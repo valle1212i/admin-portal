@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="UTF-8" />
+  <title>Kundprofil</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kundprofil</title>
+    <link rel="stylesheet" href="/css/dashboard.css" />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        padding: 40px;
+        background: #f2f2f2;
+      }
+      .card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 600px;
+        margin: auto;
+        box-shadow: 0 0 8px rgba(0,0,0,0.05);
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .label {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+<body>
+  <div class="card">
+    <h1 id="name">Laddar kund...</h1>
+    <p><span class="label">Email:</span> <span id="email"></span></p>
+    <p><span class="label">Status:</span> <span id="status"></span></p>
+    <p><span class="label">Skapad:</span> <span id="createdAt"></span></p>
+    <a href="/admin.html">← Tillbaka</a>
+  </div>
+
+  <div class="card">
+    <h2>Livechat-meddelanden</h2>
+    <div id="chatMessagesAdmin" style="max-height:300px; overflow-y:auto; border:1px solid #ccc; padding:10px;"></div>
+  </div>
+  
+
+  <script>
+    const id = new URLSearchParams(window.location.search).get("id");
+  
+    if (!id) {
+      document.body.innerHTML = "<p>Kund-ID saknas</p>";
+    } else {
+      fetch(`/api/customers/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Kunddata:", data);
+  
+          document.getElementById("name").textContent = data.name || "Okänd";
+          document.getElementById("email").textContent = data.email || "-";
+  
+          if (data.campaigns) {
+            const p = document.createElement("p");
+            p.innerHTML = `<span class="label">Kampanj:</span> ${data.campaigns}`;
+            document.querySelector(".card").appendChild(p);
+          }
+  
+          if (data.industry) {
+            const p = document.createElement("p");
+            p.innerHTML = `<span class="label">Bransch:</span> ${data.industry}`;
+            document.querySelector(".card").appendChild(p);
+          }
+  
+          if (data.website) {
+            const p = document.createElement("p");
+            p.innerHTML = `<span class="label">Webbplats:</span> <a href="${data.website}" target="_blank">${data.website}</a>`;
+            document.querySelector(".card").appendChild(p);
+          }
+  
+        
+// 🔁 Hämta livechat-meddelanden från kund
+fetch(`/api/chat/customer/${id}`)
+  .then(res => res.json())
+  .then(chatData => {
+    const container = document.getElementById("chatMessagesAdmin");
+    container.innerHTML = "";
+
+    if (chatData.length === 0) {
+      container.innerHTML = "<p>Inga meddelanden ännu.</p>";
+    } else {
+      chatData.forEach(msg => {
+        const div = document.createElement("div");
+        div.style.marginBottom = "10px";
+        div.innerHTML = `
+          <strong>${msg.sender === "customer" ? "Kund" : "Admin"}:</strong> ${msg.message}
+          <br><small style="color:#999;">${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
+        `;
+        container.appendChild(div);
+      });
+    }
+  })
+  .catch(err => {
+    console.error("Kunde inte hämta chattmeddelanden:", err);
+    const container = document.getElementById("chatMessagesAdmin");
+    container.innerHTML = "<p style='color:red;'>❌ Fel vid hämtning av chattmeddelanden.</p>";
+  });
+
+
+  
+        }) <!-- ← hit hör det -->
+        .catch(err => {
+          document.body.innerHTML = "<p>Kunde inte hämta kunddata.</p>";
+          console.error("Fel:", err);
+        });
+    }
+  </script>
+  
+  
+</body>
+</html>

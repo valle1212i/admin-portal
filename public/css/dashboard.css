@@ -1,0 +1,187 @@
+/* public/css/dashboard.css */
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f6fa;
+    color: #333;
+  }
+  
+  .container {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .sidebar {
+    width: 220px;
+    background-color: #fff;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border-right: 1px solid #e0e0e0;
+    height: 100vh;
+  }
+  
+  .logo {
+    width: 100%;
+    margin-bottom: 40px;
+  }
+  
+  .logo img {
+    width: 140px;
+    height: auto;
+  }
+  
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+  
+  .menu-item:hover {
+    background-color: #f0f0f0;
+  }
+  
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    color: #333;
+  }
+  
+  .menu-item:hover {
+    background-color: #f0f0f0;
+  }
+  
+  
+  /* Main */
+  .main {
+    flex: 1;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo {
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+  
+  .profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+  
+  .card h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #999;
+  }
+  
+  .card .value {
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+  
+  .flex-cards {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .activity, .invoices, .updates {
+    flex: 1;
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+  
+  .section-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+  
+  .activity-item, .update-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .activity-item img, .update-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 1rem;
+  }
+  
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .invoice-table th, .invoice-table td {
+    padding: 0.5rem;
+    text-align: left;
+    font-size: 0.85rem;
+  }
+  
+  .invoice-table th {
+    color: #999;
+  }
+  
+  .invoice-table td {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .icon-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+  }
+  .card {
+    min-width: 250px;
+  }
+  
