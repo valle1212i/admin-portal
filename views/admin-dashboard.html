@@ -255,7 +255,10 @@
   
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io(); // Anslut till servern
+    const socket = io("https://source-database.up.railway.app", {
+  withCredentials: true
+});
+
   
     // Lyssna på nya meddelanden från servern
     socket.on("newMessage", (msg) => {
