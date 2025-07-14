@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cases & Contacts</title>
+  <link rel="stylesheet" href="/css/cases.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>📂 Cases & Contacts</h1>
+    <div id="messages-container"></div>
+  </div>
+
+  <script>
+    async function fetchMessages() {
+      try {
+        const res = await fetch("/api/messages/all");
+        const messages = await res.json();
+
+        const container = document.getElementById("messages-container");
+        if (!messages.length) {
+          container.innerHTML = "<p>Inga meddelanden hittades.</p>";
+          return;
+        }
+
+        messages.forEach(msg => {
+          const div = document.createElement("div");
+          div.className = "message";
+          div.innerHTML = `
+            <div class="meta">
+              <strong>${msg.sender}</strong>
+              <span>${new Date(msg.timestamp).toLocaleString("sv-SE")}</span>
+            </div>
+            <p>${msg.message}</p>
+            <small>Kund-ID: ${msg.customerId}</small>
+          `;
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error("Fel vid hämtning:", err);
+      }
+    }
+
+    fetchMessages();
+  </script>
+</body>
+</html>
