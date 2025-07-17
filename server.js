@@ -39,7 +39,7 @@ app.use(express.static(path.join(__dirname, "public")));
 const chatRoutes = require('./routes/chat'); // rätt – liten bokstav
 app.use("/api/chat", chatRoutes);
 
-const serverStatusRoute = require("./routes/ServerStatus");
+const serverStatus = require('./routes/serverStatus');
 app.use("/api/server-status", serverStatusRoute);
 
 // MongoDB-anslutning
