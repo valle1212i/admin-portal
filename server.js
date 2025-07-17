@@ -8,9 +8,12 @@ const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
   cors: {
-    origin: "*", // ändra till specifik URL vid behov
+    origin: ["https://admin-portal.onrender.com", "https://source-database.onrender.com"]
   },
 });
+
+
+const PORT = process.env.PORT || 3000;
 
 http.listen(PORT, () => console.log(`🚀 Servern körs på http://localhost:${PORT}`));
 
@@ -28,8 +31,6 @@ io.on("connection", (socket) => {
   });
 });
 
-
-const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
