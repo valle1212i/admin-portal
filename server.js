@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const serverStatusRoute = require('./routes/serverStatus');
 const path = require("path");
 require("dotenv").config();
 
@@ -39,7 +40,6 @@ app.use(express.static(path.join(__dirname, "public")));
 const chatRoutes = require('./routes/chat'); // rätt – liten bokstav
 app.use("/api/chat", chatRoutes);
 
-const serverStatus = require('./routes/serverStatus');
 app.use("/api/server-status", serverStatusRoute);
 
 // MongoDB-anslutning
