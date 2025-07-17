@@ -216,42 +216,7 @@
         }
       });
   </script>
-  <script>
-    function sendAdminMessage() {
-      const message = document.getElementById("adminMessageInput").value;
-      if (!message.trim()) return alert("Skriv ett meddelande!");
   
-      fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-  customerId: new URLSearchParams(window.location.search).get("id"),
-  sender: "admin",
-  message: message.trim()
-})
-      })
-
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("adminMessageInput").value = "";
-        const div = document.createElement("div");
-        div.style.marginBottom = "10px";
-        div.innerHTML = `
-          <strong>Admin:</strong> ${data.message}
-          <br><small style="color:#999;">${new Date(data.timestamp).toLocaleString("sv-SE")}</small>
-        `;
-        document.getElementById("chatMessagesAdmin").appendChild(div);
-      })
-      .catch(err => {
-        console.error("Fel vid skickande:", err);
-        alert("Kunde inte skicka meddelande.");
-      });
-    }
-  </script>
-  
-
   
   <script src="/socket.io/socket.io.js"></script>
   <script>
