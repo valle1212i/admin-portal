@@ -12,7 +12,7 @@ const io = require("socket.io")(http, {
   },
 });
 
-http.listen(3000, () => console.log("🚀 Servern körs på http://localhost:3000"));
+http.listen(PORT, () => console.log(`🚀 Servern körs på http://localhost:${PORT}`));
 
 // Socket.IO-anslutning
 io.on("connection", (socket) => {
