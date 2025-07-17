@@ -1,10 +1,20 @@
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const serverStatusRoute = require('./routes/serverStatus');
 const path = require("path");
 require("dotenv").config();
 
+
 const app = express();
+app.use(cors({
+  origin: [
+    "http://localhost:3000",                  // för lokal utveckling
+    "https://customerportal-frontend.onrender.com",  // din riktiga kundportal
+    "https://source-database.onrender.com"    // om du använder denna domän också
+  ],
+  credentials: true
+}));
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
   cors: {
