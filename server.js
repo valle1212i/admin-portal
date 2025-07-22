@@ -11,7 +11,7 @@ app.use(cors({
   origin: [
     "http://localhost:3000",                  // för lokal utveckling
     "https://customerportal-frontend.onrender.com",  // din riktiga kundportal
-    "https://source-database.onrender.com"    // om du använder denna domän också
+    "https://admin-portal-rn5z.onrender.com"    // om du använder denna domän också
   ],
   credentials: true
 }));
