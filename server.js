@@ -29,6 +29,13 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
+
+// 🔍 Logga inkommande origin
+app.use((req, res, next) => {
+  console.log("🔍 Inkommande origin:", req.headers.origin);
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
