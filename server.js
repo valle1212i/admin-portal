@@ -50,17 +50,19 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("🔌 En klient ansluten:", socket.id);
+  console.log("🟢 Admin ansluten via Socket.IO");
 
   socket.on("sendMessage", (msg) => {
-    console.log("📥 Meddelande mottaget:", msg);
+    console.log("✉️ Meddelande mottaget i adminpanelen:", msg);
+    // broadcast till alla andra (t.ex. andra admins)
     io.emit("newMessage", msg);
   });
 
   socket.on("disconnect", () => {
-    console.log("🔌 En klient kopplade från:", socket.id);
+    console.log("🔴 Admin frånkopplad");
   });
 });
+
 
 // 🌍 MongoDB-anslutning (Adminportalen)
 mongoose
