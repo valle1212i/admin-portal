@@ -23,5 +23,10 @@ router.post("/", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+// Dummy-endpoint för att undvika 404
+router.get("/active-sessions", (req, res) => {
+  res.json([]); // Eller lägg till logik för att returnera aktiva sessions
+});
+
 
 module.exports = router;
