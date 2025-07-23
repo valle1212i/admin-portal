@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Message = require('../models/chat');
-const Customer = require('../models/Customer'); // för namn & e-post i active-sessions
+const Customer = require('../models/Customer');
+const Case = require('../models/Case'); // 🆕 för arkivering
 
 // 📨 POST - spara meddelande
 router.post('/', async (req, res) => {
@@ -73,10 +74,11 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// 🔍 STEG 3: Aktiva chatt-sessioner
+// 🔍 Aktiva chatt-sessioner (senaste 1h)
 router.get('/active-sessions', async (req, res) => {
   try {
-    const messages = await Message.find().sort({ timestamp: -1 });
+    const ONE_HOUR_AGO = new Date(Date.now() - 60 * 60 * 1000);
+    const messages = await Message.find({ timestamp: { $gte: ONE_HOUR_AGO } }).sort({ timestamp: -1 });
 
     const sessionsMap = new Map();
 
@@ -98,7 +100,7 @@ router.get('/active-sessions', async (req, res) => {
         return {
           customerId: session.customerId,
           sessionId: session.sessionId,
-          customerName: customer?.namn || "Okänd kund",
+          customerName: customer?.namn || customer?.name || "Okänd kund",
           customerEmail: customer?.email || "-",
           lastMessage: session.lastMessage,
           timestamp: session.timestamp
@@ -110,6 +112,50 @@ router.get('/active-sessions', async (req, res) => {
   } catch (err) {
     console.error("❌ GET /api/chat/active-sessions fel:", err);
     res.status(500).json({ error: "Kunde inte hämta aktiva sessioner" });
+  }
+});
+
+// 🗃️ Flytta gamla sessioner till Cases & Contacts
+router.post("/archive-old", async (req, res) => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    const expiredSessions = await Message.aggregate([
+      { $match: { timestamp: { $lt: oneHourAgo } } },
+      { $sort: { timestamp: -1 } },
+      {
+        $group: {
+          _id: { customerId: "$customerId", sessionId: "$sessionId" },
+          messages: { $push: "$$ROOT" }
+        }
+      }
+    ]);
+
+    for (const session of expiredSessions) {
+      const alreadyArchived = await Case.findOne({
+        customerId: session._id.customerId,
+        sessionId: session._id.sessionId
+      });
+
+      if (!alreadyArchived) {
+        await Case.create({
+          customerId: session._id.customerId,
+          sessionId: session._id.sessionId,
+          messages: session.messages
+        });
+
+        // Valfritt: rensa från meddelandetabellen om du vill
+        // await Message.deleteMany({
+        //   customerId: session._id.customerId,
+        //   sessionId: session._id.sessionId
+        // });
+      }
+    }
+
+    res.json({ message: `Flyttade ${expiredSessions.length} sessioner till Cases.` });
+  } catch (err) {
+    console.error("❌ POST /api/chat/archive-old fel:", err);
+    res.status(500).json({ error: "Kunde inte arkivera sessioner" });
   }
 });
 
