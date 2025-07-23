@@ -1,4 +1,4 @@
-const socket = io("https://source-database.onrender.com"); // Om det är där server.js/socket.io körs
+const socket = io("https://source-database.onrender.com"); // URL till din server/socket.io
 
 socket.on("newMessage", (msg) => {
   // Visa bara meddelanden från kunden
@@ -7,9 +7,11 @@ socket.on("newMessage", (msg) => {
   }
 });
 
-function sendAdminMessage(customerId, text) {
+// Skicka meddelande som admin, med sessionId
+function sendAdminMessage(customerId, sessionId, text) {
   const msg = {
     customerId,
+    sessionId,  // Viktigt att skicka med sessionId
     message: text,
     sender: "admin",
     timestamp: new Date()
@@ -21,14 +23,28 @@ function sendAdminMessage(customerId, text) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(msg)
+  }).catch(console.error);
+}
+
+// 🆕 Skicka systemmeddelande när chatten startar
+function notifyAdminOfNewSession(customerId, sessionId) {
+  const systemMsg = {
+    customerId,
+    sessionId,
+    message: "🔔 Ny chatt startad",
+    sender: "system",
+    timestamp: new Date()
+  };
+
+  console.log("📤 Skickar systemmeddelande:", systemMsg);
+
+  socket.emit("sendMessage", systemMsg);
+
+  fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(systemMsg)
+  }).catch(err => {
+    console.error("❌ Kunde inte skicka systemmeddelande:", err);
   });
 }
-// Lägg till sessionId (krävs nu i modellen)
-const msg = {
-    customerId,
-    message: text,
-    sender: "admin",
-    timestamp: new Date(),
-    sessionId: activeSessionId // 👈 Du behöver ha den sparad per kund
-  };
-  

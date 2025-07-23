@@ -1,41 +1,29 @@
+// 🌍 Miljövariabler
 require("dotenv").config();
+console.log("📦 MONGO_URI:", process.env.MONGO_URI);
+console.log("📦 CUSTOMER_DB_URI:", process.env.CUSTOMER_DB_URI);
+
 const express = require("express");
+const http = require("http");
+const path = require("path");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const serverStatusRoute = require("./routes/serverStatus");
-const path = require("path");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
 
-// 🔧 Tillåt frontend-domäner (inkl. localhost)
+// ✅ Tillåtna domäner (används i både Express & Socket.io)
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://localhost:5173", // t.ex. för kollegans lokala kundportal
   "https://customerportal-frontend.onrender.com",
   "https://admin-portal-rn5z.onrender.com",
   "https://admin-portal.onrender.com"
 ];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200
-}));
-
-// 👉 Hantera preflight-förfrågningar
-app.options("*", cors());
-
-// 📦 Middleware
-app.use(express.json());
-
-// 📂 Servera statiska filer från public/
-app.use(express.static(path.join(__dirname, "public")));
-
-// 📡 HTTP-server + Socket.IO setup
-const http = require("http").createServer(app);
-
-const io = require("socket.io")(http, {
+// 🔌 Socket.io - realtidskommunikation
+const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
@@ -43,35 +31,43 @@ const io = require("socket.io")(http, {
   }
 });
 
-// 🧠 Socket.IO logik
+// 🌐 Middleware
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+
+// 🌍 MongoDB-anslutning (Adminportalen)
+mongoose
+  .connect(process.env.MONGO_URI, {
+    dbName: "adminportal"
+  })
+  .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
+  .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
+
+// 🔌 Socket.io-events
 io.on("connection", (socket) => {
-  console.log("🟢 En användare anslöt");
+  console.log("🔌 En klient ansluten:", socket.id);
 
   socket.on("sendMessage", (msg) => {
-    console.log("✉️ Meddelande mottaget:", msg);
-    io.emit("newMessage", msg); // Broadcast till alla klienter
+    console.log("📥 Meddelande mottaget:", msg);
+    io.emit("newMessage", msg);
   });
 
   socket.on("disconnect", () => {
-    console.log("🔴 Användare frånkopplad");
+    console.log("🔌 En klient kopplade från:", socket.id);
   });
 });
 
-// 🔌 MongoDB-anslutning
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("🟢 MongoDB anslutning lyckades"))
-  .catch(err => console.error("🔴 MongoDB anslutning misslyckades:", err));
+// 🧭 API-routes
+console.log("🧪 Laddar ./routes/chat...");
+app.use("/api/chat", require("./routes/chat"));
+console.log("🧪 Laddar ./routes/customers...");
+app.use("/api/customers", require("./routes/customers"));
+console.log("🧪 Laddar ./routes/server-status...");
+app.use("/api/server-status", require("./routes/serverStatus"));
 
-// 🌐 API-routes
-const chatRoutes = require("./routes/chat");
-app.use("/api/chat", chatRoutes);
-
-const customerRoutes = require("./routes/customers");
-app.use("/api/customers", customerRoutes);
-
-app.use("/api/server-status", serverStatusRoute);
-
-// 📄 HTML-vyer
+// 📄 HTML-sidor
 app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
 });
@@ -80,6 +76,8 @@ app.get("/admin-chat.html", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin-chat.html"));
 });
 
-// 🚀 Starta servern
+// 🚀 Starta server
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`🚀 Servern körs på http://localhost:${PORT}`));
+server.listen(PORT, () => {
+  console.log(`🚀 Servern körs på http://localhost:${PORT}`);
+});
