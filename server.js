@@ -20,7 +20,8 @@ const allowedOrigins = [
   "https://customerportal-frontend.onrender.com",
   "https://admin-portal.onrender.com",
   "https://admin-portal-rn5z.onrender.com",
-  "https://source-database.up.railway.app" // din Railway backend
+  "https://source-database.up.railway.app", 
+  "https://admin-portal-production-a9a5.up.railway.app",  // din Railway backend
 ];
 
 // 🌐 Middleware
