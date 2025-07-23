@@ -13,16 +13,26 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Tillåtna domäner (används i både Express & Socket.io)
+// ✅ Tillåtna domäner (för både Express och Socket.io)
 const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173", // t.ex. för kollegans lokala kundportal
+  "http://localhost:3000", // lokal adminportal
+  "http://localhost:5173", // lokal kundportal
   "https://customerportal-frontend.onrender.com",
+  "https://admin-portal.onrender.com",
   "https://admin-portal-rn5z.onrender.com",
-  "https://admin-portal.onrender.com"
+  "https://source-database.up.railway.app" // din Railway backend
 ];
 
-// 🔌 Socket.io - realtidskommunikation
+// 🌐 Middleware
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+
+// 🔌 Socket.io
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -31,21 +41,6 @@ const io = new Server(server, {
   }
 });
 
-// 🌐 Middleware
-app.use(cors({ origin: allowedOrigins, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
-
-// 🌍 MongoDB-anslutning (Adminportalen)
-mongoose
-  .connect(process.env.MONGO_URI, {
-    dbName: "adminportal"
-  })
-  .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
-  .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
-
-// 🔌 Socket.io-events
 io.on("connection", (socket) => {
   console.log("🔌 En klient ansluten:", socket.id);
 
@@ -58,6 +53,14 @@ io.on("connection", (socket) => {
     console.log("🔌 En klient kopplade från:", socket.id);
   });
 });
+
+// 🌍 MongoDB-anslutning (Adminportalen)
+mongoose
+  .connect(process.env.MONGO_URI, {
+    dbName: "adminportal"
+  })
+  .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
+  .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
 
 // 🧭 API-routes
 console.log("🧪 Laddar ./routes/chat...");
