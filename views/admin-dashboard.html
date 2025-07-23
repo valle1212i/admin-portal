@@ -59,24 +59,38 @@
       border-radius: 50%;
       object-fit: cover;
     }
+    .chat-session-link {
+      display: block;
+      padding: 10px;
+      background: #f1f1f1;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-decoration: none;
+      color: #333;
+    }
+    .chat-session-link:hover {
+      background: #e2e6ea;
+    }
   </style>
 </head>
 <body>
+  <div id="notificationBanner" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #007bff; color: white; padding: 15px; font-weight: bold; text-align: center; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    🔔 Ny chatt startad
+  </div>
+
   <div class="sidebar">
     <div class="logo">
       <img src="/images/Source (kopia).png" alt="Source Logo" />
     </div>
-  
     <nav class="menu">
       <a href="/dashboard" class="menu-item">🏠 Dashboard</a>
       <a href="/search" class="menu-item">🔍 Search Customer</a>
       <a href="/public/cases.html" class="menu-item">💬 Cases & Contacts</a>
       <a href="/agreements" class="menu-item">📄 Agreements</a>
       <a href="/invoicing" class="menu-item">💰 Invoicing</a>
-      </div>
     </nav>
   </div>
-  
+
   <div class="main">
     <div class="top-bar">
       <h2>Source Admin</h2>
@@ -84,18 +98,9 @@
     </div>
 
     <div class="stats">
-      <div class="card">
-        <h3>Total Customers</h3>
-        <p>1,250</p>
-      </div>
-      <div class="card">
-        <h3>Active</h3>
-        <p>1,180</p>
-      </div>
-      <div class="card">
-        <h3>Currently Online</h3>
-        <p>320</p>
-      </div>
+      <div class="card"><h3>Total Customers</h3><p>1,250</p></div>
+      <div class="card"><h3>Active</h3><p>1,180</p></div>
+      <div class="card"><h3>Currently Online</h3><p>320</p></div>
     </div>
 
     <div class="section">
@@ -120,40 +125,32 @@
         <ul id="searchResults" style="margin-top: 10px; list-style: none; padding: 0;"></ul>
       </div>
     </div>
-    
+
     <div class="card">
-      <h3>💬 Meddelanden från kund</h3>
-      <div id="chatMessages" style="max-height:300px; overflow-y:auto; background:#f9f9f9; padding:10px; border:1px solid #ddd; border-radius:8px;"></div>
+      <h3>💬 Aktiva chatsessioner</h3>
+      <ul id="chatSessions" style="list-style:none; padding-left:0;"></ul>
     </div>
-    
+
     <div class="card">
-      <h3>✉️ Svara som admin</h3>
-      <div id="chatMessagesAdmin" style="max-height:300px; overflow-y:auto; border:1px solid #ccc; padding:10px; border-radius:8px; margin-bottom:10px;"></div>
-      <textarea id="adminMessageInput" placeholder="Skriv ditt svar..." style="width:100%; margin-top:10px;"></textarea>
-      <button onclick="sendAdminMessage()" style="margin-top:10px;">Skicka</button>
+      <h4>Payments & Expenses</h4>
+      <ul>
+        <li>Stripe Payout - Pending</li>
+        <li>MongoDB Invoice - Paid</li>
+        <li>Domain Renewal - Upcoming</li>
+      </ul>
     </div>
-    
-        <div class="card">
-          <h4>Payments & Expenses</h4>
-          <ul>
-            <li>Stripe Payout - Pending</li>
-            <li>MongoDB Invoice - Paid</li>
-            <li>Domain Renewal - Upcoming</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Mass Email</h4>
-          <p>Send outage or info messages via info@source.com</p>
-          <button>Compose Message</button>
-        </div>
-        <div class="card">
-          <h3 id="customerName">Laddar kund...</h3>
-          <p id="customerEmail"></p>
-          <p id="customerStatus"></p>
-        </div> 
-      </div>
-      
+    <div class="card">
+      <h4>Mass Email</h4>
+      <p>Send outage or info messages via info@source.com</p>
+      <button>Compose Message</button>
+    </div>
+    <div class="card">
+      <h3 id="customerName">Laddar kund...</h3>
+      <p id="customerEmail"></p>
+      <p id="customerStatus"></p>
+    </div> 
   </div>
+
   <script>
     fetch("/api/customers/latest")
       .then(res => res.json())
@@ -163,115 +160,53 @@
         document.getElementById("customerStatus").innerText = data.status;
       });
   </script>
-  
+
   <script>
     document.getElementById("searchInput").addEventListener("input", async (e) => {
       const q = e.target.value;
-      if (q.length < 2) return; // Vänta tills minst 2 tecken
-  
+      if (q.length < 2) return;
       const res = await fetch(`/api/customers/search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
-  
       const results = document.getElementById("searchResults");
-      results.innerHTML = data.map(kund => 
-  `<li>
-     <a href="/admin-customer.html?id=${kund._id}" style="text-decoration:none;color:inherit;">
-       <strong>${kund.namn}</strong> – ${kund.email}
-     </a>
-   </li>`
-).join("");
+      results.innerHTML = data.length
+        ? data.map(kund => `<li><a href="/admin-customer.html?id=${kund._id}"><strong>${kund.namn}</strong> – ${kund.email}</a></li>`).join("")
+        : "<li>Inga kunder hittades</li>";
     });
-    if (data.length === 0) {
-  results.innerHTML = "<li>Inga kunder hittades</li>";
-}
   </script>
+
   <script>
-    // Hämtar senaste inkommande chattmeddelanden
-    fetch("/api/chat/all")
+    fetch("/api/chat/active-sessions")
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById("chatMessagesAdmin");
-        if (!container) return;
-        
-        if (data.length === 0) {
-          container.innerHTML = "<p>Inga meddelanden ännu.</p>";
-          return;
-        }
-  
-        data.forEach(msg => {
-          const div = document.createElement("div");
-          div.style.marginBottom = "10px";
-          div.innerHTML = `
-            <strong>${msg.sender === "customer" ? "Kund" : "Admin"}:</strong> ${msg.message}
-            <br><small style="color:#999;">${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-          `;
-          container.appendChild(div);
-        });
-      })
-      .catch(err => {
-        console.error("Kunde inte hämta chattmeddelanden:", err);
-        const container = document.getElementById("chatMessagesAdmin");
-        if (container) {
-          container.innerHTML = "<p style='color:red;'>❌ Fel vid hämtning av meddelanden.</p>";
-        }
+        const list = document.getElementById("chatSessions");
+        if (!list) return;
+
+        list.innerHTML = data.length
+          ? data.map(session => `<li><a class="chat-session-link" href="/admin-chat.html?customerId=${session.customerId}&sessionId=${session.sessionId}">🔔 Ny chatt från ${session.customerName || 'okänd'} – ${new Date(session.timestamp).toLocaleTimeString("sv-SE")}</a></li>`).join("")
+          : "<li>Inga aktiva chatsessioner.</li>";
       });
   </script>
-  
-  
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io("https://source-database.up.railway.app", {
-  withCredentials: true
-});
+      withCredentials: true
+    });
 
-  
-    // Lyssna på nya meddelanden från servern
     socket.on("newMessage", (msg) => {
-      const container = document.getElementById("chatMessagesAdmin");
-      const div = document.createElement("div");
-      div.style.marginBottom = "10px";
-      div.innerHTML = `
-        <strong>${msg.sender === "admin" ? "Admin" : "Kund"}:</strong> ${msg.message}
-        <br><small style="color:#999;">${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-      `;
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
+      if (msg.sender === "system" && msg.message.includes("🔔 Ny chatt startad")) {
+        showNotificationBanner(msg.message);
+      }
     });
-  
-     
-  // Hämta kund-ID från URL:en
-  const currentCustomerId = new URLSearchParams(window.location.search).get("id");
 
-  // Funktion för att skicka ett meddelande som admin
-  function sendAdminMessage() {
-    const message = document.getElementById("adminMessageInput").value;
-    if (!message.trim()) {
-      alert("⚠️ Skriv ett meddelande!");
-      return;
+    function showNotificationBanner(text) {
+      const banner = document.getElementById("notificationBanner");
+      banner.textContent = text;
+      banner.style.display = "block";
+      setTimeout(() => {
+        banner.style.display = "none";
+      }, 5000);
     }
-
-    const msgObj = {
-      customerId: currentCustomerId,
-      sender: "admin",
-      message: message.trim(),
-      timestamp: new Date()
-    };
-
-    // Skicka via Socket.IO
-    socket.emit("sendMessage", msgObj);
-
-    // Spara till databasen via REST
-    fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(msgObj)
-    });
-
-    // Töm fältet
-    document.getElementById("adminMessageInput").value = "";
-  }
-</script>
-
-  
+  </script>
 </body>
 </html>

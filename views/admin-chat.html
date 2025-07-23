@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Chat</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .chat-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #chatMessages {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .message strong {
+      display: block;
+      font-weight: bold;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h2>Admin - Chatta med kund</h2>
+    <div id="chatMessages"></div>
+    <textarea id="adminMessageInput" placeholder="Skriv ditt svar..."></textarea>
+    <button onclick="sendAdminMessage()">Skicka</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io("https://source-database.up.railway.app", { withCredentials: true });
+
+    const customerId = new URLSearchParams(window.location.search).get("id");
+    const sessionId = new URLSearchParams(window.location.search).get("sessionId");
+    const chatMessages = document.getElementById("chatMessages");
+
+    // Ladda tidigare meddelanden
+    fetch(`/api/chat/customer/${customerId}?sessionId=${sessionId}`)
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(renderMessage);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      })
+      .catch(err => {
+        console.error("Kunde inte hämta historik:", err);
+        chatMessages.innerHTML = "<p style='color:red;'>Fel vid hämtning av meddelanden.</p>";
+      });
+
+    // Rendera inkommande meddelanden i realtid
+    socket.on("newMessage", (msg) => {
+      if (msg.customerId === customerId && msg.sessionId === sessionId) {
+        renderMessage(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    });
+
+    function sendAdminMessage() {
+      const input = document.getElementById("adminMessageInput");
+      const message = input.value.trim();
+      if (!message) return;
+
+      const msgObj = {
+        customerId,
+        sessionId,
+        sender: "admin",
+        message,
+        timestamp: new Date()
+      };
+
+      socket.emit("sendMessage", msgObj);
+
+      fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(msgObj)
+      }).catch(console.error);
+
+      input.value = "";
+    }
+
+    function renderMessage(msg) {
+      const div = document.createElement("div");
+      div.className = "message";
+
+      const sender = document.createElement("strong");
+      sender.textContent = msg.sender === "admin" ? "Admin:" : "Kund:";
+
+      const content = document.createElement("div");
+      content.textContent = msg.message;
+
+      const time = document.createElement("small");
+      time.style.color = "#777";
+      time.textContent = new Date(msg.timestamp).toLocaleString("sv-SE");
+
+      div.appendChild(sender);
+      div.appendChild(content);
+      div.appendChild(time);
+
+      chatMessages.appendChild(div);
+    }
+  </script>
+</body>
+</html>
