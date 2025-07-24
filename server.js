@@ -88,6 +88,9 @@ console.log("🧪 Laddar ./routes/customers...");
 app.use("/api/customers", require("./routes/customers"));
 console.log("🧪 Laddar ./routes/server-status...");
 app.use("/api/server-status", require("./routes/serverStatus"));
+console.log("🧪 Laddar ./routes/auth...");
+app.use("/api/auth", require("./routes/auth"));
+
 
 // 📄 HTML-sidor
 app.get("/dashboard", (req, res) => {
