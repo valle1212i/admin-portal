@@ -1,8 +1,6 @@
-console.log("✅ KOMMER TILL SERVER.START");
-// 🌍 Miljövariabler
+// 🌍 Ladda miljövariabler tidigt
 require("dotenv").config();
-console.log("📦 MONGO_URI:", process.env.MONGO_URI);
-console.log("📦 CUSTOMER_DB_URI:", process.env.CUSTOMER_DB_URI);
+console.log("✅ STARTAR SERVER");
 
 const express = require("express");
 const http = require("http");
@@ -14,40 +12,89 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Tillåtna domäner (för både Express och Socket.io)
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://source-database.onrender.com",       // Kundportal
-    "https://admin-portal-rn5z.onrender.com"       // Adminportal
-  ];
-  
+//✅ Tillåtna domäner (anpassa om du byter Render-URL)
+const allowedOrigins = [
+ "http://localhost:3000",
+"http://localhost:5173",
+ "https://source-database.onrender.com",     // Kundportal
+  "https://admin-portal-rn5z.onrender.com"    // Adminportal
+];
 
-// 🌐 Middleware
+// 🌐 Middleware: CORS
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log("⛔ Blockerad origin:", origin);
+      console.warn("⛔ Blockerad origin:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true
 }));
 
-app.options("*", cors()); // hanterar preflight requests korrekt
+// Hantera preflight
+app.options("*", cors());
 
-
-// 🔍 Logga inkommande origin
+// 🔍 Logga inkommande requests
 app.use((req, res, next) => {
-  console.log("🔍 Inkommande origin:", req.headers.origin);
+  console.log("🔍 Origin:", req.headers.origin || "ingen");
   next();
 });
 
+// 🧱 JSON/body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 📁 Statiska filer (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
+
+// 🧭 API-routes
+console.log("🧪 Laddar routes...");
+try {
+  app.use("/api/chat", require("./routes/chat"));
+  console.log("✅ chat route OK");
+} catch (err) {
+  console.error("❌ chat.js error:", err);
+}
+console.log("Laddar chat.js");
+app.use("/api/chat", require("./routes/chat"));
+
+try {
+  app.use("/api/customers", require("./routes/customers"));
+  console.log("✅ customers route OK");
+} catch (err) {
+  console.error("❌ customers.js error:", err);
+}
+console.log("Laddar routes.js");
+app.use("/api/chat", require("./routes/chat"));
+
+try {
+  app.use("/api/server-status", require("./routes/serverStatus"));
+  console.log("✅ serverStatus route OK");
+} catch (err) {
+  console.error("❌ serverStatus.js error:", err);
+}
+console.log("Laddar serverStatus.js");
+app.use("/api/chat", require("./routes/chat"));
+
+try {
+  app.use("/api/auth", require("./routes/auth"));
+  console.log("✅ auth route OK");
+} catch (err) {
+  console.error("❌ auth.js error:", err);
+}
+console.log("Laddar auth.js");
+app.use("/api/chat", require("./routes/chat"));
+
+
+// 📄 SSR-routes (HTML)
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
+ });
+ app.get("/admin-chat.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "admin-chat.html"));
+ });
 
 // 🔌 Socket.io
 const io = new Server(server, {
@@ -62,8 +109,7 @@ io.on("connection", (socket) => {
   console.log("🟢 Admin ansluten via Socket.IO");
 
   socket.on("sendMessage", (msg) => {
-    console.log("✉️ Meddelande mottaget i adminpanelen:", msg);
-    // broadcast till alla andra (t.ex. andra admins)
+    console.log("✉️ Meddelande mottaget:", msg);
     io.emit("newMessage", msg);
   });
 
@@ -72,34 +118,11 @@ io.on("connection", (socket) => {
   });
 });
 
-
-// 🌍 MongoDB-anslutning (Adminportalen)
+// 🛢 MongoDB-anslutning
 mongoose
-  .connect(process.env.MONGO_URI, {
-    dbName: "adminportal"
-  })
+  .connect(process.env.MONGO_URI, { dbName: "adminportal" })
   .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
   .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
-
-// 🧭 API-routes
-console.log("🧪 Laddar ./routes/chat...");
-app.use("/api/chat", require("./routes/chat"));
-console.log("🧪 Laddar ./routes/customers...");
-app.use("/api/customers", require("./routes/customers"));
-console.log("🧪 Laddar ./routes/server-status...");
-app.use("/api/server-status", require("./routes/serverStatus"));
-console.log("🧪 Laddar ./routes/auth...");
-app.use("/api/auth", require("./routes/auth"));
-
-
-// 📄 HTML-sidor
-app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
-});
-
-app.get("/admin-chat.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin-chat.html"));
-});
 
 // 🚀 Starta server
 const PORT = process.env.PORT || 3000;

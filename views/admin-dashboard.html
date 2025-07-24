@@ -189,9 +189,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io("https://admin-portal-production-a9a5.up.railway.app", {
-      withCredentials: true
-    });
+   const socket = io(window.location.origin, { withCredentials: true });
 
     socket.on("newMessage", (msg) => {
       if (msg.sender === "system" && msg.message.includes("🔔 Ny chatt startad")) {

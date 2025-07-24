@@ -1,7 +1,5 @@
-const socket = io("https://admin-portal-rn5z.onrender.com", {
-  withCredentials: true,
-  transports: ["websocket"]
-});
+const socket = io(window.location.origin, { withCredentials: true });
+
 
 
 socket.on("newMessage", (msg) => {

@@ -78,7 +78,8 @@
     console.log("✅ customerId:", customerId);
     console.log("✅ sessionId:", sessionId);
 
-    const socket = io("https://admin-portal-production-a9a5.up.railway.app", { withCredentials: true });
+    const socket = io(window.location.origin, { withCredentials: true });
+
 
     // 🔄 Ladda historik
     fetch(`/api/chat/customer/${customerId}?sessionId=${sessionId}`)
