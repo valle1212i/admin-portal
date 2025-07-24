@@ -1,3 +1,7 @@
+io.on("connection", (socket) => {
+  console.log("🟢 NY SOCKET-ANSLUTNING:", socket.id);
+});
+
 // 🌍 Miljövariabler
 require("dotenv").config();
 console.log("📦 MONGO_URI:", process.env.MONGO_URI);
@@ -17,7 +21,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   "http://localhost:3000", // lokal adminportal
   "http://localhost:5173", // lokal kundportal
-  "https://customerportal-frontend.onrender.com",
+  "sourcedatabase-production.up.railway.app",
   "https://admin-portal.onrender.com",
   "https://admin-portal-rn5z.onrender.com",
   "https://source-database.up.railway.app", 

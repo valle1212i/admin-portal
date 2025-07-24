@@ -4,6 +4,7 @@ const socket = io("https://admin-portal-production-a9a5.up.railway.app", {
 
 socket.on("newMessage", (msg) => {
   console.log("📥 Nytt meddelande från servern:", msg); // 🧪 Debug
+  console.log("📥 Nytt meddelande från kund:", msg);
 
   if (msg.sender === "customer" || msg.sender === "system") {
     renderIncomingMessage(msg);
