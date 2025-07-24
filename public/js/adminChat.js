@@ -1,6 +1,8 @@
-const socket = io("https://admin-portal-production-a9a5.up.railway.app", {
-  withCredentials: true
+const socket = io("https://admin-portal-rn5z.onrender.com", {
+  withCredentials: true,
+  transports: ["websocket"]
 });
+
 
 socket.on("newMessage", (msg) => {
   console.log("📥 Nytt meddelande från servern:", msg); // 🧪 Debug

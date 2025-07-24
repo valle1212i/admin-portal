@@ -1,7 +1,3 @@
-io.on("connection", (socket) => {
-  console.log("🟢 NY SOCKET-ANSLUTNING:", socket.id);
-});
-
 // 🌍 Miljövariabler
 require("dotenv").config();
 console.log("📦 MONGO_URI:", process.env.MONGO_URI);
@@ -18,21 +14,29 @@ const app = express();
 const server = http.createServer(app);
 
 // ✅ Tillåtna domäner (för både Express och Socket.io)
-const allowedOrigins = [
-  "http://localhost:3000", // lokal adminportal
-  "http://localhost:5173", // lokal kundportal
-  "sourcedatabase-production.up.railway.app",
-  "https://admin-portal.onrender.com",
-  "https://admin-portal-rn5z.onrender.com",
-  "https://source-database.up.railway.app", 
-  "https://admin-portal-production-a9a5.up.railway.app",  // din Railway backend
-];
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://source-database.onrender.com",       // Kundportal
+    "https://admin-portal-rn5z.onrender.com"       // Adminportal
+  ];
+  
 
 // 🌐 Middleware
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("⛔ Blockerad origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
+
+app.options("*", cors()); // hanterar preflight requests korrekt
+
 
 // 🔍 Logga inkommande origin
 app.use((req, res, next) => {
