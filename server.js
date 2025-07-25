@@ -12,11 +12,11 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-//✅ Tillåtna domäner (anpassa om du byter Render-URL)
+// ✅ Tillåtna domäner (anpassa vid behov)
 const allowedOrigins = [
- "http://localhost:3000",
-"http://localhost:5173",
- "https://source-database.onrender.com",     // Kundportal
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://source-database.onrender.com",     // Kundportal
   "https://admin-portal-rn5z.onrender.com"    // Adminportal
 ];
 
@@ -32,8 +32,6 @@ app.use(cors({
   },
   credentials: true
 }));
-
-// Hantera preflight
 app.options("*", cors());
 
 // 🔍 Logga inkommande requests
@@ -57,8 +55,6 @@ try {
 } catch (err) {
   console.error("❌ chat.js error:", err);
 }
-console.log("Laddar chat.js");
-app.use("/api/chat", require("./routes/chat"));
 
 try {
   app.use("/api/customers", require("./routes/customers"));
@@ -66,8 +62,6 @@ try {
 } catch (err) {
   console.error("❌ customers.js error:", err);
 }
-console.log("Laddar routes.js");
-app.use("/api/chat", require("./routes/chat"));
 
 try {
   app.use("/api/server-status", require("./routes/serverStatus"));
@@ -75,8 +69,6 @@ try {
 } catch (err) {
   console.error("❌ serverStatus.js error:", err);
 }
-console.log("Laddar serverStatus.js");
-app.use("/api/chat", require("./routes/chat"));
 
 try {
   app.use("/api/auth", require("./routes/auth"));
@@ -84,17 +76,19 @@ try {
 } catch (err) {
   console.error("❌ auth.js error:", err);
 }
-console.log("Laddar auth.js");
-app.use("/api/chat", require("./routes/chat"));
-
 
 // 📄 SSR-routes (HTML)
 app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
- });
- app.get("/admin-chat.html", (req, res) => {
+});
+app.get("/admin-chat.html", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "admin-chat.html"));
- });
+});
+
+// ✅ Ny root route för hälsokoll
+app.get("/", (req, res) => {
+  res.send("✅ Admin-servern är igång!");
+});
 
 // 🔌 Socket.io
 const io = new Server(server, {
