@@ -8,16 +8,22 @@ const path = require("path");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const { Server } = require("socket.io");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const bcrypt = require("bcrypt");
+
+const Admin = require("./models/Admin");
+const Case = require("./models/Case");
 
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Tillåtna domäner (anpassa vid behov)
+// ✅ Tillåtna domäner
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://source-database.onrender.com",     // Kundportal
-  "https://admin-portal-rn5z.onrender.com"    // Adminportal
+  "https://source-database.onrender.com",
+  "https://admin-portal-rn5z.onrender.com"
 ];
 
 // 🌐 Middleware: CORS
@@ -34,63 +40,96 @@ app.use(cors({
 }));
 app.options("*", cors());
 
-// 🔍 Logga inkommande requests
-app.use((req, res, next) => {
-  console.log("🔍 Origin:", req.headers.origin || "ingen");
-  next();
-});
-
-// 🧱 JSON/body parser
+// 🧱 Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 📁 Statiska filer (HTML, CSS, JS)
+// 💾 Sessions med MongoDB-lagring
+app.use(session({
+  secret: process.env.SESSION_SECRET || "admin_secret_key",
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    dbName: "adminportal"
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 2
+  }
+}));
+
+// 📁 Statisk frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// 🧭 API-routes
-console.log("🧪 Laddar routes...");
+// 🔐 Middleware för att skydda adminsidor
+const requireAdminLogin = require("./middleware/requireAdminLogin");
+
+// 🧪 Ladda routes
 try {
   app.use("/api/chat", require("./routes/chat"));
-  console.log("✅ chat route OK");
-} catch (err) {
-  console.error("❌ chat.js error:", err);
-}
-
-try {
   app.use("/api/customers", require("./routes/customers"));
-  console.log("✅ customers route OK");
-} catch (err) {
-  console.error("❌ customers.js error:", err);
-}
-
-try {
   app.use("/api/server-status", require("./routes/serverStatus"));
-  console.log("✅ serverStatus route OK");
-} catch (err) {
-  console.error("❌ serverStatus.js error:", err);
-}
-
-try {
   app.use("/api/auth", require("./routes/auth"));
-  console.log("✅ auth route OK");
+  console.log("✅ API-routes laddade");
 } catch (err) {
-  console.error("❌ auth.js error:", err);
+  console.error("❌ Fel vid laddning av routes:", err);
 }
 
-// 📄 SSR-routes (HTML)
-app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
-});
-app.get("/admin-chat.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin-chat.html"));
-});
-
-// ✅ Ny root route för hälsokoll
-app.get("/", (req, res) => {
-  res.send("✅ Admin-servern är igång!");
+// API: Vem är inloggad admin?
+app.get("/api/admin/me", (req, res) => {
+  if (!req.session?.admin) {
+    return res.status(401).json({ success: false, message: "Inte inloggad" });
+  }
+  res.json({ success: true, admin: req.session.admin });
 });
 
-// 🔌 Socket.io
+// 🌐 HTML-sidor (skyddade & publika)
+app.get("/", (req, res) => res.send("✅ Admin-servern är igång!"));
+app.get("/dashboard", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"))
+);
+app.get("/admin-chat.html", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "views", "admin-chat.html"))
+);
+app.get("/login.html", (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "login.html"))
+);
+
+// 🔐 Inloggning (POST)
+app.post("/admin-login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const admin = await Admin.findOne({ email });
+    if (!admin) return res.status(401).send("❌ Fel e-post");
+    const match = await bcrypt.compare(password, admin.password);
+    if (!match) return res.status(401).send("❌ Fel lösenord");
+
+    req.session.admin = {
+      _id: admin._id,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role || "admin"
+    };
+
+    res.redirect("/dashboard");
+  } catch (err) {
+    console.error("❌ Fel vid admin-login:", err);
+    res.status(500).send("❌ Internt serverfel vid inloggning");
+  }
+});
+
+// 🚪 Utloggning
+app.get("/logout", (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).send("❌ Fel vid utloggning");
+    res.redirect("/login.html");
+  });
+});
+
+// 🔌 Socket.IO + Chat Case-sparning
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -102,9 +141,39 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("🟢 Admin ansluten via Socket.IO");
 
-  socket.on("sendMessage", (msg) => {
+  socket.on("sendMessage", async (msg) => {
     console.log("✉️ Meddelande mottaget:", msg);
-    io.emit("newMessage", msg);
+
+    try {
+      const { sessionId, customerId, sender, message } = msg;
+
+      if (!sessionId || !customerId || !sender || !message) {
+        console.warn("⚠️ Ogiltigt meddelandeformat");
+        return;
+      }
+
+      let caseDoc = await Case.findOne({ sessionId });
+
+      if (!caseDoc) {
+        caseDoc = new Case({
+          customerId,
+          sessionId,
+          messages: []
+        });
+      }
+
+      caseDoc.messages.push({
+        sender,
+        message,
+        timestamp: new Date()
+      });
+
+      await caseDoc.save();
+
+      io.emit("newMessage", msg);
+    } catch (err) {
+      console.error("❌ Fel vid sparning av chattmeddelande:", err);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -112,7 +181,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// 🛢 MongoDB-anslutning
+// 🛢️ MongoDB
 mongoose
   .connect(process.env.MONGO_URI, { dbName: "adminportal" })
   .then(() => console.log("✅ MongoDB (adminportal) ansluten"))

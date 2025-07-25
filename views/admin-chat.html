@@ -68,18 +68,14 @@
     const sessionId = urlParams.get("sessionId");
     const chatMessages = document.getElementById("chatMessages");
 
-    // 🚨 Felsökning – saknas ID:n?
+    // 🚨 Säkerhetskontroll: saknas ID:n?
     if (!customerId || !sessionId) {
       alert("❌ Saknar nödvändiga URL-parametrar (customerId/sessionId)");
       chatMessages.innerHTML = "<p style='color:red;'>Kunde inte ladda chatten – saknar kund/session-id.</p>";
       throw new Error("Saknar customerId eller sessionId i URL");
     }
 
-    console.log("✅ customerId:", customerId);
-    console.log("✅ sessionId:", sessionId);
-
     const socket = io(window.location.origin, { withCredentials: true });
-
 
     // 🔄 Ladda historik
     fetch(`/api/chat/customer/${customerId}?sessionId=${sessionId}`)
@@ -122,13 +118,8 @@
         timestamp: new Date()
       };
 
+      // Skickas till servern – sparas i Case och broadcastas
       socket.emit("sendMessage", msgObj);
-
-      fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(msgObj)
-      }).catch(console.error);
 
       input.value = "";
     }

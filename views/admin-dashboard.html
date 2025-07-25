@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -71,12 +71,22 @@
     .chat-session-link:hover {
       background: #e2e6ea;
     }
+    #notificationBanner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+      text-align: center;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
-  <div id="notificationBanner" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #007bff; color: white; padding: 15px; font-weight: bold; text-align: center; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-    🔔 Ny chatt startad
-  </div>
+  <div id="notificationBanner">🔔 Ny chatt startad</div>
 
   <div class="sidebar">
     <div class="logo">
@@ -96,6 +106,8 @@
       <h2>Source Admin</h2>
       <img src="https://randomuser.me/api/portraits/women/44.jpg" class="avatar" alt="Admin">
     </div>
+
+    <h2>Välkommen <span id="admin-name"></span>!</h2>
 
     <div class="stats">
       <div class="card"><h3>Total Customers</h3><p>1,250</p></div>
@@ -139,61 +151,22 @@
         <li>Domain Renewal - Upcoming</li>
       </ul>
     </div>
-    <div class="card">
-      <h4>Mass Email</h4>
-      <p>Send outage or info messages via info@source.com</p>
-      <button>Compose Message</button>
-    </div>
+
     <div class="card">
       <h3 id="customerName">Laddar kund...</h3>
       <p id="customerEmail"></p>
       <p id="customerStatus"></p>
-    </div> 
+    </div>
   </div>
-
-  <script>
-    fetch("/api/customers/latest")
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("customerName").innerText = data.name;
-        document.getElementById("customerEmail").innerText = data.email;
-        document.getElementById("customerStatus").innerText = data.status;
-      });
-  </script>
-
-  <script>
-    document.getElementById("searchInput").addEventListener("input", async (e) => {
-      const q = e.target.value;
-      if (q.length < 2) return;
-      const res = await fetch(`/api/customers/search?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      const results = document.getElementById("searchResults");
-      results.innerHTML = data.length
-        ? data.map(kund => `<li><a href="/admin-customer.html?id=${kund._id}"><strong>${kund.namn}</strong> – ${kund.email}</a></li>`).join("")
-        : "<li>Inga kunder hittades</li>";
-    });
-  </script>
-
-  <script>
-    fetch("/api/chat/active-sessions")
-      .then(res => res.json())
-      .then(data => {
-        const list = document.getElementById("chatSessions");
-        if (!list) return;
-
-        list.innerHTML = data.length
-          ? data.map(session => `<li><a class="chat-session-link" href="/admin-chat.html?customerId=${session.customerId}&sessionId=${session.sessionId}">🔔 Ny chatt från ${session.customerName || 'okänd'} – ${new Date(session.timestamp).toLocaleTimeString("sv-SE")}</a></li>`).join("")
-          : "<li>Inga aktiva chatsessioner.</li>";
-      });
-  </script>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-   const socket = io(window.location.origin, { withCredentials: true });
+    const socket = io(window.location.origin, { withCredentials: true });
 
     socket.on("newMessage", (msg) => {
       if (msg.sender === "system" && msg.message.includes("🔔 Ny chatt startad")) {
         showNotificationBanner(msg.message);
+        loadActiveSessions(); // 🔄 Ladda om sessioner
       }
     });
 
@@ -205,6 +178,64 @@
         banner.style.display = "none";
       }, 5000);
     }
+
+    function loadActiveSessions() {
+      fetch("/api/chat/active-sessions")
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("chatSessions");
+          if (!list) return;
+
+          list.innerHTML = data.length
+            ? data.map(session => `
+                <li>
+                  <a class="chat-session-link" href="/admin-chat.html?customerId=${session.customerId}&sessionId=${session.sessionId}">
+                    💬 Chatt från ${session.customerName || 'okänd'} – 
+                    ${new Date(session.timestamp).toLocaleTimeString("sv-SE")}
+                  </a>
+                </li>
+              `).join("")
+            : "<li>Inga aktiva chatsessioner.</li>";
+        });
+    }
+
+    // 🚀 Kör vid laddning
+    loadActiveSessions();
+
+    // 🔐 Admininfo
+    fetch("/api/admin/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("admin-name").textContent = data.admin.name;
+        } else {
+          window.location.href = "/login.html";
+        }
+      });
+
+    // 🧍 Senaste kund
+    fetch("/api/customers/latest")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("customerName").innerText = data.name || "Okänd kund";
+        document.getElementById("customerEmail").innerText = data.email || "";
+        document.getElementById("customerStatus").innerText = data.status || "";
+      })
+      .catch(() => {
+        document.getElementById("customerName").innerText = "Ingen data";
+      });
+
+    // 🔍 Sök kund
+    document.getElementById("searchInput").addEventListener("input", async (e) => {
+      const q = e.target.value;
+      if (q.length < 2) return;
+      const res = await fetch(`/api/customers/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      const results = document.getElementById("searchResults");
+      results.innerHTML = data.length
+        ? data.map(kund => `<li><a href="/admin-customer.html?id=${kund._id}"><strong>${kund.namn}</strong> – ${kund.email}</a></li>`).join("")
+        : "<li>Inga kunder hittades</li>";
+    });
   </script>
 </body>
 </html>
