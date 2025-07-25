@@ -187,6 +187,15 @@ mongoose
   .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
   .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
 
+  app.use((req, res, next) => {
+    const fallbackPath = path.join(__dirname, "public", "404.html");
+    res.status(404).sendFile(fallbackPath, (err) => {
+      if (err) {
+        // Om 404.html saknas – visa enkel text
+        res.status(404).send("❌ Sidan kunde inte hittas.");
+      }
+    });
+  });
 // 🚀 Starta server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
