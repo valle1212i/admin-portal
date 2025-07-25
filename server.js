@@ -87,7 +87,7 @@ app.get("/api/admin/me", (req, res) => {
 });
 
 // 🌐 HTML-sidor (skyddade & publika)
-app.get("/", (req, res) => res.send("✅ Admin-servern är igång!"));
+app.get("/", (req, res) => res.redirect("/login.html"));
 app.get("/dashboard", requireAdminLogin, (req, res) =>
   res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"))
 );
