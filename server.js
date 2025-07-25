@@ -99,7 +99,7 @@ app.get("/login.html", (req, res) =>
 );
 
 // 🔐 Inloggning (POST)
-app.post("/admin-dashboard.html", async (req, res) => {
+app.post("/admin-login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const admin = await Admin.findOne({ email });
