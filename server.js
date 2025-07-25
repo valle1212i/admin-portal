@@ -89,7 +89,7 @@ app.get("/api/admin/me", (req, res) => {
 // 🌐 HTML-sidor (skyddade & publika)
 app.get("/", (req, res) => res.redirect("/login.html"));
 app.get("/dashboard", requireAdminLogin, (req, res) =>
-  res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"))
+  res.sendFile(path.join(__dirname, "public", "admin-dashboard.html"))
 );
 app.get("/admin-chat.html", requireAdminLogin, (req, res) =>
   res.sendFile(path.join(__dirname, "views", "admin-chat.html"))
