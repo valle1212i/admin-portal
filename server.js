@@ -114,7 +114,8 @@ app.post("/admin-login", async (req, res) => {
       role: admin.role || "admin"
     };
 
-    res.redirect("/admin-dashboard.html");
+    res.redirect("/dashboard");
+
   } catch (err) {
     console.error("❌ Fel vid admin-login:", err);
     res.status(500).send("❌ Internt serverfel vid inloggning");
