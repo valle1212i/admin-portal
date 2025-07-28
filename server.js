@@ -54,11 +54,11 @@ app.use(session({
     dbName: "adminportal"
   }),
   cookie: {
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    secure: false,
+    sameSite: "Lax",
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 2
-  }
+  }  
 }));
 
 // 📁 Statisk frontend
