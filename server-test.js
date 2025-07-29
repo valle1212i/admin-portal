@@ -45,7 +45,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // 📦 Routes
 try {
-  app.use("/api/chat", require("./routes/chat"));
+  app.use("/api/chat", require("./routes/Chat")); // Adjusted to match the casing of the file name
   console.log("✅ Chat route laddad");
 } catch (err) {
   console.error("❌ Fel i chat.js:", err);

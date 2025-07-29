@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Message = require("../models/Message");
+const Customer = require("../models/Customer");
 
 // 📨 Hämta alla meddelanden för en specifik kund och session
 router.get("/customer/:customerId", async (req, res) => {
@@ -30,31 +31,35 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 🔍 Hämta aktiva chatt-sessioner
+// 🔍 Hämta aktiva chatt-sessioner (senaste per sessionId)
 router.get("/active-sessions", async (req, res) => {
   try {
-    // Hämta alla meddelanden från senaste 2 timmarna
-    const since = new Date(Date.now() - 1000 * 60 * 60 * 2); // 2 timmar bakåt
+    const recentMessages = await Message.aggregate([
+      { $sort: { timestamp: -1 } },
+      {
+        $group: {
+          _id: "$sessionId",
+          customerId: { $first: "$customerId" },
+          timestamp: { $first: "$timestamp" }
+        }
+      },
+      { $sort: { timestamp: -1 } },
+      { $limit: 20 }
+    ]);
 
-    const recentMessages = await Message.find({ timestamp: { $gte: since } });
-
-    // Grupp: customerId + sessionId → senast meddelande
-    const sessionsMap = {};
-
-    recentMessages.forEach(msg => {
-      const key = `${msg.customerId}_${msg.sessionId}`;
-      if (!sessionsMap[key] || msg.timestamp > sessionsMap[key].timestamp) {
-        sessionsMap[key] = {
+    const populated = await Promise.all(
+      recentMessages.map(async (msg) => {
+        const customer = await Customer.findById(msg.customerId);
+        return {
+          sessionId: msg._id,
           customerId: msg.customerId,
-          sessionId: msg.sessionId,
-          customerName: msg.sender === "customer" ? msg.senderName || "Kund" : null,
-          timestamp: msg.timestamp
+          timestamp: msg.timestamp,
+          customerName: customer?.name || "Okänd"
         };
-      }
-    });
+      })
+    );
 
-    const sessions = Object.values(sessionsMap);
-    res.json(sessions);
+    res.json(populated);
   } catch (err) {
     console.error("❌ Fel vid hämtning av aktiva sessioner:", err);
     res.status(500).json({ message: "Fel vid hämtning av aktiva sessioner" });
