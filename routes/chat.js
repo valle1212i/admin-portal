@@ -1,29 +1,47 @@
 const express = require("express");
 const router = express.Router();
-const Message = require("../models/Message");
+const Case = require("../models/Case");
 const Customer = require("../models/Customer");
 
 // 📨 Hämta alla meddelanden för en specifik kund och session
 router.get("/customer/:customerId", async (req, res) => {
   const { sessionId } = req.query;
 
-  try {
-    const query = { customerId: req.params.customerId };
-    if (sessionId) query.sessionId = sessionId;
+  if (!sessionId) {
+    return res.status(400).json({ message: "sessionId krävs" });
+  }
 
-    const messages = await Message.find(query).sort({ timestamp: 1 });
-    res.json(messages);
+  try {
+    const caseDoc = await Case.findOne({ customerId: req.params.customerId, sessionId });
+    if (!caseDoc) return res.status(404).json([]);
+
+    res.json(caseDoc.messages || []);
   } catch (err) {
     console.error("❌ Fel vid hämtning av meddelanden:", err);
     res.status(500).json({ message: "Fel vid hämtning av meddelanden" });
   }
 });
 
-// ✉️ Skapa och spara ett nytt meddelande
+// ✉️ Spara ett nytt meddelande till rätt case
 router.post("/", async (req, res) => {
   try {
-    const newMessage = new Message(req.body);
-    await newMessage.save();
+    const { sessionId, customerId, message, sender } = req.body;
+    if (!sessionId || !customerId || !message || !sender) {
+      return res.status(400).json({ success: false, message: "Ofullständig data" });
+    }
+
+    const caseDoc = await Case.findOne({ sessionId });
+    if (!caseDoc) {
+      return res.status(404).json({ success: false, message: "Case ej hittad" });
+    }
+
+    caseDoc.messages.push({
+      sender,
+      message,
+      timestamp: new Date()
+    });
+
+    await caseDoc.save();
     res.status(201).json({ success: true });
   } catch (err) {
     console.error("❌ Fel vid sparande av meddelande:", err);
@@ -31,29 +49,20 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 🔍 Hämta aktiva chatt-sessioner (senaste per sessionId)
+// 🔍 Visa senaste aktiva chatsessioner
 router.get("/active-sessions", async (req, res) => {
   try {
-    const recentMessages = await Message.aggregate([
-      { $sort: { timestamp: -1 } },
-      {
-        $group: {
-          _id: "$sessionId",
-          customerId: { $first: "$customerId" },
-          timestamp: { $first: "$timestamp" }
-        }
-      },
-      { $sort: { timestamp: -1 } },
-      { $limit: 20 }
-    ]);
+    const cases = await Case.find({})
+      .sort({ createdAt: -1 })
+      .limit(20);
 
     const populated = await Promise.all(
-      recentMessages.map(async (msg) => {
-        const customer = await Customer.findById(msg.customerId);
+      cases.map(async (c) => {
+        const customer = await Customer.findById(c.customerId);
         return {
-          sessionId: msg._id,
-          customerId: msg.customerId,
-          timestamp: msg.timestamp,
+          sessionId: c.sessionId,
+          customerId: c.customerId,
+          timestamp: c.createdAt,
           customerName: customer?.name || "Okänd"
         };
       })
