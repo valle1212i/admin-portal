@@ -1,128 +1,90 @@
 const socket = io(window.location.origin, { withCredentials: true });
 
-// 🔄 Hämta session och kund-ID från URL
+// 🔽 Plocka session och kund-ID från URL
 const urlParams = new URLSearchParams(window.location.search);
 const sessionId = urlParams.get("sessionId");
 const customerId = urlParams.get("customerId");
 
 if (!sessionId || !customerId) {
-  alert("❌ Saknar sessionId eller customerId");
-  throw new Error("Saknas nödvändiga parametrar");
+  alert("❌ Saknar sessionId eller customerId i URL");
+  throw new Error("sessionId eller customerId saknas");
 }
 
-const input = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
+// 🔽 Lyssna på inkommande meddelanden
+socket.on("newMessage", (msg) => {
+  if (msg.sessionId !== sessionId) return;
+  renderMessage(msg);
+});
 
-// ⏪ Ladda historik vid start
+// 🚀 Ladda historik
 window.addEventListener("DOMContentLoaded", async () => {
   try {
     const res = await fetch(`/api/chat/session/${sessionId}`);
+    if (!res.ok) throw new Error("Svar ej OK");
     const data = await res.json();
-    data.forEach(msg => {
-      if (msg.sender === "admin") renderOutgoingMessage(msg);
-      else renderIncomingMessage(msg);
-    });
 
-    // 👇 Skicka systemmeddelande (endast första gången)
-    notifyAdminOfNewSession();
+    if (!Array.isArray(data)) return;
 
+    data.forEach(renderMessage);
   } catch (err) {
     console.error("❌ Kunde inte hämta historik:", err);
+    const box = document.getElementById("chatMessages");
+    if (box) {
+      box.innerHTML = "<p style='color:red;'>❌ Fel vid hämtning av meddelanden.</p>";
+    }
   }
 });
 
-// 🔔 Ny session (om kunden skickade från sin portal)
-socket.on("activeSession", (session) => {
-  if (session.sessionId === sessionId && session.customerId === customerId) {
-    renderSystemMessage("🔔 Ny chatt startad");
-  }
-});
+// 📤 Skicka meddelande
+document.getElementById("sendBtn")?.addEventListener("click", () => {
+  const input = document.getElementById("adminMessageInput");
+  if (!input) return;
 
-// 📨 Nya meddelanden i realtid
-socket.on("newMessage", (msg) => {
-  if (msg.sessionId !== sessionId) return;
-
-  if (msg.sender === "admin") renderOutgoingMessage(msg);
-  else renderIncomingMessage(msg);
-});
-
-// 🧾 Skicka meddelande från admin
-sendBtn?.addEventListener("click", () => {
-  const text = input.value.trim();
-  if (!text) return;
+  const message = input.value.trim();
+  if (!message) return;
 
   const msg = {
     customerId,
     sessionId,
-    message: text,
+    message,
     sender: "admin",
     timestamp: new Date()
   };
 
+  // Skicka via Socket.IO
   socket.emit("sendMessage", msg);
 
+  // Spara till backend
   fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(msg)
-  }).catch(console.error);
+  }).catch(err => console.error("❌ Kunde inte spara meddelande:", err));
 
   input.value = "";
-  renderOutgoingMessage(msg);
+  renderMessage(msg);
 });
 
-// 🔔 Systemmeddelande till logg + databas
-function notifyAdminOfNewSession() {
-  const msg = {
-    customerId,
-    sessionId,
-    message: "🔔 Ny chatt startad",
-    sender: "system",
-    timestamp: new Date()
-  };
-
-  socket.emit("sendMessage", msg);
-
-  fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(msg)
-  }).catch(console.error);
-}
-
-// 💬 Visa inkommande
-function renderIncomingMessage(msg) {
+// 🧱 Visa meddelande i chatten
+function renderMessage(msg) {
   const container = document.getElementById("chatMessages");
+  if (!container) return;
+
   const div = document.createElement("div");
-  div.className = "message incoming";
+  div.className = "message";
+
+  const sender =
+    msg.sender === "admin" ? "Du" :
+    msg.sender === "system" ? "System" :
+    "Kund";
+
   div.innerHTML = `
-    <strong>${msg.sender === "system" ? "System" : "Kund"}:</strong>
+    <strong>${sender}:</strong>
     <span>${msg.message}</span><br/>
     <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
   `;
+
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
-}
-
-// 💬 Visa admins meddelande
-function renderOutgoingMessage(msg) {
-  const container = document.getElementById("chatMessages");
-  const div = document.createElement("div");
-  div.className = "message outgoing";
-  div.innerHTML = `
-    <strong>Du:</strong>
-    <span>${msg.message}</span><br/>
-    <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-  `;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-
-// 💬 Systemmeddelande (manuellt renderad)
-function renderSystemMessage(text) {
-  renderIncomingMessage({
-    message: text,
-    sender: "system",
-    timestamp: new Date()
-  });
 }
