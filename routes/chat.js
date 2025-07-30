@@ -3,7 +3,7 @@ const router = express.Router();
 const Case = require("../models/Case");
 const Customer = require("../models/Customer");
 
-// 📨 Hämta alla meddelanden för en specifik kund och session
+// 🟢 Hämta aktiva sessioner
 router.get("/active-sessions", async (req, res) => {
   try {
     const cases = await Case.find().sort({ createdAt: -1 }).limit(20).lean();
@@ -28,7 +28,28 @@ router.get("/active-sessions", async (req, res) => {
   }
 });
 
-// ✉️ Spara ett nytt meddelande till rätt case
+// 📨 Hämta historik för specifik session (för admin-chat)
+router.get("/session/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: "SessionId krävs" });
+    }
+
+    const caseDoc = await Case.findOne({ sessionId }).lean();
+
+    if (!caseDoc) {
+      return res.status(404).json({ success: false, message: "Session ej hittad" });
+    }
+
+    res.json(caseDoc.messages || []);
+  } catch (err) {
+    console.error("❌ Fel vid hämtning av session:", err);
+    res.status(500).json({ success: false, message: "Internt serverfel" });
+  }
+});
+
+// ✉️ Spara nytt meddelande till rätt case
 router.post("/", async (req, res) => {
   try {
     const { sessionId, customerId, message, sender } = req.body;
@@ -54,6 +75,5 @@ router.post("/", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 module.exports = router;
