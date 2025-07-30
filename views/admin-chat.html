@@ -55,99 +55,55 @@
 </head>
 <body>
   <div class="chat-container">
-    <h2>Admin - Chatta med kund</h2>
+    <h2>Admin – Chatta med kund</h2>
     <div id="chatMessages"></div>
     <textarea id="adminMessageInput" placeholder="Skriv ditt svar..."></textarea>
-    <button onclick="sendAdminMessage()">Skicka</button>
+    <button id="sendBtn">Skicka</button>
+    <button id="endSessionBtn" style="background:#dc3545;">Avsluta chatt</button>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/adminChat.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const customerId = urlParams.get("customerId");
     const sessionId = urlParams.get("sessionId");
-    const chatMessages = document.getElementById("chatMessages");
 
     if (!customerId || !sessionId) {
-      alert("❌ Saknar nödvändiga URL-parametrar (customerId/sessionId)");
-      chatMessages.innerHTML = "<p style='color:red;'>Kunde inte ladda chatten – saknar kund/session-id.</p>";
-      throw new Error("Saknar customerId eller sessionId i URL");
+      alert("❌ Saknar URL-parametrar: customerId och sessionId krävs");
+      document.getElementById("chatMessages").innerHTML =
+        "<p style='color:red;'>❌ Kunde inte ladda chatten.</p>";
+      throw new Error("customerId eller sessionId saknas i URL");
     }
 
-    const socket = io(window.location.origin, { withCredentials: true });
-
-    // 🔄 Ladda historik
-    fetch(`/api/chat/customer/${customerId}?sessionId=${sessionId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.length === 0) {
-          chatMessages.innerHTML = "<p>Ingen historik ännu.</p>";
-          return;
-        }
-        data.forEach(renderMessage);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      })
-      .catch(err => {
-        console.error("Kunde inte hämta historik:", err);
-        chatMessages.innerHTML = "<p style='color:red;'>❌ Fel vid hämtning av meddelanden.</p>";
-      });
-
-    socket.on("newMessage", (msg) => {
-      if (msg.customerId === customerId && msg.sessionId === sessionId) {
-        renderMessage(msg);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-    });
-
-    function sendAdminMessage() {
+    // 💬 Skicka meddelande vid klick
+    document.getElementById("sendBtn").addEventListener("click", () => {
       const input = document.getElementById("adminMessageInput");
       const message = input.value.trim();
       if (!message) return;
 
-      const msgObj = {
-        customerId,
-        sessionId,
-        sender: "admin",
-        senderName: "Admin",
-        message,
-        timestamp: new Date()
-      };
-
-      // 1. 🔄 Realtid via Socket.IO
-      socket.emit("sendMessage", msgObj);
-
-      // 2. 💾 Spara till databas
-      fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(msgObj)
-      }).catch(err => {
-        console.error("❌ Kunde inte spara meddelande:", err);
-      });
-
+      sendAdminMessage(customerId, sessionId, message);
       input.value = "";
-    }
+    });
 
-    function renderMessage(msg) {
-      const div = document.createElement("div");
-      div.className = "message";
+    // ✅ Ladda historik
+    fetch(`/api/chat/customer/${customerId}?sessionId=${sessionId}`)
+      .then(res => res.json())
+      .then(data => {
+        const box = document.getElementById("chatMessages");
+        if (!Array.isArray(data) || data.length === 0) {
+          box.innerHTML = "<p>Ingen historik ännu.</p>";
+          return;
+        }
 
-      const sender = document.createElement("strong");
-      sender.textContent = msg.sender === "admin" ? (msg.senderName || "Admin") + ":" : "Kund:";
-
-      const content = document.createElement("div");
-      content.textContent = msg.message;
-
-      const time = document.createElement("small");
-      time.style.color = "#777";
-      time.textContent = new Date(msg.timestamp).toLocaleString("sv-SE");
-
-      div.appendChild(sender);
-      div.appendChild(content);
-      div.appendChild(time);
-
-      chatMessages.appendChild(div);
-    }
+        data.forEach(renderIncomingMessage);
+        box.scrollTop = box.scrollHeight;
+      })
+      .catch(err => {
+        console.error("❌ Kunde inte hämta historik:", err);
+        document.getElementById("chatMessages").innerHTML =
+          "<p style='color:red;'>❌ Fel vid hämtning av meddelanden.</p>";
+      });
   </script>
 </body>
 </html>
