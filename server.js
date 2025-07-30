@@ -1,4 +1,5 @@
-// 🌍 Ladda miljövariabler
+// server.js (adminportalen) - komplett version med Socket.IO, chatt-sessioner och meddelandehantering
+
 require("dotenv").config();
 console.log("✅ STARTAR SERVER");
 
@@ -14,11 +15,12 @@ const bcrypt = require("bcrypt");
 
 const Admin = require("./models/Admin");
 const Case = require("./models/Case");
+const Message = require("./models/Message");
+const Customer = require("./models/Customer");
 
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Tillåtna domäner
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
@@ -26,7 +28,6 @@ const allowedOrigins = [
   "https://admin-portal-rn5z.onrender.com"
 ];
 
-// 🌐 Middleware: CORS
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -40,11 +41,9 @@ app.use(cors({
 }));
 app.options("*", cors());
 
-// 🧱 Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 💾 Sessions
 app.use(session({
   secret: process.env.SESSION_SECRET || "admin_secret_key",
   resave: false,
@@ -61,19 +60,15 @@ app.use(session({
   }
 }));
 
-// 📁 Statisk frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// 🔐 Middleware
 const requireAdminLogin = require("./middleware/requireAdminLogin");
 
-// 🧪 Routes
 app.use("/api/chat", require("./routes/chat"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/server-status", require("./routes/serverStatus"));
 app.use("/api/auth", require("./routes/auth"));
 
-// API: Inloggad admin
 app.get("/api/admin/me", (req, res) => {
   if (!req.session?.admin) {
     return res.status(401).json({ success: false, message: "Inte inloggad" });
@@ -81,7 +76,6 @@ app.get("/api/admin/me", (req, res) => {
   res.json({ success: true, admin: req.session.admin });
 });
 
-// 🔐 Sidor
 app.get("/", (req, res) => res.redirect("/login.html"));
 app.get("/dashboard", requireAdminLogin, (req, res) =>
   res.sendFile(path.join(__dirname, "public", "admin-dashboard.html"))
@@ -93,7 +87,6 @@ app.get("/login.html", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "login.html"))
 );
 
-// 🔐 Inloggning
 app.post("/admin-login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -116,7 +109,6 @@ app.post("/admin-login", async (req, res) => {
   }
 });
 
-// 🚪 Utloggning
 app.get("/logout", (req, res) => {
   req.session.destroy(err => {
     if (err) return res.status(500).send("❌ Fel vid utloggning");
@@ -124,7 +116,6 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// 🔌 SOCKET.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -136,7 +127,6 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("🟢 Admin ansluten via Socket.IO");
 
-  // 🆕 Ny session från kund
   socket.on("newSession", async (data) => {
     try {
       const { sessionId, customerId, topic, description } = data;
@@ -163,7 +153,6 @@ io.on("connection", (socket) => {
         console.log("ℹ️ Session redan finns:", sessionId);
       }
 
-      // 🟢 Visa på dashboard
       io.emit("activeSession", {
         sessionId,
         customerId,
@@ -177,7 +166,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ✉️ Meddelanden
   socket.on("sendMessage", async (msg) => {
     console.log("✉️ Meddelande mottaget:", msg);
 
@@ -206,7 +194,6 @@ io.on("connection", (socket) => {
 
       await caseDoc.save();
 
-      // Skicka vidare till alla admins
       io.emit("newMessage", msg);
     } catch (err) {
       console.error("❌ Fel vid sparning av meddelande:", err);
@@ -214,13 +201,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// 🛢️ MongoDB
 mongoose
   .connect(process.env.MONGO_URI, { dbName: "adminportal" })
   .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
   .catch((err) => console.error("❌ MongoDB-anslutning misslyckades:", err));
 
-// 404 fallback
 app.use((req, res) => {
   const fallbackPath = path.join(__dirname, "public", "404.html");
   res.status(404).sendFile(fallbackPath, (err) => {
@@ -228,7 +213,6 @@ app.use((req, res) => {
   });
 });
 
-// 🚀 Starta server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server körs på http://localhost:${PORT}`);

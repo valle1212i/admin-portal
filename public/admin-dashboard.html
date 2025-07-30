@@ -164,11 +164,16 @@
     const socket = io(window.location.origin, { withCredentials: true });
 
     socket.on("newMessage", (msg) => {
-      if (msg.sender === "system" && msg.message.includes("🔔 Ny chatt startad")) {
-        showNotificationBanner(msg.message);
-        loadActiveSessions(); // 🔄 Ladda om sessioner
-      }
-    });
+  if (msg.sender === "system" && msg.message.includes("🔔 Ny chatt startad")) {
+    showNotificationBanner(msg.message);
+    loadActiveSessions(); // 🔄 Ladda om sessioner
+  }
+});
+
+socket.on("activeSession", (session) => {
+  showNotificationBanner("🔔 Ny chatt startad");
+  loadActiveSessions();
+});
 
     function showNotificationBanner(text) {
       const banner = document.getElementById("notificationBanner");
