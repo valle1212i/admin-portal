@@ -64,7 +64,7 @@ router.get("/all", async (req, res) => {
     }
   });
   // 📄 Hämta en enskild kund via ID
-router.get("/:id", async (req, res) => {
+  router.get("/by-id/:id", async (req, res) => {
     const { id } = req.params;
   
     try {

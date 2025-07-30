@@ -1,17 +1,21 @@
-const socket = io("https://source-database.onrender.com"); // URL till din server/socket.io
+const socket = io(window.location.origin, { withCredentials: true });
+
+
 
 socket.on("newMessage", (msg) => {
-  // Visa bara meddelanden från kunden
-  if (msg.sender === "customer") {
+  console.log("📥 Nytt meddelande från servern:", msg); // 🧪 Debug
+  console.log("📥 Nytt meddelande från kund:", msg);
+
+  if (msg.sender === "customer" || msg.sender === "system") {
     renderIncomingMessage(msg);
   }
 });
 
-// Skicka meddelande som admin, med sessionId
+
 function sendAdminMessage(customerId, sessionId, text) {
   const msg = {
     customerId,
-    sessionId,  // Viktigt att skicka med sessionId
+    sessionId,
     message: text,
     sender: "admin",
     timestamp: new Date()
@@ -26,7 +30,6 @@ function sendAdminMessage(customerId, sessionId, text) {
   }).catch(console.error);
 }
 
-// 🆕 Skicka systemmeddelande när chatten startar
 function notifyAdminOfNewSession(customerId, sessionId) {
   const systemMsg = {
     customerId,
