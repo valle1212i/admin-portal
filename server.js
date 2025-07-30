@@ -1,4 +1,4 @@
-// 🌍 Ladda miljövariabler tidigt
+// 🌍 Ladda miljövariabler
 require("dotenv").config();
 console.log("✅ STARTAR SERVER");
 
@@ -40,11 +40,11 @@ app.use(cors({
 }));
 app.options("*", cors());
 
-// 🧱 Body parser
+// 🧱 Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 💾 Sessions med MongoDB-lagring
+// 💾 Sessions
 app.use(session({
   secret: process.env.SESSION_SECRET || "admin_secret_key",
   resave: false,
@@ -58,27 +58,22 @@ app.use(session({
     sameSite: "Lax",
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 2
-  }  
+  }
 }));
 
 // 📁 Statisk frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// 🔐 Middleware för att skydda adminsidor
+// 🔐 Middleware
 const requireAdminLogin = require("./middleware/requireAdminLogin");
 
-// 🧪 Ladda routes
-try {
-  app.use("/api/chat", require("./routes/chat"));
-  app.use("/api/customers", require("./routes/customers"));
-  app.use("/api/server-status", require("./routes/serverStatus"));
-  app.use("/api/auth", require("./routes/auth"));
-  console.log("✅ API-routes laddade");
-} catch (err) {
-  console.error("❌ Fel vid laddning av routes:", err);
-}
+// 🧪 Routes
+app.use("/api/chat", require("./routes/chat"));
+app.use("/api/customers", require("./routes/customers"));
+app.use("/api/server-status", require("./routes/serverStatus"));
+app.use("/api/auth", require("./routes/auth"));
 
-// API: Vem är inloggad admin?
+// API: Inloggad admin
 app.get("/api/admin/me", (req, res) => {
   if (!req.session?.admin) {
     return res.status(401).json({ success: false, message: "Inte inloggad" });
@@ -86,7 +81,7 @@ app.get("/api/admin/me", (req, res) => {
   res.json({ success: true, admin: req.session.admin });
 });
 
-// 🌐 HTML-sidor (skyddade & publika)
+// 🔐 Sidor
 app.get("/", (req, res) => res.redirect("/login.html"));
 app.get("/dashboard", requireAdminLogin, (req, res) =>
   res.sendFile(path.join(__dirname, "public", "admin-dashboard.html"))
@@ -98,7 +93,7 @@ app.get("/login.html", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "login.html"))
 );
 
-// 🔐 Inloggning (POST)
+// 🔐 Inloggning
 app.post("/admin-login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -115,10 +110,9 @@ app.post("/admin-login", async (req, res) => {
     };
 
     res.redirect("/dashboard");
-
   } catch (err) {
     console.error("❌ Fel vid admin-login:", err);
-    res.status(500).send("❌ Internt serverfel vid inloggning");
+    res.status(500).send("❌ Internt serverfel");
   }
 });
 
@@ -130,7 +124,7 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// 🔌 Socket.IO + Chat Case-sparning
+// 🔌 SOCKET.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -142,7 +136,7 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("🟢 Admin ansluten via Socket.IO");
 
-  // 🆕 Lyssna på ny chattsession
+  // 🆕 Ny session från kund
   socket.on("newSession", async (data) => {
     try {
       const { sessionId, customerId, topic, description } = data;
@@ -153,43 +147,42 @@ io.on("connection", (socket) => {
       }
 
       let caseExists = await Case.findOne({ sessionId });
-      if (caseExists) {
-        console.log("ℹ️ Session redan existerar – ingen ny case skapad");
-        return;
+      if (!caseExists) {
+        const newCase = new Case({
+          sessionId,
+          customerId,
+          topic,
+          description,
+          messages: [],
+          createdAt: new Date()
+        });
+
+        await newCase.save();
+        console.log("🆕 Ny chatsession sparad:", sessionId);
+      } else {
+        console.log("ℹ️ Session redan finns:", sessionId);
       }
 
-      const newCase = new Case({
-        sessionId,
-        customerId,
-        topic,
-        description,
-        messages: [],
-        createdAt: new Date()
-      });
-
-      await newCase.save();
-      console.log("🆕 Ny chatsession sparad som case:", sessionId);
-
-      // Skicka vidare till admins
+      // 🟢 Visa på dashboard
       io.emit("activeSession", {
         sessionId,
         customerId,
         topic,
         description,
-        createdAt: newCase.createdAt
+        timestamp: new Date()
       });
+
     } catch (err) {
-      console.error("❌ Fel vid newSession:", err);
+      console.error("❌ Fel vid mottagning av newSession:", err);
     }
   });
 
-  // ✉️ Mottag meddelande från kundportalen
+  // ✉️ Meddelanden
   socket.on("sendMessage", async (msg) => {
     console.log("✉️ Meddelande mottaget:", msg);
 
     try {
       const { sessionId, customerId, sender, message } = msg;
-
       if (!sessionId || !customerId || !sender || !message) {
         console.warn("⚠️ Ogiltigt meddelandeformat");
         return;
@@ -213,15 +206,11 @@ io.on("connection", (socket) => {
 
       await caseDoc.save();
 
-      // Broadcast till admins
+      // Skicka vidare till alla admins
       io.emit("newMessage", msg);
     } catch (err) {
-      console.error("❌ Fel vid sparning av chattmeddelande:", err);
+      console.error("❌ Fel vid sparning av meddelande:", err);
     }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Admin frånkopplad");
   });
 });
 
@@ -229,20 +218,18 @@ io.on("connection", (socket) => {
 mongoose
   .connect(process.env.MONGO_URI, { dbName: "adminportal" })
   .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
-  .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
+  .catch((err) => console.error("❌ MongoDB-anslutning misslyckades:", err));
 
 // 404 fallback
-app.use((req, res, next) => {
+app.use((req, res) => {
   const fallbackPath = path.join(__dirname, "public", "404.html");
   res.status(404).sendFile(fallbackPath, (err) => {
-    if (err) {
-      res.status(404).send("❌ Sidan kunde inte hittas.");
-    }
+    if (err) res.status(404).send("❌ Sidan kunde inte hittas.");
   });
 });
 
 // 🚀 Starta server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Servern körs på http://localhost:${PORT}`);
+  console.log(`🚀 Server körs på http://localhost:${PORT}`);
 });
