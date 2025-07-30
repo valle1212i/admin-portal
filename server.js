@@ -142,6 +142,48 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("🟢 Admin ansluten via Socket.IO");
 
+  // 🆕 Lyssna på ny chattsession
+  socket.on("newSession", async (data) => {
+    try {
+      const { sessionId, customerId, topic, description } = data;
+
+      if (!sessionId || !customerId || !topic || !description) {
+        console.warn("⚠️ Ogiltig sessionsdata:", data);
+        return;
+      }
+
+      let caseExists = await Case.findOne({ sessionId });
+      if (caseExists) {
+        console.log("ℹ️ Session redan existerar – ingen ny case skapad");
+        return;
+      }
+
+      const newCase = new Case({
+        sessionId,
+        customerId,
+        topic,
+        description,
+        messages: [],
+        createdAt: new Date()
+      });
+
+      await newCase.save();
+      console.log("🆕 Ny chatsession sparad som case:", sessionId);
+
+      // Skicka vidare till admins
+      io.emit("activeSession", {
+        sessionId,
+        customerId,
+        topic,
+        description,
+        createdAt: newCase.createdAt
+      });
+    } catch (err) {
+      console.error("❌ Fel vid newSession:", err);
+    }
+  });
+
+  // ✉️ Mottag meddelande från kundportalen
   socket.on("sendMessage", async (msg) => {
     console.log("✉️ Meddelande mottaget:", msg);
 
@@ -171,6 +213,7 @@ io.on("connection", (socket) => {
 
       await caseDoc.save();
 
+      // Broadcast till admins
       io.emit("newMessage", msg);
     } catch (err) {
       console.error("❌ Fel vid sparning av chattmeddelande:", err);
@@ -188,15 +231,16 @@ mongoose
   .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
   .catch((err) => console.error("❌ Fel vid MongoDB-anslutning:", err));
 
-  app.use((req, res, next) => {
-    const fallbackPath = path.join(__dirname, "public", "404.html");
-    res.status(404).sendFile(fallbackPath, (err) => {
-      if (err) {
-        // Om 404.html saknas – visa enkel text
-        res.status(404).send("❌ Sidan kunde inte hittas.");
-      }
-    });
+// 404 fallback
+app.use((req, res, next) => {
+  const fallbackPath = path.join(__dirname, "public", "404.html");
+  res.status(404).sendFile(fallbackPath, (err) => {
+    if (err) {
+      res.status(404).send("❌ Sidan kunde inte hittas.");
+    }
   });
+});
+
 // 🚀 Starta server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

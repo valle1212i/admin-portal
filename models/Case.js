@@ -8,7 +8,17 @@ const caseSchema = new mongoose.Schema({
   },
   sessionId: {
     type: String,
+    required: true,
+    unique: true
+  },
+  topic: {
+    type: String,
     required: true
+  },
+  description: {
+    type: String,
+    required: true,
+    maxlength: 300
   },
   messages: [
     {
@@ -31,5 +41,8 @@ const caseSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+module.exports = mongoose.model("Case", caseSchema);
+
 
 module.exports = mongoose.model("Case", caseSchema);
