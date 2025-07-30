@@ -4,21 +4,27 @@ const Case = require("../models/Case");
 const Customer = require("../models/Customer");
 
 // 📨 Hämta alla meddelanden för en specifik kund och session
-router.get("/customer/:customerId", async (req, res) => {
-  const { sessionId } = req.query;
-
-  if (!sessionId) {
-    return res.status(400).json({ message: "sessionId krävs" });
-  }
-
+router.get("/active-sessions", async (req, res) => {
   try {
-    const caseDoc = await Case.findOne({ customerId: req.params.customerId, sessionId });
-    if (!caseDoc) return res.status(404).json([]);
+    const cases = await Case.find().sort({ createdAt: -1 }).limit(20).lean();
 
-    res.json(caseDoc.messages || []);
+    const populated = await Promise.all(
+      cases.map(async (caseDoc) => {
+        const customer = await Customer.findById(caseDoc.customerId);
+        const lastMessage = caseDoc.messages[caseDoc.messages.length - 1];
+        return {
+          sessionId: caseDoc.sessionId,
+          customerId: caseDoc.customerId,
+          timestamp: lastMessage?.timestamp || caseDoc.createdAt,
+          customerName: customer?.name || "Okänd"
+        };
+      })
+    );
+
+    res.json(populated);
   } catch (err) {
-    console.error("❌ Fel vid hämtning av meddelanden:", err);
-    res.status(500).json({ message: "Fel vid hämtning av meddelanden" });
+    console.error("❌ Fel vid hämtning av aktiva case-sessioner:", err);
+    res.status(500).json({ message: "Fel vid hämtning av aktiva sessioner" });
   }
 });
 
@@ -49,30 +55,5 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 🔍 Visa senaste aktiva chatsessioner
-router.get("/active-sessions", async (req, res) => {
-  try {
-    const cases = await Case.find({})
-      .sort({ createdAt: -1 })
-      .limit(20);
-
-    const populated = await Promise.all(
-      cases.map(async (c) => {
-        const customer = await Customer.findById(c.customerId);
-        return {
-          sessionId: c.sessionId,
-          customerId: c.customerId,
-          timestamp: c.createdAt,
-          customerName: customer?.name || "Okänd"
-        };
-      })
-    );
-
-    res.json(populated);
-  } catch (err) {
-    console.error("❌ Fel vid hämtning av aktiva sessioner:", err);
-    res.status(500).json({ message: "Fel vid hämtning av aktiva sessioner" });
-  }
-});
 
 module.exports = router;
