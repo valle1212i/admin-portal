@@ -1,16 +1,21 @@
 const mongoose = require("mongoose");
 
-// Skapa en separat anslutning till kundportalen
+// ✅ Säkerställ att URI finns
+if (!process.env.CUSTOMER_DB_URI) {
+  throw new Error("❌ CUSTOMER_DB_URI är inte definierad i miljövariablerna.");
+}
+
+// 🌐 Egen anslutning till kunddatabas
 const customerConnection = mongoose.createConnection(process.env.CUSTOMER_DB_URI, {
   dbName: "kundportal",
   useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useUnifiedTopology: true
 });
 
-// Skapa en flexibel schema (vi vet inte exakt vilka fält kunden har)
+// 🧱 Flexibelt schema för okända fält
 const CustomerSchema = new mongoose.Schema({}, { strict: false });
 
-// Skapa modellen
-const Customer = customerConnection.model("Customer", CustomerSchema);
+// 🧍 Modell baserad på "customers"-collection
+const Customer = customerConnection.model("Customer", CustomerSchema, "customers");
 
 module.exports = Customer;

@@ -23,7 +23,8 @@ const caseSchema = new mongoose.Schema({
   messages: [
     {
       sender: {
-        type: String, // "admin" eller "customer"
+        type: String,
+        enum: ["admin", "customer", "system"],
         required: true
       },
       message: {
@@ -41,8 +42,5 @@ const caseSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-
-module.exports = mongoose.model("Case", caseSchema);
-
 
 module.exports = mongoose.model("Case", caseSchema);
