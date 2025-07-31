@@ -10,13 +10,7 @@ if (!sessionId || !customerId) {
   throw new Error("sessionId eller customerId saknas");
 }
 
-// 🔽 Lyssna på inkommande meddelanden
-socket.on("newMessage", (msg) => {
-  if (msg.sessionId !== sessionId) return;
-  renderMessage(msg);
-});
-
-// 🚀 Ladda historik
+// 🚀 Ladda historik när sidan är redo
 window.addEventListener("DOMContentLoaded", async () => {
   try {
     const res = await fetch(`/api/chat/session/${sessionId}`);
@@ -35,7 +29,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// 📤 Skicka meddelande
+// 💬 Ta emot inkommande meddelanden i realtid
+socket.on("newMessage", (msg) => {
+  if (msg.sessionId !== sessionId) return;
+  renderMessage(msg);
+});
+
+// 📤 Skicka meddelande som admin
 document.getElementById("sendBtn")?.addEventListener("click", () => {
   const input = document.getElementById("adminMessageInput");
   if (!input) return;
@@ -64,6 +64,33 @@ document.getElementById("sendBtn")?.addEventListener("click", () => {
 
   input.value = "";
   renderMessage(msg);
+});
+
+// 🚪 Avsluta sessionen
+document.getElementById("endSessionBtn")?.addEventListener("click", () => {
+  if (!confirm("Är du säker på att du vill avsluta chatten?")) return;
+
+  const systemMsg = {
+    customerId,
+    sessionId,
+    message: "❌ Chatten har avslutats av administratör.",
+    sender: "system",
+    timestamp: new Date()
+  };
+
+  // Skicka systemmeddelande via Socket.IO
+  socket.emit("sendMessage", systemMsg);
+
+  // Spara systemmeddelandet
+  fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(systemMsg)
+  }).catch(err => console.error("❌ Kunde inte spara avslutsmeddelande:", err));
+
+  alert("✅ Chatten har avslutats.");
+  window.location.href = "/dashboard";
 });
 
 // 🧱 Visa meddelande i chatten

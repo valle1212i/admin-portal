@@ -104,6 +104,34 @@
         document.getElementById("chatMessages").innerHTML =
           "<p style='color:red;'>❌ Fel vid hämtning av meddelanden.</p>";
       });
+          // 🚪 Avsluta chattsession som admin
+    document.getElementById("endSessionBtn").addEventListener("click", () => {
+      if (confirm("Är du säker på att du vill avsluta chatten?")) {
+        const payload = {
+          sessionId,
+          customerId,
+          message: "❌ Chatten har avslutats av administratör.",
+          sender: "system",
+          timestamp: new Date()
+        };
+
+        // Skicka systemmeddelande
+        fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          credentials: "include"
+        });
+
+        // Emit till kund via Socket.IO
+        const socket = io();
+        socket.emit("sendMessage", payload);
+
+        alert("✅ Chatten har avslutats.");
+        window.location.href = "/dashboard";
+      }
+    });
+
   </script>
 </body>
 </html>
