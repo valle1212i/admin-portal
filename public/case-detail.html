@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Case-detaljer</title>
+  <link rel="stylesheet" href="/css/cases.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8f8f8; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1, h2, h3 { margin-top: 20px; }
+    .message { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .message strong { display: block; }
+    textarea, input[type="text"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button.danger { background-color: #dc3545; }
+    .note-box { background: #f1f1f1; padding: 10px; border-left: 4px solid #007bff; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗂 Ärendedetaljer</h1>
+
+    <div id="caseInfo"></div>
+
+    <h2>💬 Konversation</h2>
+    <div id="chatMessages"></div>
+
+    <h3>📝 Lägg till intern anteckning</h3>
+    <textarea id="internalNote" placeholder="Skriv anteckning för internt bruk..."></textarea>
+    <button id="saveNoteBtn">Spara anteckning</button>
+
+    <h3>📧 Skicka e-post till kund</h3>
+    <textarea id="emailContent" placeholder="Skriv meddelande till kunden..."></textarea>
+    <button id="sendEmailBtn">Skicka mejl</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("sessionId");
+    let customerId = null;
+
+    async function loadCase() {
+      try {
+        const res = await fetch(`/api/chat/session/${sessionId}`);
+        const messages = await res.json();
+
+        const infoRes = await fetch(`/api/case/meta/${sessionId}`);
+        const info = await infoRes.json();
+        customerId = info.customerId;
+
+        document.getElementById("caseInfo").innerHTML = `
+          <p><strong>Ärende ID:</strong> ${info.sessionId}</p>
+          <p><strong>Kundnamn:</strong> ${info.customerName || "Okänd"}</p>
+          <p><strong>Ärendetyp:</strong> ${info.topic}</p>
+          <p><strong>Beskrivning:</strong> ${info.description}</p>
+          <p><strong>Skapad:</strong> ${new Date(info.createdAt).toLocaleString("sv-SE")}</p>
+        `;
+
+        const chatBox = document.getElementById("chatMessages");
+        chatBox.innerHTML = "";
+        messages.forEach(msg => {
+          const div = document.createElement("div");
+          div.className = "message";
+          const sender =
+            msg.sender === "admin" ? "Admin" :
+            msg.sender === "system" ? "System" :
+            "Kund";
+          div.innerHTML = `
+            <strong>${sender}</strong>
+            <p>${msg.message}</p>
+            <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
+          `;
+          chatBox.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error("Fel vid inladdning:", err);
+      }
+    }
+
+    document.getElementById("saveNoteBtn").addEventListener("click", async () => {
+      const note = document.getElementById("internalNote").value.trim();
+      if (!note) return alert("Fältet är tomt.");
+      await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          customerId,
+          message: `📝 INTERN ANTECKNING: ${note}`,
+          sender: "system",
+          timestamp: new Date()
+        })
+      });
+      alert("Anteckning sparad.");
+      location.reload();
+    });
+
+    document.getElementById("sendEmailBtn").addEventListener("click", async () => {
+      const content = document.getElementById("emailContent").value.trim();
+      if (!content) return alert("Skriv ett meddelande först.");
+
+      const emailPayload = {
+        customerId,
+        sessionId,
+        subject: `Svar på ärende #${sessionId}`,
+        message: content
+      };
+
+      // 1️⃣ Skicka mejl
+      await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailPayload)
+      });
+
+      // 2️⃣ Logga i chatten
+      await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          customerId,
+          message: `📬 Mejlsvar till kund: "${content}"`,
+          sender: "system",
+          timestamp: new Date()
+        })
+      });
+
+      alert("Mejl skickat och loggat.");
+      location.reload();
+    });
+
+    loadCase();
+  </script>
+</body>
+</html>
