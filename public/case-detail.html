@@ -15,6 +15,7 @@
     button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
     button.danger { background-color: #dc3545; }
     .note-box { background: #f1f1f1; padding: 10px; border-left: 4px solid #007bff; margin-bottom: 10px; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -32,7 +33,10 @@
 
     <h3>📧 Skicka e-post till kund</h3>
     <textarea id="emailContent" placeholder="Skriv meddelande till kunden..."></textarea>
-    <button id="sendEmailBtn">Skicka mejl</button>
+    <div class="btn-row">
+      <button id="sendEmailBtn">Skicka mejl</button>
+      <button id="closeCaseBtn" class="danger">Avsluta ärendet</button>
+    </div>
   </div>
 
   <script>
@@ -93,6 +97,7 @@
           timestamp: new Date()
         })
       });
+      document.getElementById("internalNote").value = "";
       alert("Anteckning sparad.");
       location.reload();
     });
@@ -108,14 +113,14 @@
         message: content
       };
 
-      // 1️⃣ Skicka mejl
+      // Skicka mejl
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailPayload)
       });
 
-      // 2️⃣ Logga i chatten
+      // Logga i chatten
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,7 +133,40 @@
         })
       });
 
+      document.getElementById("emailContent").value = "";
       alert("Mejl skickat och loggat.");
+      location.reload();
+    });
+
+    document.getElementById("closeCaseBtn").addEventListener("click", async () => {
+      if (!confirm("Är du säker på att du vill avsluta detta ärende?")) return;
+
+      // Logga avslut i chatten
+      await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          customerId,
+          message: "✅ Ärendet har markerats som avslutat.",
+          sender: "system",
+          timestamp: new Date()
+        })
+      });
+
+      // (Valfritt) Skicka info till kunden via e-post
+      await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId,
+          sessionId,
+          subject: `Ärende #${sessionId} avslutat`,
+          message: `Ditt supportärende #${sessionId} har nu markerats som avslutat. Tack för att du kontaktade oss!`
+        })
+      });
+
+      alert("✅ Ärendet avslutat och kund har informerats.");
       location.reload();
     });
 
