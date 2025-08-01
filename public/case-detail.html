@@ -16,6 +16,45 @@
     button.danger { background-color: #dc3545; }
     .note-box { background: #f1f1f1; padding: 10px; border-left: 4px solid #007bff; margin-bottom: 10px; }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .transcript-box {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #fefefe;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.chat-bubble {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #f1f1f1;
+  position: relative;
+}
+
+.chat-bubble.admin {
+  background-color: #d1e7ff;
+  text-align: left;
+}
+
+.chat-bubble.customer {
+  background-color: #e2ffe8;
+  text-align: left;
+}
+
+.chat-bubble.system {
+  background-color: #fff3cd;
+  text-align: left;
+}
+
+.chat-meta {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
   </style>
 </head>
 <body>
@@ -24,8 +63,8 @@
 
     <div id="caseInfo"></div>
 
-    <h2>💬 Konversation</h2>
-    <div id="chatMessages"></div>
+    <h2>🧾 Chattranskript</h2>
+    <div id="chatTranscript" class="transcript-box"></div>    
 
     <h3>📝 Lägg till intern anteckning</h3>
     <textarea id="internalNote" placeholder="Skriv anteckning för internt bruk..."></textarea>
@@ -61,22 +100,29 @@
           <p><strong>Skapad:</strong> ${new Date(info.createdAt).toLocaleString("sv-SE")}</p>
         `;
 
-        const chatBox = document.getElementById("chatMessages");
-        chatBox.innerHTML = "";
-        messages.forEach(msg => {
-          const div = document.createElement("div");
-          div.className = "message";
-          const sender =
-            msg.sender === "admin" ? "Admin" :
-            msg.sender === "system" ? "System" :
-            "Kund";
-          div.innerHTML = `
-            <strong>${sender}</strong>
-            <p>${msg.message}</p>
-            <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-          `;
-          chatBox.appendChild(div);
-        });
+        const transcript = document.getElementById("chatTranscript");
+transcript.innerHTML = "";
+messages.forEach(msg => {
+  const div = document.createElement("div");
+  const senderClass =
+    msg.sender === "admin" ? "admin" :
+    msg.sender === "system" ? "system" :
+    "customer";
+
+  const senderName =
+    msg.sender === "admin" ? "👩‍💻 Admin" :
+    msg.sender === "system" ? "⚙️ System" :
+    "👤 Kund";
+
+  div.className = `chat-bubble ${senderClass}`;
+  div.innerHTML = `
+    <strong>${senderName}</strong><br/>
+    ${msg.message}
+    <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
+  `;
+  transcript.appendChild(div);
+});
+
 
       } catch (err) {
         console.error("Fel vid inladdning:", err);
