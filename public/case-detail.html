@@ -17,44 +17,27 @@
     .note-box { background: #f1f1f1; padding: 10px; border-left: 4px solid #007bff; margin-bottom: 10px; }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
     .transcript-box {
-  max-height: 300px;
-  overflow-y: auto;
-  background-color: #fefefe;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 20px;
-}
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #fefefe;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
 
-.chat-bubble {
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  background-color: #f1f1f1;
-  position: relative;
-}
+    .chat-bubble {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f1f1f1;
+      position: relative;
+    }
 
-.chat-bubble.admin {
-  background-color: #d1e7ff;
-  text-align: left;
-}
-
-.chat-bubble.customer {
-  background-color: #e2ffe8;
-  text-align: left;
-}
-
-.chat-bubble.system {
-  background-color: #fff3cd;
-  text-align: left;
-}
-
-.chat-meta {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 5px;
-}
-
+    .chat-bubble.admin { background-color: #d1e7ff; }
+    .chat-bubble.customer { background-color: #e2ffe8; }
+    .chat-bubble.system { background-color: #fff3cd; }
+    .chat-meta { font-size: 0.8rem; color: #666; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -80,15 +63,15 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get("id"); // detta matchar URL:en från cases.html
+    const id = urlParams.get("id");
     let customerId = null;
 
     async function loadCase() {
       try {
-        const res = await fetch(`/api/chat/session/${sessionId}`);
+        const res = await fetch(`/api/chat/session/${id}`);
         const messages = await res.json();
 
-        const infoRes = await fetch(`/api/case/meta/${sessionId}`);
+        const infoRes = await fetch(`/api/case/meta/${id}`);
         const info = await infoRes.json();
         customerId = info.customerId;
 
@@ -101,28 +84,23 @@
         `;
 
         const transcript = document.getElementById("chatTranscript");
-transcript.innerHTML = "";
-messages.forEach(msg => {
-  const div = document.createElement("div");
-  const senderClass =
-    msg.sender === "admin" ? "admin" :
-    msg.sender === "system" ? "system" :
-    "customer";
-
-  const senderName =
-    msg.sender === "admin" ? "👩‍💻 Admin" :
-    msg.sender === "system" ? "⚙️ System" :
-    "👤 Kund";
-
-  div.className = `chat-bubble ${senderClass}`;
-  div.innerHTML = `
-    <strong>${senderName}</strong><br/>
-    ${msg.message}
-    <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
-  `;
-  transcript.appendChild(div);
-});
-
+        transcript.innerHTML = "";
+        messages.forEach(msg => {
+          const div = document.createElement("div");
+          const senderClass =
+            msg.sender === "admin" ? "admin" :
+            msg.sender === "system" ? "system" : "customer";
+          const senderName =
+            msg.sender === "admin" ? "👩‍💻 Admin" :
+            msg.sender === "system" ? "⚙️ System" : "👤 Kund";
+          div.className = `chat-bubble ${senderClass}`;
+          div.innerHTML = `
+            <strong>${senderName}</strong><br/>
+            ${msg.message}
+            <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
+          `;
+          transcript.appendChild(div);
+        });
 
       } catch (err) {
         console.error("Fel vid inladdning:", err);
@@ -136,7 +114,7 @@ messages.forEach(msg => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId,
+          sessionId: id,
           customerId,
           message: `📝 INTERN ANTECKNING: ${note}`,
           sender: "system",
@@ -151,34 +129,28 @@ messages.forEach(msg => {
     document.getElementById("sendEmailBtn").addEventListener("click", async () => {
       const content = document.getElementById("emailContent").value.trim();
       if (!content) return alert("Skriv ett meddelande först.");
-
       const emailPayload = {
         customerId,
-        sessionId,
-        subject: `Svar på ärende #${sessionId}`,
+        sessionId: id,
+        subject: `Svar på ärende #${id}`,
         message: content
       };
-
-      // Skicka mejl
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailPayload)
       });
-
-      // Logga i chatten
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId,
+          sessionId: id,
           customerId,
           message: `📬 Mejlsvar till kund: "${content}"`,
           sender: "system",
           timestamp: new Date()
         })
       });
-
       document.getElementById("emailContent").value = "";
       alert("Mejl skickat och loggat.");
       location.reload();
@@ -186,32 +158,27 @@ messages.forEach(msg => {
 
     document.getElementById("closeCaseBtn").addEventListener("click", async () => {
       if (!confirm("Är du säker på att du vill avsluta detta ärende?")) return;
-
-      // Logga avslut i chatten
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId,
+          sessionId: id,
           customerId,
           message: "✅ Ärendet har markerats som avslutat.",
           sender: "system",
           timestamp: new Date()
         })
       });
-
-      // (Valfritt) Skicka info till kunden via e-post
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
-          sessionId,
-          subject: `Ärende #${sessionId} avslutat`,
-          message: `Ditt supportärende #${sessionId} har nu markerats som avslutat. Tack för att du kontaktade oss!`
+          sessionId: id,
+          subject: `Ärende #${id} avslutat`,
+          message: `Ditt supportärende #${id} har nu markerats som avslutat. Tack för att du kontaktade oss!`
         })
       });
-
       alert("✅ Ärendet avslutat och kund har informerats.");
       location.reload();
     });
