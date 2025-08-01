@@ -69,7 +69,9 @@
   <script>
     async function fetchCases() {
       try {
-        const res = await fetch("/api/cases"); // 🔄 Denna endpoint bör returnera en lista med cases
+        const res = await fetch("/api/cases");
+        if (!res.ok) throw new Error("Svar ej OK");
+
         const cases = await res.json();
 
         const container = document.getElementById("caseList");
@@ -85,13 +87,13 @@
           div.innerHTML = `
             <div class="case-header">
               <h3>Ärende: ${c.topic || "Okänt ärende"}</h3>
-              <button class="view-btn" onclick="location.href='case-detail.html?sessionId=${c.sessionId}'">📄 Visa</button>
+              <button class="view-btn" onclick="location.href='case-detail.html?id=${c.caseId}'">📄 Visa</button>
             </div>
             <p>${c.description || "Ingen beskrivning tillgänglig."}</p>
             <div class="case-meta">
               👤 ${c.customerName || "Okänd kund"}<br/>
               🆔 ${c.sessionId}<br/>
-              📅 ${new Date(c.timestamp).toLocaleString("sv-SE")}
+              📅 ${new Date(c.createdAt).toLocaleString("sv-SE")}
             </div>
           `;
           container.appendChild(div);

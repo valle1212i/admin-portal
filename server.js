@@ -68,6 +68,8 @@ app.use("/api/chat", require("./routes/chat"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/server-status", require("./routes/serverStatus"));
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/cases", require("./routes/cases"));
+
 
 app.get("/api/admin/me", (req, res) => {
   if (!req.session?.admin) {
