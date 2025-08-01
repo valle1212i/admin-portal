@@ -80,7 +80,7 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get("sessionId");
+    const sessionId = urlParams.get("id"); // detta matchar URL:en från cases.html
     let customerId = null;
 
     async function loadCase() {
