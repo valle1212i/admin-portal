@@ -6,16 +6,51 @@
   <title>Case-detaljer</title>
   <link rel="stylesheet" href="/css/cases.css">
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f8f8f8; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8f8f8;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
     h1, h2, h3 { margin-top: 20px; }
-    .message { border-bottom: 1px solid #ddd; padding: 10px 0; }
-    .message strong { display: block; }
-    textarea, input[type="text"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button.danger { background-color: #dc3545; }
-    .note-box { background: #f1f1f1; padding: 10px; border-left: 4px solid #007bff; margin-bottom: 10px; }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button.danger {
+      background-color: #dc3545;
+    }
+
     .transcript-box {
       max-height: 300px;
       overflow-y: auto;
@@ -31,13 +66,25 @@
       padding: 10px;
       border-radius: 8px;
       background-color: #f1f1f1;
-      position: relative;
     }
 
-    .chat-bubble.admin { background-color: #d1e7ff; }
-    .chat-bubble.customer { background-color: #e2ffe8; }
-    .chat-bubble.system { background-color: #fff3cd; }
-    .chat-meta { font-size: 0.8rem; color: #666; margin-top: 5px; }
+    .chat-bubble.admin {
+      background-color: #d1e7ff;
+    }
+
+    .chat-bubble.customer {
+      background-color: #e2ffe8;
+    }
+
+    .chat-bubble.system {
+      background-color: #fff3cd;
+    }
+
+    .chat-meta {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -47,7 +94,7 @@
     <div id="caseInfo"></div>
 
     <h2>🧾 Chattranskript</h2>
-    <div id="chatTranscript" class="transcript-box"></div>    
+    <div id="chatTranscript" class="transcript-box"></div>
 
     <h3>📝 Lägg till intern anteckning</h3>
     <textarea id="internalNote" placeholder="Skriv anteckning för internt bruk..."></textarea>
@@ -62,17 +109,16 @@
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get("id");
+    const sessionId = new URLSearchParams(window.location.search).get("sessionId");
     let customerId = null;
 
     async function loadCase() {
       try {
-        const res = await fetch(`/api/chat/session/${id}`);
-        const messages = await res.json();
+        const chatRes = await fetch(`/api/chat/session/${sessionId}`);
+        const messages = await chatRes.json();
 
-        const infoRes = await fetch(`/api/case/meta/${id}`);
-        const info = await infoRes.json();
+        const metaRes = await fetch(`/api/case/meta/${sessionId}`);
+        const info = await metaRes.json();
         customerId = info.customerId;
 
         document.getElementById("caseInfo").innerHTML = `
@@ -93,6 +139,7 @@
           const senderName =
             msg.sender === "admin" ? "👩‍💻 Admin" :
             msg.sender === "system" ? "⚙️ System" : "👤 Kund";
+
           div.className = `chat-bubble ${senderClass}`;
           div.innerHTML = `
             <strong>${senderName}</strong><br/>
@@ -104,6 +151,7 @@
 
       } catch (err) {
         console.error("Fel vid inladdning:", err);
+        alert("Kunde inte ladda ärendedata.");
       }
     }
 
@@ -114,7 +162,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: id,
+          sessionId,
           customerId,
           message: `📝 INTERN ANTECKNING: ${note}`,
           sender: "system",
@@ -129,28 +177,30 @@
     document.getElementById("sendEmailBtn").addEventListener("click", async () => {
       const content = document.getElementById("emailContent").value.trim();
       if (!content) return alert("Skriv ett meddelande först.");
-      const emailPayload = {
-        customerId,
-        sessionId: id,
-        subject: `Svar på ärende #${id}`,
-        message: content
-      };
+
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emailPayload)
+        body: JSON.stringify({
+          customerId,
+          sessionId,
+          subject: `Svar på ärende #${sessionId}`,
+          message: content
+        })
       });
+
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: id,
+          sessionId,
           customerId,
           message: `📬 Mejlsvar till kund: "${content}"`,
           sender: "system",
           timestamp: new Date()
         })
       });
+
       document.getElementById("emailContent").value = "";
       alert("Mejl skickat och loggat.");
       location.reload();
@@ -158,27 +208,30 @@
 
     document.getElementById("closeCaseBtn").addEventListener("click", async () => {
       if (!confirm("Är du säker på att du vill avsluta detta ärende?")) return;
+
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: id,
+          sessionId,
           customerId,
           message: "✅ Ärendet har markerats som avslutat.",
           sender: "system",
           timestamp: new Date()
         })
       });
+
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
-          sessionId: id,
-          subject: `Ärende #${id} avslutat`,
-          message: `Ditt supportärende #${id} har nu markerats som avslutat. Tack för att du kontaktade oss!`
+          sessionId,
+          subject: `Ärende #${sessionId} avslutat`,
+          message: `Ditt supportärende #${sessionId} har nu markerats som avslutat. Tack för att du kontaktade oss!`
         })
       });
+
       alert("✅ Ärendet avslutat och kund har informerats.");
       location.reload();
     });
