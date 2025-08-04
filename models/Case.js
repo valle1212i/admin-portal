@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const caseSchema = new mongoose.Schema({
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -42,10 +40,22 @@ const caseSchema = new mongoose.Schema({
     ref: "Admin",
     default: null
   },
+  status: {
+    type: String,
+    enum: ["new", "in_progress", "waiting", "on_hold", "closed"],
+    default: "new"
+  },
+  internalNotes: [
+    {
+      note: String,
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
-
-module.exports = mongoose.model("Case", caseSchema);

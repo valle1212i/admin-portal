@@ -17,7 +17,7 @@
       display: flex;
       gap: 30px;
       width: 100%;
-      max-width: 1200px;
+      max-width: 1400px;
     }
     .card {
       background: white;
@@ -54,6 +54,9 @@
     }
     .message.admin { background: #e1f0ff; }
     .message.system { background: #fff3cd; }
+    .note-section {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -62,6 +65,16 @@
     <!-- Ärendeinfo -->
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
+      <p><strong>Status:</strong>
+        <select id="case-status">
+          <option value="new">🆕 Nytt</option>
+          <option value="in_progress">🚧 Arbetande</option>
+          <option value="waiting">⏳ Väntar svar</option>
+          <option value="on_hold">⏸️ On Hold</option>
+          <option value="closed">✅ Stängd</option>
+        </select>
+      </p>
+
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
       <p><strong>Typ:</strong> <span id="case-type">Laddar...</span></p>
@@ -73,6 +86,18 @@
         <option value="">Välj admin...</option>
       </select>
       <button id="assignAdminBtn">✅ Bekräfta</button>
+
+      <div class="note-section">
+        <h3>📝 Intern anteckning</h3>
+        <textarea id="internal-note" placeholder="Skriv en intern anteckning..."></textarea>
+        <button onclick="saveNote()">💾 Spara anteckning</button>
+      </div>
+
+      <div class="note-section">
+        <h3>📨 Skicka meddelande till kund</h3>
+        <textarea id="customer-message" placeholder="Skriv meddelande till kund..."></textarea>
+        <button onclick="sendMessage()">📤 Skicka</button>
+      </div>
     </div>
 
     <!-- Chattranskript -->
@@ -85,30 +110,37 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
+    let currentAssignedAdmin = null;
 
-    // Hämta ärendedata
     async function loadCaseData() {
+      try {
         const res = await fetch(`/api/cases/meta/${sessionId}`);
-      const data = await res.json();
-      if (!data || !data._id) return;
+        const data = await res.json();
+        if (!data || !data._id) return;
 
-      document.getElementById("case-id").textContent = data._id;
-      document.getElementById("customer-name").textContent = data.customerName || "Okänd";
-      document.getElementById("case-type").textContent = data.type || "-";
-      document.getElementById("case-description").textContent = data.description || "-";
-      document.getElementById("created-at").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
+        document.getElementById("case-id").textContent = data._id;
+        document.getElementById("customer-name").textContent = data.customerName || "Okänd";
+        document.getElementById("case-type").textContent = data.topic || "-";
+        document.getElementById("case-description").textContent = data.description || "-";
+        document.getElementById("created-at").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
 
-      // Ladda chat
-      const transcript = document.getElementById("chat-transcript");
-      transcript.innerHTML = data.messages.map(msg => `
-        <div class="message ${msg.sender === 'System' ? 'system' : 'admin'}">
-          <strong>${msg.sender}:</strong> ${msg.message}<br/>
-          <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-        </div>
-      `).join("");
+        // Status
+        document.getElementById("case-status").value = data.status || "new";
+
+        currentAssignedAdmin = data.assignedAdmin;
+
+        const transcript = document.getElementById("chat-transcript");
+        transcript.innerHTML = (data.messages || []).map(msg => `
+          <div class="message ${msg.sender === 'System' ? 'system' : 'admin'}">
+            <strong>${msg.sender}:</strong> ${msg.message}<br/>
+            <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error("Fel vid hämtning av ärendedata:", err);
+      }
     }
 
-    // Hämta admins till dropdown
     async function loadAdmins() {
       const res = await fetch("/api/admins");
       const admins = await res.json();
@@ -120,6 +152,11 @@
         option.textContent = admin.name;
         select.appendChild(option);
       });
+
+      // Förvälj redan tilldelad admin
+      if (currentAssignedAdmin) {
+        select.value = currentAssignedAdmin;
+      }
     }
 
     // Tilldela admin
@@ -141,8 +178,23 @@
       }
     });
 
-    loadCaseData();
-    loadAdmins();
+    // Spara intern anteckning
+    function saveNote() {
+      const note = document.getElementById("internal-note").value;
+      if (!note.trim()) return alert("Ange en anteckning.");
+      alert("📝 (Funktion placeholder) Anteckning sparad: " + note);
+      // TODO: Skicka till backend
+    }
+
+    // Skicka meddelande till kund
+    function sendMessage() {
+      const msg = document.getElementById("customer-message").value;
+      if (!msg.trim()) return alert("Ange ett meddelande.");
+      alert("📨 (Funktion placeholder) Meddelande skickat: " + msg);
+      // TODO: Skicka till backend
+    }
+
+    loadCaseData().then(loadAdmins);
   </script>
 </body>
 </html>
