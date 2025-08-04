@@ -52,7 +52,7 @@
 
     async function loadCase() {
       try {
-        const metaRes = await fetch(`/api/case/meta/${sessionId}`);
+        const metaRes = await fetch(`/api/cases/meta/${sessionId}`);
         if (!metaRes.ok) throw new Error("Case meta saknas");
         const info = await metaRes.json();
         customerId = info.customerId;
