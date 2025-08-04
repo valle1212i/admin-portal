@@ -38,7 +38,8 @@ const caseSchema = new mongoose.Schema({
     }
   ],
   assignedAdmin: {
-    type: String, // eller mongoose.Schema.Types.ObjectId om du kopplar till en Admin-modell
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
     default: null
   },
   createdAt: {

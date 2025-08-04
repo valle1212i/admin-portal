@@ -285,9 +285,6 @@ window.addEventListener("load", () => {
     });
   }, 5000);
 });
-window.addEventListener("beforeunload", () => {
-  navigator.sendBeacon("/api/admin-status/end-session");
-});
 
   </script>
 </body>

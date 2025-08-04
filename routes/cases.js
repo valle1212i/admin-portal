@@ -55,29 +55,31 @@ router.get("/meta/:sessionId", async (req, res) => {
 });
 
 // 🔁 Uppdatera ansvarig admin för ett ärende via sessionId
-router.post("/assign-admin/:sessionId", async (req, res) => {
-  try {
-    const { assignedAdmin } = req.body;
-    if (!assignedAdmin) {
-      return res.status(400).json({ message: "assignedAdmin krävs" });
+router.post("/assign-admin", async (req, res) => {
+    try {
+      const { sessionId, adminId } = req.body;
+  
+      if (!sessionId || !adminId) {
+        return res.status(400).json({ success: false, message: "sessionId och adminId krävs" });
+      }
+  
+      const updated = await Case.findOneAndUpdate(
+        { sessionId },
+        { assignedAdmin: adminId },
+        { new: true }
+      );
+  
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "Ärendet kunde inte hittas" });
+      }
+  
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ Kunde inte uppdatera ansvarig admin:", err);
+      res.status(500).json({ success: false, message: "Serverfel vid uppdatering" });
     }
-
-    const updated = await Case.findOneAndUpdate(
-      { sessionId: req.params.sessionId },
-      { assignedAdmin },
-      { new: true }
-    );
-
-    if (!updated) {
-      return res.status(404).json({ message: "Ärendet kunde inte hittas" });
-    }
-
-    res.json({ message: "Admin uppdaterad", case: updated });
-  } catch (err) {
-    console.error("❌ Kunde inte uppdatera ansvarig admin:", err);
-    res.status(500).json({ message: "Serverfel vid uppdatering" });
-  }
-});
+  });
+  
 
 // 🧾 Hämta ett ärende via dess MongoDB _id (LÄGG DENNA SIST!)
 router.get("/:id", async (req, res) => {
