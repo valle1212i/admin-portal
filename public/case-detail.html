@@ -3,40 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Case-detaljer</title>
-  <link rel="stylesheet" href="/css/cases.css">
+  <title>Ärendedetaljer</title>
+  <link rel="stylesheet" href="/css/cases.css" />
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f8f8f8; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h1, h2, h3 { margin-top: 20px; }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button.danger { background-color: #dc3545; }
-    .transcript-box { max-height: 300px; overflow-y: auto; background-color: #fefefe; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; }
-    .chat-bubble { margin-bottom: 10px; padding: 10px; border-radius: 8px; background-color: #f1f1f1; }
-    .chat-bubble.admin { background-color: #d1e7ff; }
-    .chat-bubble.customer { background-color: #e2ffe8; }
-    .chat-bubble.system { background-color: #fff3cd; }
-    .chat-meta { font-size: 0.8rem; color: #666; margin-top: 5px; }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .sidebar {
+      flex: 1 1 300px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-right: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      min-width: 250px;
+    }
+
+    .main-content {
+      flex: 3 1 600px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      min-width: 300px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    select, textarea, button {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .transcript-box {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      background-color: #fefefe;
+    }
+
+    .chat-bubble {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    .chat-bubble.admin { background: #d1e7ff; }
+    .chat-bubble.customer { background: #e2ffe8; }
+    .chat-bubble.system { background: #fff3cd; }
+
+    .chat-meta {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    button.danger { background-color: #dc3545; color: white; }
+    button.primary { background-color: #007bff; color: white; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🗂 Ärendedetaljer</h1>
-    <div id="caseInfo">⏳ Laddar ärendedata...</div>
-    <h2>🧾 Chattranskript</h2>
-    <div id="chatTranscript" class="transcript-box">⏳ Laddar chatt...</div>
+  <div class="wrapper">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <h2>🗂 Ärendeinfo</h2>
+      <div id="caseMeta"></div>
 
-    <h3>📝 Lägg till intern anteckning</h3>
-    <textarea id="internalNote" placeholder="Skriv anteckning för internt bruk..."></textarea>
-    <button id="saveNoteBtn">Spara anteckning</button>
+      <label for="adminSelect">👩‍💼 Ansvarig admin</label>
+      <select id="adminSelect">
+        <option value="">Välj admin...</option>
+        <option value="admin1">Anna Andersson</option>
+        <option value="admin2">Erik Eriksson</option>
+      </select>
+    </div>
 
-    <h3>📧 Skicka e-post till kund</h3>
-    <textarea id="emailContent" placeholder="Skriv meddelande till kunden..."></textarea>
-    <div class="btn-row">
-      <button id="sendEmailBtn">Skicka mejl</button>
-      <button id="closeCaseBtn" class="danger">Avsluta ärendet</button>
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <h2>💬 Chattranskript</h2>
+      <div id="chatTranscript" class="transcript-box"></div>
+
+      <h3>📝 Lägg till intern anteckning</h3>
+      <textarea id="internalNote" placeholder="Skriv anteckning..."></textarea>
+      <button class="primary" id="saveNoteBtn">Spara anteckning</button>
+
+      <h3>📧 Skicka e-post till kund</h3>
+      <textarea id="emailContent" placeholder="Skriv meddelande..."></textarea>
+      <button class="primary" id="sendEmailBtn">Skicka mejl</button>
+      <button class="danger" id="closeCaseBtn">Avsluta ärende</button>
     </div>
   </div>
 
@@ -44,59 +118,45 @@
     const sessionId = new URLSearchParams(window.location.search).get("sessionId");
     let customerId = null;
 
-    if (!sessionId) {
-      alert("Ingen sessionId angiven.");
-      document.getElementById("caseInfo").innerText = "Ingen sessionId angiven.";
-      throw new Error("Saknar sessionId");
-    }
-
     async function loadCase() {
       try {
-        const metaRes = await fetch(`/api/cases/meta/${sessionId}`);
-        if (!metaRes.ok) throw new Error("Case meta saknas");
+        const metaRes = await fetch(`/api/case/meta/${sessionId}`);
         const info = await metaRes.json();
         customerId = info.customerId;
 
-        document.getElementById("caseInfo").innerHTML = `
-          <p><strong>Ärende ID:</strong> ${info.sessionId}</p>
-          <p><strong>Kundnamn:</strong> ${info.customerName || "Okänd"}</p>
-          <p><strong>Ärendetyp:</strong> ${info.topic}</p>
-          <p><strong>Beskrivning:</strong> ${info.description}</p>
+        document.getElementById("caseMeta").innerHTML = `
+          <p><strong>ID:</strong> ${info.sessionId}</p>
+          <p><strong>Kund:</strong> ${info.customerName}</p>
+          <p><strong>Typ:</strong> ${info.topic}</p>
+          <p><strong>Beskrivning:</strong><br>${info.description}</p>
           <p><strong>Skapad:</strong> ${new Date(info.createdAt).toLocaleString("sv-SE")}</p>
         `;
+        
+        if (info.assignedAdmin) {
+  document.getElementById("adminSelect").value = info.assignedAdmin;
+}
 
         const chatRes = await fetch(`/api/chat/session/${sessionId}`);
-        const messages = await chatRes.ok ? await chatRes.json() : [];
+        const messages = await chatRes.json();
 
         const transcript = document.getElementById("chatTranscript");
         transcript.innerHTML = "";
-
-        if (!messages.length) {
-          transcript.innerHTML = "<p>Inga meddelanden ännu.</p>";
-        } else {
-          messages.forEach(msg => {
-            const div = document.createElement("div");
-            const senderClass =
-              msg.sender === "admin" ? "admin" :
-              msg.sender === "system" ? "system" : "customer";
-            const senderName =
-              msg.sender === "admin" ? "👩‍💻 Admin" :
-              msg.sender === "system" ? "⚙️ System" : "👤 Kund";
-
-            div.className = `chat-bubble ${senderClass}`;
-            div.innerHTML = `
-              <strong>${senderName}</strong><br/>
-              ${msg.message}
-              <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
-            `;
-            transcript.appendChild(div);
-          });
-        }
+        messages.forEach(msg => {
+          const div = document.createElement("div");
+          const type =
+            msg.sender === "admin" ? "admin" :
+            msg.sender === "system" ? "system" : "customer";
+          div.className = `chat-bubble ${type}`;
+          div.innerHTML = `
+            <strong>${type === 'admin' ? '👩‍💻 Admin' : type === 'system' ? '⚙️ System' : '👤 Kund'}</strong><br/>
+            ${msg.message}
+            <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
+          `;
+          transcript.appendChild(div);
+        });
       } catch (err) {
-        console.error("Fel vid inladdning:", err);
-        alert("Kunde inte ladda ärendedata.");
-        document.getElementById("caseInfo").innerText = "❌ Fel vid laddning av ärendet.";
-        document.getElementById("chatTranscript").innerText = "";
+        alert("Kunde inte ladda ärendet.");
+        console.error(err);
       }
     }
 
@@ -114,23 +174,16 @@
           timestamp: new Date()
         })
       });
-      document.getElementById("internalNote").value = "";
-      alert("Anteckning sparad.");
       location.reload();
     });
 
     document.getElementById("sendEmailBtn").addEventListener("click", async () => {
       const content = document.getElementById("emailContent").value.trim();
-      if (!content) return alert("Skriv ett meddelande först.");
+      if (!content) return alert("Skriv något först.");
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId,
-          sessionId,
-          subject: `Svar på ärende #${sessionId}`,
-          message: content
-        })
+        body: JSON.stringify({ customerId, sessionId, subject: `Svar på ärende #${sessionId}`, message: content })
       });
       await fetch("/api/chat", {
         method: "POST",
@@ -143,13 +196,11 @@
           timestamp: new Date()
         })
       });
-      document.getElementById("emailContent").value = "";
-      alert("Mejl skickat och loggat.");
       location.reload();
     });
 
     document.getElementById("closeCaseBtn").addEventListener("click", async () => {
-      if (!confirm("Är du säker på att du vill avsluta detta ärende?")) return;
+      if (!confirm("Avsluta detta ärende?")) return;
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,14 +219,37 @@
           customerId,
           sessionId,
           subject: `Ärende #${sessionId} avslutat`,
-          message: `Ditt supportärende #${sessionId} har nu markerats som avslutat. Tack för att du kontaktade oss!`
+          message: `Ditt ärende #${sessionId} är nu avslutat. Tack för att du kontaktade oss!`
         })
       });
-      alert("✅ Ärendet avslutat och kund har informerats.");
+      alert("Ärendet avslutat och kund informerades.");
       location.reload();
     });
 
     loadCase();
+    document.getElementById("adminSelect").addEventListener("change", async (e) => {
+  const assignedAdmin = e.target.value;
+  if (!assignedAdmin) return;
+
+  try {
+    const res = await fetch(`/api/case/assign-admin/${sessionId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedAdmin })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert("Kunde inte spara admin: " + err.message);
+    } else {
+      alert("Ansvarig admin uppdaterad ✅");
+    }
+  } catch (err) {
+    console.error("❌ Fel vid uppdatering av admin:", err);
+    alert("Något gick fel vid uppdateringen.");
+  }
+});
+
   </script>
 </body>
 </html>

@@ -73,5 +73,29 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: "Fel vid hämtning av ärendet" });
   }
 });
-
+// 🔁 Uppdatera ansvarig admin för ett ärende
+router.post("/assign-admin/:sessionId", async (req, res) => {
+    try {
+      const { assignedAdmin } = req.body;
+      if (!assignedAdmin) {
+        return res.status(400).json({ message: "assignedAdmin krävs" });
+      }
+  
+      const updated = await Case.findOneAndUpdate(
+        { sessionId: req.params.sessionId },
+        { assignedAdmin },
+        { new: true }
+      );
+  
+      if (!updated) {
+        return res.status(404).json({ message: "Ärendet kunde inte hittas" });
+      }
+  
+      res.json({ message: "Admin uppdaterad", case: updated });
+    } catch (err) {
+      console.error("❌ Kunde inte uppdatera ansvarig admin:", err);
+      res.status(500).json({ message: "Serverfel vid uppdatering" });
+    }
+  });
+  
 module.exports = router;
