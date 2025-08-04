@@ -17,7 +17,9 @@ router.get("/", async (req, res) => {
           customerId: c.customerId,
           topic: c.topic,
           description: c.description,
+          status: c.status,
           createdAt: c.createdAt,
+          assignedAdmin: c.assignedAdmin,
           customerName: customer?.name || "Okänd"
         };
       })
@@ -30,7 +32,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 🧾 Hämta metadata för ett ärende via sessionId (MÅSTE komma före /:id!)
+// 🧾 Hämta metadata för ett ärende via sessionId
 router.get("/meta/:sessionId", async (req, res) => {
   try {
     const caseDoc = await Case.findOne({ sessionId: req.params.sessionId }).lean();
@@ -41,10 +43,15 @@ router.get("/meta/:sessionId", async (req, res) => {
     const customer = await Customer.findById(caseDoc.customerId).lean();
 
     res.json({
+      _id: caseDoc._id,
       sessionId: caseDoc.sessionId,
       customerId: caseDoc.customerId,
       topic: caseDoc.topic,
       description: caseDoc.description,
+      status: caseDoc.status,
+      assignedAdmin: caseDoc.assignedAdmin,
+      messages: caseDoc.messages,
+      internalNotes: caseDoc.internalNotes || [],
       createdAt: caseDoc.createdAt,
       customerName: customer?.name || "Okänd"
     });
@@ -56,30 +63,107 @@ router.get("/meta/:sessionId", async (req, res) => {
 
 // 🔁 Uppdatera ansvarig admin för ett ärende via sessionId
 router.post("/assign-admin", async (req, res) => {
-    try {
-      const { sessionId, adminId } = req.body;
-  
-      if (!sessionId || !adminId) {
-        return res.status(400).json({ success: false, message: "sessionId och adminId krävs" });
-      }
-  
-      const updated = await Case.findOneAndUpdate(
-        { sessionId },
-        { assignedAdmin: adminId },
-        { new: true }
-      );
-  
-      if (!updated) {
-        return res.status(404).json({ success: false, message: "Ärendet kunde inte hittas" });
-      }
-  
-      res.json({ success: true });
-    } catch (err) {
-      console.error("❌ Kunde inte uppdatera ansvarig admin:", err);
-      res.status(500).json({ success: false, message: "Serverfel vid uppdatering" });
+  try {
+    const { sessionId, adminId } = req.body;
+
+    if (!sessionId || !adminId) {
+      return res.status(400).json({ success: false, message: "sessionId och adminId krävs" });
     }
-  });
-  
+
+    const updated = await Case.findOneAndUpdate(
+      { sessionId },
+      { assignedAdmin: adminId },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Ärendet kunde inte hittas" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Kunde inte uppdatera ansvarig admin:", err);
+    res.status(500).json({ success: false, message: "Serverfel vid uppdatering" });
+  }
+});
+
+// 🔁 Uppdatera status för ett ärende
+router.post("/update-status", async (req, res) => {
+  const { sessionId, status } = req.body;
+
+  if (!sessionId || !status) {
+    return res.status(400).json({ success: false, message: "sessionId och status krävs." });
+  }
+
+  try {
+    const updated = await Case.findOneAndUpdate(
+      { sessionId },
+      { status },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ success: false, message: "Ärende ej hittat." });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Fel vid uppdatering av status:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// 📝 Lägg till intern anteckning
+router.post("/add-note", async (req, res) => {
+  const { sessionId, note } = req.body;
+
+  if (!sessionId || !note) {
+    return res.status(400).json({ success: false, message: "sessionId och note krävs." });
+  }
+
+  try {
+    const updated = await Case.findOneAndUpdate(
+      { sessionId },
+      { $push: { internalNotes: { note } } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ success: false, message: "Ärende ej hittat." });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Fel vid sparande av anteckning:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// 💬 Skicka meddelande till kund (lägg till i messages)
+router.post("/send-message", async (req, res) => {
+  const { sessionId, message } = req.body;
+
+  if (!sessionId || !message) {
+    return res.status(400).json({ success: false, message: "sessionId och message krävs." });
+  }
+
+  try {
+    const msg = {
+      sender: "admin",
+      message,
+      timestamp: new Date()
+    };
+
+    const updated = await Case.findOneAndUpdate(
+      { sessionId },
+      { $push: { messages: msg } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ success: false, message: "Ärende ej hittat." });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Fel vid skickande av meddelande:", err);
+    res.status(500).json({ success: false });
+  }
+});
 
 // 🧾 Hämta ett ärende via dess MongoDB _id (LÄGG DENNA SIST!)
 router.get("/:id", async (req, res) => {
