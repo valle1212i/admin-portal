@@ -120,7 +120,7 @@
 
     async function loadCase() {
       try {
-        const metaRes = await fetch(`/api/case/meta/${sessionId}`);
+        const metaRes = await fetch(`/api/cases/meta/${sessionId}`);
         const info = await metaRes.json();
         customerId = info.customerId;
 
@@ -131,7 +131,7 @@
           <p><strong>Beskrivning:</strong><br>${info.description}</p>
           <p><strong>Skapad:</strong> ${new Date(info.createdAt).toLocaleString("sv-SE")}</p>
         `;
-        
+
         if (info.assignedAdmin) {
   document.getElementById("adminSelect").value = info.assignedAdmin;
 }
@@ -232,7 +232,7 @@
   if (!assignedAdmin) return;
 
   try {
-    const res = await fetch(`/api/case/assign-admin/${sessionId}`, {
+    const res = await fetch(`/api/cases/assign-admin/${sessionId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assignedAdmin })
