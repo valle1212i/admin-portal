@@ -1,31 +1,37 @@
 const express = require("express");
 const router = express.Router();
-const Admin = require("../models/Admin");
+const AdminSession = require("../models/AdminSession");
 
-// GET /api/admin-status
-router.get("/", async (req, res) => {
-  try {
-    const admins = await Admin.find().lean();
-    const now = Date.now();
+// Starta ny session
+router.post("/start-session", async (req, res) => {
+  if (!req.session.admin) return res.sendStatus(401);
 
-    const status = admins.map((admin) => {
-      const secondsOnline = admin.lastSeen ? Math.floor((now - new Date(admin.lastSeen)) / 1000) : 0;
-      const isOnline = secondsOnline < 60; // Online om aktiv senaste 60 sekunder
+  const session = await AdminSession.create({
+    adminId: req.session.admin._id,
+    startTime: new Date()
+  });
 
-      return {
-        name: admin.name,
-        email: admin.email,
-        status: isOnline ? "LIVE 🟢" : "OFFLINE 🔴",
-        lastSeen: admin.lastSeen,
-        secondsOnline
-      };
-    });
+  req.session.activeSessionId = session._id;
+  res.json({ success: true });
+});
 
-    res.json(status);
-  } catch (err) {
-    console.error("❌ Fel vid hämtning av adminstatus:", err);
-    res.status(500).json({ message: "Serverfel" });
-  }
+// Avsluta session
+router.post("/end-session", async (req, res) => {
+  const sessionId = req.session.activeSessionId;
+  if (!sessionId) return res.json({ success: false });
+
+  const session = await AdminSession.findById(sessionId);
+  if (!session || session.endTime) return res.json({ success: false });
+
+  const end = new Date();
+  const duration = Math.floor((end - session.startTime) / 1000);
+
+  session.endTime = end;
+  session.durationSeconds = duration;
+  await session.save();
+
+  req.session.activeSessionId = null;
+  res.json({ success: true });
 });
 
 module.exports = router;

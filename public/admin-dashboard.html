@@ -277,6 +277,18 @@ async function loadAdminStatus() {
 loadAdminStatus();
 setInterval(loadAdminStatus, 5000);
 
+window.addEventListener("load", () => {
+  setInterval(() => {
+    fetch("/api/admin-status/ping", {
+      method: "POST",
+      credentials: "include"
+    });
+  }, 5000);
+});
+window.addEventListener("beforeunload", () => {
+  navigator.sendBeacon("/api/admin-status/end-session");
+});
+
   </script>
 </body>
 </html>
