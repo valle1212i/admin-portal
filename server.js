@@ -60,6 +60,21 @@ app.use(session({
   }
 }));
 
+// 🔄 Uppdatera lastSeen varje gång en admin gör en request
+app.use(async (req, res, next) => {
+  if (req.session?.admin) {
+    try {
+      await Admin.findByIdAndUpdate(req.session.admin._id, {
+        lastSeen: new Date()
+      });
+    } catch (err) {
+      console.error("⚠️ Kunde inte uppdatera lastSeen:", err);
+    }
+  }
+  next();
+});
+
+
 app.use(express.static(path.join(__dirname, "public")));
 
 const requireAdminLogin = require("./middleware/requireAdminLogin");
@@ -69,6 +84,8 @@ app.use("/api/customers", require("./routes/customers"));
 app.use("/api/server-status", require("./routes/serverStatus"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/cases", require("./routes/cases"));
+app.use("/api/admin-status", require("./routes/adminStatus"));
+
 
 
 app.get("/api/admin/me", (req, res) => {

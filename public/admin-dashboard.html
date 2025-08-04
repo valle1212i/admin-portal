@@ -144,6 +144,12 @@
     </div>
 
     <div class="card">
+      <h3>🧍‍♂️ Adminstatus (Live)</h3>
+      <ul id="adminStatusList" style="list-style: none; padding-left: 0;"></ul>
+    </div>
+    
+
+    <div class="card">
       <h4>Payments & Expenses</h4>
       <ul>
         <li>Stripe Payout - Pending</li>
@@ -241,6 +247,36 @@ socket.on("activeSession", (session) => {
         ? data.map(kund => `<li><a href="/admin-customer.html?id=${kund._id}"><strong>${kund.namn}</strong> – ${kund.email}</a></li>`).join("")
         : "<li>Inga kunder hittades</li>";
     });
+
+    // ⏱️ Uppdatera adminstatus var 5:e sekund
+async function loadAdminStatus() {
+  try {
+    const res = await fetch("/api/admin-status");
+    const data = await res.json();
+
+    const list = document.getElementById("adminStatusList");
+    list.innerHTML = "";
+
+    data.forEach(admin => {
+      const secondsOnline = Math.floor((Date.now() - new Date(admin.lastSeen)) / 1000);
+      const status = secondsOnline <= 15 ? "🟢 LIVE" : "🔴 Offline";
+
+      list.innerHTML += `
+        <li style="margin-bottom: 10px;">
+          <strong>${admin.name}</strong> – ${status}<br/>
+          📧 ${admin.email}<br/>
+          ⏱️ ${new Date(admin.lastSeen).toLocaleString("sv-SE")} – ${secondsOnline} sekunder
+        </li>
+      `;
+    });
+  } catch (err) {
+    console.error("⚠️ Kunde inte hämta adminstatus:", err);
+  }
+}
+
+loadAdminStatus();
+setInterval(loadAdminStatus, 5000);
+
   </script>
 </body>
 </html>
