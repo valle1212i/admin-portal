@@ -88,7 +88,7 @@
 
     // Hämta ärendedata
     async function loadCaseData() {
-      const res = await fetch(`/api/cases/${sessionId}`);
+        const res = await fetch(`/api/cases/meta/${sessionId}`);
       const data = await res.json();
       if (!data || !data._id) return;
 
