@@ -3,7 +3,7 @@ const router = express.Router();
 const Case = require("../models/Case");
 const Customer = require("../models/Customer");
 
-// 📂 Hämta alla supportärenden (för t.ex. admin cases.html)
+// 📂 Hämta alla supportärenden
 router.get("/", async (req, res) => {
   try {
     const cases = await Case.find().sort({ createdAt: -1 }).lean();
@@ -30,7 +30,31 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 🧾 Hämta enskilt ärende (för t.ex. case-detail.html)
+// 🧾 Hämta metadata för ett ärende via sessionId
+router.get("/meta/:sessionId", async (req, res) => {
+  try {
+    const caseDoc = await Case.findOne({ sessionId: req.params.sessionId }).lean();
+    if (!caseDoc) {
+      return res.status(404).json({ message: "Case saknas" });
+    }
+
+    const customer = await Customer.findById(caseDoc.customerId).lean();
+
+    res.json({
+      sessionId: caseDoc.sessionId,
+      customerId: caseDoc.customerId,
+      topic: caseDoc.topic,
+      description: caseDoc.description,
+      createdAt: caseDoc.createdAt,
+      customerName: customer?.name || "Okänd"
+    });
+  } catch (err) {
+    console.error("❌ Fel vid hämtning av case-meta:", err);
+    res.status(500).json({ message: "Serverfel" });
+  }
+});
+
+// 🧾 Hämta ett ärende via dess MongoDB _id
 router.get("/:id", async (req, res) => {
   try {
     const caseDoc = await Case.findById(req.params.id).lean();
