@@ -85,6 +85,8 @@ app.use("/api/server-status", require("./routes/serverStatus"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/cases", require("./routes/cases"));
 app.use("/api/admin-status", require("./routes/adminStatus"));
+app.use("/api/admins", require("./routes/admins"));
+
 
 
 
