@@ -30,7 +30,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 🧾 Hämta metadata för ett ärende via sessionId
+// 🧾 Hämta metadata för ett ärende via sessionId (MÅSTE komma före /:id!)
 router.get("/meta/:sessionId", async (req, res) => {
   try {
     const caseDoc = await Case.findOne({ sessionId: req.params.sessionId }).lean();
@@ -54,7 +54,7 @@ router.get("/meta/:sessionId", async (req, res) => {
   }
 });
 
-// 🔁 Uppdatera ansvarig admin för ett ärende
+// 🔁 Uppdatera ansvarig admin för ett ärende via sessionId
 router.post("/assign-admin/:sessionId", async (req, res) => {
   try {
     const { assignedAdmin } = req.body;
@@ -79,7 +79,7 @@ router.post("/assign-admin/:sessionId", async (req, res) => {
   }
 });
 
-// 🧾 Hämta ett ärende via dess MongoDB _id (måste ligga sist!)
+// 🧾 Hämta ett ärende via dess MongoDB _id (LÄGG DENNA SIST!)
 router.get("/:id", async (req, res) => {
   try {
     const caseDoc = await Case.findById(req.params.id).lean();
