@@ -6,95 +6,27 @@
   <title>Case-detaljer</title>
   <link rel="stylesheet" href="/css/cases.css">
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8f8f8;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
+    body { font-family: 'Inter', sans-serif; background-color: #f8f8f8; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     h1, h2, h3 { margin-top: 20px; }
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    button {
-      padding: 10px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    button.danger {
-      background-color: #dc3545;
-    }
-
-    .transcript-box {
-      max-height: 300px;
-      overflow-y: auto;
-      background-color: #fefefe;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 20px;
-    }
-
-    .chat-bubble {
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      background-color: #f1f1f1;
-    }
-
-    .chat-bubble.admin {
-      background-color: #d1e7ff;
-    }
-
-    .chat-bubble.customer {
-      background-color: #e2ffe8;
-    }
-
-    .chat-bubble.system {
-      background-color: #fff3cd;
-    }
-
-    .chat-meta {
-      font-size: 0.8rem;
-      color: #666;
-      margin-top: 5px;
-    }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button.danger { background-color: #dc3545; }
+    .transcript-box { max-height: 300px; overflow-y: auto; background-color: #fefefe; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; }
+    .chat-bubble { margin-bottom: 10px; padding: 10px; border-radius: 8px; background-color: #f1f1f1; }
+    .chat-bubble.admin { background-color: #d1e7ff; }
+    .chat-bubble.customer { background-color: #e2ffe8; }
+    .chat-bubble.system { background-color: #fff3cd; }
+    .chat-meta { font-size: 0.8rem; color: #666; margin-top: 5px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🗂 Ärendedetaljer</h1>
-
-    <div id="caseInfo"></div>
-
+    <div id="caseInfo">⏳ Laddar ärendedata...</div>
     <h2>🧾 Chattranskript</h2>
-    <div id="chatTranscript" class="transcript-box"></div>
+    <div id="chatTranscript" class="transcript-box">⏳ Laddar chatt...</div>
 
     <h3>📝 Lägg till intern anteckning</h3>
     <textarea id="internalNote" placeholder="Skriv anteckning för internt bruk..."></textarea>
@@ -112,12 +44,16 @@
     const sessionId = new URLSearchParams(window.location.search).get("sessionId");
     let customerId = null;
 
+    if (!sessionId) {
+      alert("Ingen sessionId angiven.");
+      document.getElementById("caseInfo").innerText = "Ingen sessionId angiven.";
+      throw new Error("Saknar sessionId");
+    }
+
     async function loadCase() {
       try {
-        const chatRes = await fetch(`/api/chat/session/${sessionId}`);
-        const messages = await chatRes.json();
-
         const metaRes = await fetch(`/api/case/meta/${sessionId}`);
+        if (!metaRes.ok) throw new Error("Case meta saknas");
         const info = await metaRes.json();
         customerId = info.customerId;
 
@@ -129,29 +65,38 @@
           <p><strong>Skapad:</strong> ${new Date(info.createdAt).toLocaleString("sv-SE")}</p>
         `;
 
+        const chatRes = await fetch(`/api/chat/session/${sessionId}`);
+        const messages = await chatRes.ok ? await chatRes.json() : [];
+
         const transcript = document.getElementById("chatTranscript");
         transcript.innerHTML = "";
-        messages.forEach(msg => {
-          const div = document.createElement("div");
-          const senderClass =
-            msg.sender === "admin" ? "admin" :
-            msg.sender === "system" ? "system" : "customer";
-          const senderName =
-            msg.sender === "admin" ? "👩‍💻 Admin" :
-            msg.sender === "system" ? "⚙️ System" : "👤 Kund";
 
-          div.className = `chat-bubble ${senderClass}`;
-          div.innerHTML = `
-            <strong>${senderName}</strong><br/>
-            ${msg.message}
-            <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
-          `;
-          transcript.appendChild(div);
-        });
+        if (!messages.length) {
+          transcript.innerHTML = "<p>Inga meddelanden ännu.</p>";
+        } else {
+          messages.forEach(msg => {
+            const div = document.createElement("div");
+            const senderClass =
+              msg.sender === "admin" ? "admin" :
+              msg.sender === "system" ? "system" : "customer";
+            const senderName =
+              msg.sender === "admin" ? "👩‍💻 Admin" :
+              msg.sender === "system" ? "⚙️ System" : "👤 Kund";
 
+            div.className = `chat-bubble ${senderClass}`;
+            div.innerHTML = `
+              <strong>${senderName}</strong><br/>
+              ${msg.message}
+              <div class="chat-meta">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
+            `;
+            transcript.appendChild(div);
+          });
+        }
       } catch (err) {
         console.error("Fel vid inladdning:", err);
         alert("Kunde inte ladda ärendedata.");
+        document.getElementById("caseInfo").innerText = "❌ Fel vid laddning av ärendet.";
+        document.getElementById("chatTranscript").innerText = "";
       }
     }
 
@@ -177,7 +122,6 @@
     document.getElementById("sendEmailBtn").addEventListener("click", async () => {
       const content = document.getElementById("emailContent").value.trim();
       if (!content) return alert("Skriv ett meddelande först.");
-
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -188,7 +132,6 @@
           message: content
         })
       });
-
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -200,7 +143,6 @@
           timestamp: new Date()
         })
       });
-
       document.getElementById("emailContent").value = "";
       alert("Mejl skickat och loggat.");
       location.reload();
@@ -208,7 +150,6 @@
 
     document.getElementById("closeCaseBtn").addEventListener("click", async () => {
       if (!confirm("Är du säker på att du vill avsluta detta ärende?")) return;
-
       await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -220,7 +161,6 @@
           timestamp: new Date()
         })
       });
-
       await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -231,7 +171,6 @@
           message: `Ditt supportärende #${sessionId} har nu markerats som avslutat. Tack för att du kontaktade oss!`
         })
       });
-
       alert("✅ Ärendet avslutat och kund har informerats.");
       location.reload();
     });
