@@ -162,12 +162,13 @@ router.post("/send-message", async (req, res) => {
       }
   
       // 📌 Uppdatera kundens supporthistorik
-      const customerId = caseDoc.customerId;
       const supportItem = {
+        caseId: caseDoc._id.toString(),
         topic: caseDoc.topic || "Okänt ärende",
         date: new Date(),
         status: caseDoc.status || "Pågående"
       };
+      
   
       await Customer.findByIdAndUpdate(
         customerId,
