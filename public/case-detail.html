@@ -52,7 +52,6 @@
     }
 
     #update-status-btn {
-      white-space: nowrap;
       padding: 10px 16px;
       background: #007bff;
       color: white;
@@ -94,6 +93,21 @@
       font-size: 14px;
     }
 
+    .readonly-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #eee;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .edit-icon {
+      cursor: pointer;
+      font-size: 18px;
+      color: #666;
+    }
+
     textarea {
       resize: vertical;
       min-height: 80px;
@@ -118,48 +132,15 @@
       margin-top: 20px;
     }
 
-    .admin-edit {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .admin-display {
-      padding: 8px 12px;
-      background: #f0f0f0;
-      border-radius: 6px;
-      min-width: 150px;
-      border: 1px solid #ccc;
-    }
-
-    .admin-edit input {
-      flex: 1;
-    }
-
-    .edit-icon {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      color: #888;
-      transition: color 0.2s;
-    }
-
-    .edit-icon:hover {
-      color: #000;
-    }
-
     @media (max-width: 900px) {
       .container {
         flex-direction: column;
       }
-
       .status-bar {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
       }
-
       #update-status-btn {
         width: 100%;
         margin-left: 0;
@@ -168,6 +149,7 @@
   </style>
 </head>
 <body>
+
   <div class="status-bar">
     <div class="status-buttons" id="status-options">
       <button data-status="new">🆕 Nytt</button>
@@ -183,6 +165,7 @@
     <!-- Ärendeinfo -->
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
+
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
       <p><strong>Typ:</strong> <span id="case-type">Laddar...</span></p>
@@ -190,11 +173,12 @@
       <p><strong>Skapad:</strong> <span id="created-at">Laddar...</span></p>
 
       <p><strong>🧑‍💼 Ansvarig admin:</strong></p>
-      <div class="admin-edit">
-        <div id="admin-name-display" class="admin-display">Ingen</div>
-        <input type="text" id="admin-name-input" style="display:none;" placeholder="Sök admin..." />
-        <button class="edit-icon" onclick="toggleAdminEdit()">✏️</button>
+      <div class="readonly-box">
+        <input type="text" id="admin-display" readonly />
+        <span class="edit-icon" onclick="toggleEditAdmin()">✏️</span>
       </div>
+      <input type="text" id="admin-input" style="display: none;" placeholder="Sök admin..." oninput="filterAdmins(this.value)" list="admin-suggestions" />
+      <datalist id="admin-suggestions"></datalist>
 
       <div class="note-section">
         <h3>📝 Intern anteckning</h3>
@@ -216,131 +200,118 @@
     </div>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get("sessionId");
-    let currentAssignedAdmin = null;
-    let admins = [];
+<script>
+  const sessionId = new URLSearchParams(window.location.search).get("sessionId");
+  let currentAdmins = [];
+  let editingAdmin = false;
 
-    function toggleAdminEdit() {
-      const input = document.getElementById("admin-name-input");
-      const display = document.getElementById("admin-name-display");
+  async function loadCaseData() {
+    const res = await fetch(`/api/cases/meta/${sessionId}`);
+    const data = await res.json();
+    document.getElementById("case-id").textContent = data._id;
+    document.getElementById("customer-name").textContent = data.customerName || "Okänd";
+    document.getElementById("case-type").textContent = data.topic || "-";
+    document.getElementById("case-description").textContent = data.description || "-";
+    document.getElementById("created-at").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
+    document.getElementById("admin-display").value = data.assignedAdminName || "Ingen";
 
-      if (input.style.display === "none") {
-        input.style.display = "inline-block";
-        input.focus();
-      } else {
-        const name = input.value.trim();
-        const found = admins.find(a => a.name.toLowerCase() === name.toLowerCase());
-        if (!found) return alert("Admin hittades inte.");
+    const btn = document.querySelector(`.status-buttons button[data-status="${data.status}"]`);
+    if (btn) btn.classList.add("active");
 
+    const transcript = document.getElementById("chat-transcript");
+    transcript.innerHTML = (data.messages || []).map(msg => `
+      <div class="message ${msg.sender === 'System' ? 'system' : 'admin'}">
+        <strong>${msg.sender}:</strong> ${msg.message}<br/>
+        <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
+      </div>`).join("");
+  }
+
+  async function loadAdmins() {
+    const res = await fetch("/api/admins");
+    currentAdmins = await res.json();
+  }
+
+  function toggleEditAdmin() {
+    if (!editingAdmin) {
+      document.getElementById("admin-display").style.display = "none";
+      document.getElementById("admin-input").style.display = "block";
+      editingAdmin = true;
+    } else {
+      const name = document.getElementById("admin-input").value;
+      const match = currentAdmins.find(a => a.name.toLowerCase() === name.toLowerCase());
+      if (match) {
         fetch("/api/cases/assign-admin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, adminId: found._id })
-        }).then(res => res.json()).then(result => {
-          if (result.success) {
-            display.textContent = found.name;
-            input.style.display = "none";
-            input.value = "";
-          } else {
-            alert("Kunde inte spara.");
-          }
+          body: JSON.stringify({ sessionId, adminId: match._id })
+        }).then(() => {
+          document.getElementById("admin-display").value = match.name;
+          document.getElementById("admin-display").style.display = "block";
+          document.getElementById("admin-input").style.display = "none";
+          editingAdmin = false;
         });
       }
     }
+  }
 
-    async function loadAdmins() {
-      const res = await fetch("/api/admins");
-      admins = await res.json();
-    }
-
-    async function loadCaseData() {
-      const res = await fetch(`/api/cases/meta/${sessionId}`);
-      const data = await res.json();
-
-      document.getElementById("case-id").textContent = data._id;
-      document.getElementById("customer-name").textContent = data.customerName || "Okänd";
-      document.getElementById("case-type").textContent = data.topic || "-";
-      document.getElementById("case-description").textContent = data.description || "-";
-      document.getElementById("created-at").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
-
-      if (data.assignedAdminName) {
-        document.getElementById("admin-name-display").textContent = data.assignedAdminName;
-      }
-
-      if (data.status) {
-        const btn = document.querySelector(`.status-buttons button[data-status="${data.status}"]`);
-        if (btn) btn.classList.add("active");
-      }
-
-      const transcript = document.getElementById("chat-transcript");
-      transcript.innerHTML = (data.messages || []).map(msg => `
-        <div class="message ${msg.sender === 'system' ? 'system' : 'admin'}">
-          <strong>${msg.sender}:</strong> ${msg.message}<br/>
-          <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-        </div>
-      `).join("");
-    }
-
-    document.querySelectorAll(".status-buttons button").forEach(button => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll(".status-buttons button").forEach(b => b.classList.remove("active"));
-        button.classList.add("active");
+  function filterAdmins(value) {
+    const datalist = document.getElementById("admin-suggestions");
+    datalist.innerHTML = "";
+    currentAdmins
+      .filter(a => a.name.toLowerCase().includes(value.toLowerCase()))
+      .forEach(a => {
+        const option = document.createElement("option");
+        option.value = a.name;
+        datalist.appendChild(option);
       });
+  }
+
+  function saveNote() {
+    const note = document.getElementById("internal-note").value;
+    if (!note.trim()) return alert("Ange en anteckning.");
+    fetch("/api/cases/add-note", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, note })
+    }).then(() => {
+      alert("📝 Anteckning sparad.");
+      document.getElementById("internal-note").value = "";
     });
+  }
 
-    document.getElementById("update-status-btn").addEventListener("click", () => {
-      const activeBtn = document.querySelector(".status-buttons button.active");
-      if (!activeBtn) return alert("Välj en status först.");
-
-      fetch("/api/cases/update-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, status: activeBtn.dataset.status })
-      }).then(res => res.json()).then(result => {
-        if (result.success) {
-          alert("Status uppdaterad!");
-        } else {
-          alert("Kunde inte uppdatera status.");
-        }
-      });
+  function sendMessage() {
+    const msg = document.getElementById("customer-message").value;
+    if (!msg.trim()) return alert("Ange ett meddelande.");
+    fetch("/api/cases/send-message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, message: msg })
+    }).then(() => {
+      alert("📨 Meddelande skickat.");
+      document.getElementById("customer-message").value = "";
+      loadCaseData();
     });
+  }
 
-    function saveNote() {
-      const note = document.getElementById("internal-note").value;
-      if (!note.trim()) return alert("Ange en anteckning.");
+  document.querySelectorAll(".status-buttons button").forEach(button => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".status-buttons button").forEach(b => b.classList.remove("active"));
+      button.classList.add("active");
+    });
+  });
 
-      fetch("/api/cases/add-note", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, note })
-      }).then(res => res.json()).then(result => {
-        if (result.success) {
-          alert("Anteckning sparad");
-          document.getElementById("internal-note").value = "";
-        }
-      });
-    }
+  document.getElementById("update-status-btn").addEventListener("click", () => {
+    const activeBtn = document.querySelector(".status-buttons button.active");
+    if (!activeBtn) return alert("Välj en status först.");
+    fetch("/api/cases/update-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, status: activeBtn.dataset.status })
+    }).then(() => alert("✅ Status uppdaterad!"));
+  });
 
-    function sendMessage() {
-      const msg = document.getElementById("customer-message").value;
-      if (!msg.trim()) return alert("Ange ett meddelande.");
-
-      fetch("/api/cases/send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, message: msg })
-      }).then(res => res.json()).then(result => {
-        if (result.success) {
-          alert("Meddelande skickat");
-          document.getElementById("customer-message").value = "";
-          loadCaseData();
-        }
-      });
-    }
-
-    loadAdmins().then(loadCaseData);
-  </script>
+  loadCaseData();
+  loadAdmins();
+</script>
 </body>
 </html>
