@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📂 Supportärenden – Admin</title>
-  <link rel="stylesheet" href="/css/cases.css" />
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -20,6 +19,22 @@
 
     h1 {
       margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      flex: 1;
+      min-width: 200px;
     }
 
     .case-card {
@@ -44,6 +59,7 @@
     .case-meta {
       font-size: 0.9rem;
       color: #555;
+      margin-top: 10px;
     }
 
     .view-btn {
@@ -58,49 +74,128 @@
     .view-btn:hover {
       background-color: #0056b3;
     }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .status-nytt { background: #e6f7e6; color: #2e7d32; }
+    .status-arbetande { background: #e3f2fd; color: #1565c0; }
+    .status-väntar { background: #fff8e1; color: #ff6f00; }
+    .status-onhold { background: #fce4ec; color: #c2185b; }
+    .status-stängt { background: #eeeeee; color: #424242; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>📂 Alla supportärenden</h1>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="🔍 Sök på ID, namn, email eller ämne..." oninput="filterAndRender()">
+
+      <select id="statusFilter" onchange="filterAndRender()">
+        <option value="">📁 Alla statusar</option>
+        <option value="nytt">🗂️ Nytt</option>
+        <option value="arbetande">🛠️ Arbetande</option>
+        <option value="väntar svar">⏳ Väntar svar</option>
+        <option value="on hold">🛑 On Hold</option>
+        <option value="stängt">✅ Stängt</option>
+      </select>
+
+      <select id="sortOrder" onchange="filterAndRender()">
+        <option value="desc">🔽 Nyast först</option>
+        <option value="asc">🔼 Äldst först</option>
+      </select>
+    </div>
+
     <div id="caseList"></div>
   </div>
 
   <script>
+    let allCases = [];
+
     async function fetchCases() {
       try {
         const res = await fetch("/api/cases");
-        const cases = await res.json();
-
-        const container = document.getElementById("caseList");
-        if (!cases.length) {
-          container.innerHTML = "<p>❌ Inga ärenden hittades.</p>";
-          return;
-        }
-
-        cases.forEach(c => {
-          const div = document.createElement("div");
-          div.className = "case-card";
-
-          div.innerHTML = `
-            <div class="case-header">
-              <h3>Ärende: ${c.topic || "Okänt ärende"}</h3>
-              <button class="view-btn" onclick="location.href='case-detail.html?sessionId=${c.sessionId}'">📄 Visa</button>
-            </div>
-            <p>${c.description || "Ingen beskrivning tillgänglig."}</p>
-            <div class="case-meta">
-              👤 ${c.customerName || "Okänd kund"}<br/>
-              🆔 ${c.sessionId}<br/>
-              📅 ${new Date(c.timestamp).toLocaleString("sv-SE")}
-            </div>
-          `;
-          container.appendChild(div);
-        });
-
+        allCases = await res.json();
+        filterAndRender();
       } catch (err) {
-        console.error("❌ Fel vid hämtning av cases:", err);
+        console.error("❌ Fel vid hämtning av ärenden:", err);
         document.getElementById("caseList").innerHTML = "<p style='color:red;'>Fel vid hämtning av data.</p>";
       }
+    }
+
+    function getStatusClass(status) {
+      switch ((status || '').toLowerCase()) {
+        case 'nytt': return 'status-nytt';
+        case 'arbetande': return 'status-arbetande';
+        case 'väntar svar': return 'status-väntar';
+        case 'on hold': return 'status-onhold';
+        case 'stängt': return 'status-stängt';
+        default: return '';
+      }
+    }
+
+    function filterAndRender() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const status = document.getElementById("statusFilter").value.toLowerCase();
+      const sortOrder = document.getElementById("sortOrder").value;
+
+      let filtered = allCases.filter(c =>
+        (!input || (
+          (c.sessionId && c.sessionId.toLowerCase().includes(input)) ||
+          (c.customerName && c.customerName.toLowerCase().includes(input)) ||
+          (c.email && c.email.toLowerCase().includes(input)) ||
+          (c.topic && c.topic.toLowerCase().includes(input))
+        )) &&
+        (!status || (c.status && c.status.toLowerCase() === status))
+      );
+
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
+        return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      });
+
+      renderCases(filtered);
+    }
+
+    function renderCases(list) {
+      const container = document.getElementById("caseList");
+      container.innerHTML = "";
+
+      if (!list.length) {
+        container.innerHTML = "<p>❌ Inga matchande ärenden hittades.</p>";
+        return;
+      }
+
+      list.forEach(c => {
+        const div = document.createElement("div");
+        const statusText = c.status || "okänd";
+        const statusClass = getStatusClass(statusText);
+
+        div.className = "case-card";
+        div.innerHTML = `
+          <div class="case-header">
+            <h3>Ärende: ${c.topic || "Okänt ärende"}</h3>
+            <button class="view-btn" onclick="location.href='case-detail.html?sessionId=${c.sessionId}'">📄 Visa</button>
+          </div>
+          <p>${c.description || "Ingen beskrivning tillgänglig."}</p>
+          <div class="case-meta">
+            👤 ${c.customerName || "Okänd kund"}<br/>
+            📧 ${c.email || "Ingen email"}<br/>
+            🆔 ${c.sessionId}<br/>
+            📅 ${new Date(c.timestamp).toLocaleString("sv-SE")}<br/>
+            <span class="status-badge ${statusClass}">Status: ${statusText}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
     }
 
     fetchCases();
