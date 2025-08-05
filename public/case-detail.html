@@ -20,10 +20,10 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  gap: 10px;
   width: 100%;
   max-width: 1400px;
   margin-bottom: 25px;
-  gap: 10px;
 }
 
 .status-buttons {
@@ -32,7 +32,7 @@
   flex-wrap: wrap;
 }
 
-.status-buttons button {
+.status-buttons .status-btn {
   background: #e0e0e0;
   border: none;
   padding: 10px 16px;
@@ -42,11 +42,11 @@
   transition: all 0.2s ease-in-out;
 }
 
-.status-buttons button:hover {
+.status-buttons .status-btn:hover {
   background: #ccc;
 }
 
-.status-buttons button.active {
+.status-buttons .status-btn.active {
   background-color: #007bff;
   color: white;
   box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
@@ -62,7 +62,6 @@
   cursor: pointer;
   height: 40px;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 
@@ -155,16 +154,16 @@
 </head>
 <body>
 
-  <div class="status-bar">
-    <div class="status-buttons" id="status-options">
-      <button data-status="new">🆕 Nytt</button>
-      <button data-status="in_progress">🚧 Arbetande</button>
-      <button data-status="waiting">⏳ Väntar svar</button>
-      <button data-status="on_hold">⏸️ On Hold</button>
-      <button data-status="closed">✅ Stängt</button>
-    </div>
-    <button id="update-status-btn">📘 Bekräfta status</button>
-  </div>
+    <div class="status-bar">
+        <div class="status-buttons">
+          <button class="status-btn" data-status="Nytt">🗂️ Nytt</button>
+          <button class="status-btn active" data-status="Arbetande">🛠️ Arbetande</button>
+          <button class="status-btn" data-status="Väntar svar">⏳ Väntar svar</button>
+          <button class="status-btn" data-status="On Hold">🛑 On Hold</button>
+          <button class="status-btn" data-status="Stängt">✅ Stängt</button>
+        </div>
+        <button id="update-status-btn">📁 Bekräfta status</button>
+      </div>      
 
   <div class="container">
     <!-- Ärendeinfo -->
