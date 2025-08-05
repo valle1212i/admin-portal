@@ -16,54 +16,54 @@
     }
 
     .status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 1400px;
-  margin-bottom: 25px;
-  flex-wrap: wrap;
-}
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1400px;
+      margin-bottom: 25px;
+      flex-wrap: nowrap;
+      gap: 10px;
+    }
 
-.status-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+    .status-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-.status-btn {
-  background: #e0e0e0;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
+    .status-btn {
+      background: #e0e0e0;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
 
-.status-btn:hover {
-  background: #ccc;
-}
+    .status-btn:hover {
+      background: #ccc;
+    }
 
-.status-btn.active {
-  background-color: #007bff;
-  color: white;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
-}
+    .status-btn.active {
+      background-color: #007bff;
+      color: white;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
+    }
 
-#update-status-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-weight: bold;
-  height: 40px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
+    #update-status-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-weight: bold;
+      white-space: nowrap;
+      height: 40px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
 
     .container {
       display: flex;
@@ -153,23 +153,20 @@
   </style>
 </head>
 <body>
-
-    <div class="status-bar">
-        <div class="status-buttons">
-          <button class="status-btn" data-status="Nytt">🗂️ Nytt</button>
-          <button class="status-btn active" data-status="Arbetande">🛠️ Arbetande</button>
-          <button class="status-btn" data-status="Väntar svar">⏳ Väntar svar</button>
-          <button class="status-btn" data-status="On Hold">🛑 On Hold</button>
-          <button class="status-btn" data-status="Stängt">✅ Stängt</button>
-        </div>
-        <button id="update-status-btn">📁 Bekräfta status</button>
-      </div>      
+  <div class="status-bar">
+    <div class="status-buttons">
+      <button class="status-btn" data-status="Nytt">🗂️ Nytt</button>
+      <button class="status-btn" data-status="Arbetande">🛠️ Arbetande</button>
+      <button class="status-btn" data-status="Väntar svar">⏳ Väntar svar</button>
+      <button class="status-btn" data-status="On Hold">🛑 On Hold</button>
+      <button class="status-btn" data-status="Stängt">✅ Stängt</button>
+    </div>
+    <button id="update-status-btn">📁 Bekräfta status</button>
+  </div>
 
   <div class="container">
-    <!-- Ärendeinfo -->
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
-
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
       <p><strong>Typ:</strong> <span id="case-type">Laddar...</span></p>
@@ -197,7 +194,6 @@
       </div>
     </div>
 
-    <!-- Chattranskript -->
     <div class="card">
       <h2>💬 Chatttranskript</h2>
       <div id="chat-transcript">Laddar...</div>
