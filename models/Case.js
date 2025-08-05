@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const caseSchema = new mongoose.Schema({
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -59,3 +61,5 @@ const caseSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+module.exports = mongoose.model("Case", caseSchema);
