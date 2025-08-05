@@ -34,38 +34,42 @@
     }
 
     .status-btn {
-      background: #e0e0e0;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-      white-space: nowrap;
-    }
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  color: #333;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
 
-    .status-btn:hover {
-      background: #ccc;
-    }
+.status-btn:hover {
+  background: #eaeaea;
+  border-color: #999;
+}
 
-    .status-btn.active {
-      background-color: #007bff;
-      color: white;
-      box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
-    }
+.status-btn.active {
+  background-color: #111;
+  color: #fff;
+  border: 1px solid #111;
+}
 
-    #update-status-btn {
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-weight: bold;
-      white-space: nowrap;
-      cursor: pointer;
-      height: 40px;
-      align-self: center;
-    }
+#update-status-btn {
+  background-color: #0a7e3e;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+#update-status-btn:hover {
+  background-color: #066630;
+}
+
 
     .container {
       display: flex;
