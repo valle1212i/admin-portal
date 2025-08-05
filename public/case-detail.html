@@ -54,7 +54,6 @@
     #update-status-btn {
       white-space: nowrap;
       padding: 10px 16px;
-      margin-left: auto;
       background: #007bff;
       color: white;
       border: none;
@@ -80,19 +79,6 @@
       flex-direction: column;
     }
 
-    .admin-inline {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .edit-icon {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-    }
-
     h2, h3 {
       margin-top: 0;
       color: #333;
@@ -106,11 +92,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 14px;
-    }
-
-    input.inline-input {
-      width: auto;
-      flex: 1;
     }
 
     textarea {
@@ -137,15 +118,48 @@
       margin-top: 20px;
     }
 
+    .admin-edit {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-display {
+      padding: 8px 12px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      min-width: 150px;
+      border: 1px solid #ccc;
+    }
+
+    .admin-edit input {
+      flex: 1;
+    }
+
+    .edit-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #888;
+      transition: color 0.2s;
+    }
+
+    .edit-icon:hover {
+      color: #000;
+    }
+
     @media (max-width: 900px) {
       .container {
         flex-direction: column;
       }
+
       .status-bar {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
       }
+
       #update-status-btn {
         width: 100%;
         margin-left: 0;
@@ -154,7 +168,6 @@
   </style>
 </head>
 <body>
-
   <div class="status-bar">
     <div class="status-buttons" id="status-options">
       <button data-status="new">🆕 Nytt</button>
@@ -170,7 +183,6 @@
     <!-- Ärendeinfo -->
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
-
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
       <p><strong>Typ:</strong> <span id="case-type">Laddar...</span></p>
@@ -178,13 +190,10 @@
       <p><strong>Skapad:</strong> <span id="created-at">Laddar...</span></p>
 
       <p><strong>🧑‍💼 Ansvarig admin:</strong></p>
-      <div class="admin-inline">
-        <span id="assigned-admin-display">Ingen</span>
+      <div class="admin-edit">
+        <div id="admin-name-display" class="admin-display">Ingen</div>
+        <input type="text" id="admin-name-input" style="display:none;" placeholder="Sök admin..." />
         <button class="edit-icon" onclick="toggleAdminEdit()">✏️</button>
-      </div>
-      <div class="admin-inline" id="admin-edit-field" style="display:none; margin-top:10px;">
-        <input type="text" id="admin-name-input" class="inline-input" placeholder="Skriv adminnamn...">
-        <button class="edit-icon" onclick="confirmAdminAssignment()">✏️</button>
       </div>
 
       <div class="note-section">
@@ -211,47 +220,58 @@
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
     let currentAssignedAdmin = null;
+    let admins = [];
 
     function toggleAdminEdit() {
-      document.getElementById("admin-edit-field").style.display = "flex";
+      const input = document.getElementById("admin-name-input");
+      const display = document.getElementById("admin-name-display");
+
+      if (input.style.display === "none") {
+        input.style.display = "inline-block";
+        input.focus();
+      } else {
+        const name = input.value.trim();
+        const found = admins.find(a => a.name.toLowerCase() === name.toLowerCase());
+        if (!found) return alert("Admin hittades inte.");
+
+        fetch("/api/cases/assign-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, adminId: found._id })
+        }).then(res => res.json()).then(result => {
+          if (result.success) {
+            display.textContent = found.name;
+            input.style.display = "none";
+            input.value = "";
+          } else {
+            alert("Kunde inte spara.");
+          }
+        });
+      }
     }
 
-    async function confirmAdminAssignment() {
-      const adminName = document.getElementById("admin-name-input").value;
-      if (!adminName) return alert("Ange ett namn först");
-
-      const res = await fetch("/api/cases/assign-admin-by-name", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, adminName })
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        document.getElementById("assigned-admin-display").textContent = adminName;
-        document.getElementById("admin-edit-field").style.display = "none";
-        alert("✅ Admin uppdaterad!");
-      } else {
-        alert("❌ Kunde inte uppdatera admin.");
-      }
+    async function loadAdmins() {
+      const res = await fetch("/api/admins");
+      admins = await res.json();
     }
 
     async function loadCaseData() {
       const res = await fetch(`/api/cases/meta/${sessionId}`);
       const data = await res.json();
+
       document.getElementById("case-id").textContent = data._id;
       document.getElementById("customer-name").textContent = data.customerName || "Okänd";
       document.getElementById("case-type").textContent = data.topic || "-";
       document.getElementById("case-description").textContent = data.description || "-";
       document.getElementById("created-at").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
 
+      if (data.assignedAdminName) {
+        document.getElementById("admin-name-display").textContent = data.assignedAdminName;
+      }
+
       if (data.status) {
         const btn = document.querySelector(`.status-buttons button[data-status="${data.status}"]`);
         if (btn) btn.classList.add("active");
-      }
-
-      if (data.assignedAdminName) {
-        document.getElementById("assigned-admin-display").textContent = data.assignedAdminName;
       }
 
       const transcript = document.getElementById("chat-transcript");
@@ -274,20 +294,17 @@
       const activeBtn = document.querySelector(".status-buttons button.active");
       if (!activeBtn) return alert("Välj en status först.");
 
-      const status = activeBtn.dataset.status;
       fetch("/api/cases/update-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, status })
-      })
-        .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            alert("✅ Status uppdaterad!");
-          } else {
-            alert("❌ Kunde inte uppdatera status.");
-          }
-        });
+        body: JSON.stringify({ sessionId, status: activeBtn.dataset.status })
+      }).then(res => res.json()).then(result => {
+        if (result.success) {
+          alert("Status uppdaterad!");
+        } else {
+          alert("Kunde inte uppdatera status.");
+        }
+      });
     });
 
     function saveNote() {
@@ -298,16 +315,12 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, note })
-      })
-        .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            alert("📝 Anteckning sparad.");
-            document.getElementById("internal-note").value = "";
-          } else {
-            alert("❌ Kunde inte spara anteckning.");
-          }
-        });
+      }).then(res => res.json()).then(result => {
+        if (result.success) {
+          alert("Anteckning sparad");
+          document.getElementById("internal-note").value = "";
+        }
+      });
     }
 
     function sendMessage() {
@@ -318,20 +331,16 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, message: msg })
-      })
-        .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            alert("📨 Meddelande skickat.");
-            document.getElementById("customer-message").value = "";
-            loadCaseData();
-          } else {
-            alert("❌ Kunde inte skicka meddelandet.");
-          }
-        });
+      }).then(res => res.json()).then(result => {
+        if (result.success) {
+          alert("Meddelande skickat");
+          document.getElementById("customer-message").value = "";
+          loadCaseData();
+        }
+      });
     }
 
-    loadCaseData();
+    loadAdmins().then(loadCaseData);
   </script>
 </body>
 </html>
