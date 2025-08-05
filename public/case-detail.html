@@ -83,38 +83,40 @@
       margin-top: 20px;
     }
   
-    .status-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 10px 0 20px 0;
-    }
-  
-    .status-buttons button {
-      padding: 10px 20px;
-      background: #e0e0e0;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-      font-weight: bold;
-    }
-  
-    .status-buttons button:hover {
-      background: #ccc;
-    }
-  
-    .status-buttons button.active {
-      background-color: #007bff;
-      color: white;
-      box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
-    }
-  
-    #update-status-btn {
-      width: auto;
-      margin-top: -10px;
-      margin-bottom: 25px;
-    }
+    .status-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 25px;
+}
+
+.status-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.status-buttons button {
+  background: #e0e0e0;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.status-buttons button:hover {
+  background: #ccc;
+}
+
+.status-buttons button.active {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
+}
+
   
     @media (max-width: 900px) {
       .container {
@@ -131,17 +133,17 @@
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
 
-      <div>
-        <h3>Status:</h3>
-        <div class="status-buttons">
+      <div class="status-bar">
+        <div class="status-buttons" id="status-options">
           <button data-status="new">🆕 Nytt</button>
           <button data-status="in_progress">🚧 Arbetande</button>
           <button data-status="waiting">⏳ Väntar svar</button>
           <button data-status="on_hold">⏸️ On Hold</button>
           <button data-status="closed">✅ Stängt</button>
         </div>
-        <button onclick="updateStatus()">💾 Bekräfta status</button>
+        <button id="update-status-btn" onclick="updateStatus()">📘 Bekräfta status</button>
       </div>
+      
 
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
