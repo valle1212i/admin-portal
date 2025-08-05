@@ -11,16 +11,53 @@
       margin: 0;
       padding: 30px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
-  
+
+    .status-bar {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 25px;
+    }
+
+    .status-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .status-buttons button {
+      background: #e0e0e0;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .status-buttons button:hover {
+      background: #ccc;
+    }
+
+    .status-buttons button.active {
+      background-color: #007bff;
+      color: white;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
+    }
+
     .container {
       display: flex;
       gap: 30px;
       width: 100%;
       max-width: 1400px;
     }
-  
+
     .card {
       background: #ffffff;
       padding: 25px 30px;
@@ -30,12 +67,12 @@
       display: flex;
       flex-direction: column;
     }
-  
+
     h2, h3 {
       margin-top: 0;
       color: #333;
     }
-  
+
     select, textarea, input, button {
       width: 100%;
       padding: 12px;
@@ -45,12 +82,12 @@
       border: 1px solid #ccc;
       font-size: 14px;
     }
-  
+
     textarea {
       resize: vertical;
       min-height: 80px;
     }
-  
+
     button {
       background: #007bff;
       color: white;
@@ -59,91 +96,56 @@
       cursor: pointer;
       transition: background 0.2s ease;
     }
-  
+
     button:hover {
       background: #0056b3;
     }
-  
+
     .message {
       margin-bottom: 15px;
       padding: 12px;
       border-radius: 8px;
       font-size: 14px;
     }
-  
+
     .message.admin {
       background: #e8f1ff;
     }
-  
+
     .message.system {
       background: #fff4cc;
     }
-  
+
     .note-section {
       margin-top: 20px;
     }
-  
-    .status-bar {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 25px;
-}
 
-.status-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.status-buttons button {
-  background: #e0e0e0;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.status-buttons button:hover {
-  background: #ccc;
-}
-
-.status-buttons button.active {
-  background-color: #007bff;
-  color: white;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
-}
-
-  
     @media (max-width: 900px) {
       .container {
         flex-direction: column;
       }
     }
   </style>
-  
 </head>
 <body>
 
+  <!-- 🟦 STATUSRAD (utanför korten) -->
+  <div class="status-bar">
+    <div class="status-buttons" id="status-options">
+      <button data-status="new">🆕 Nytt</button>
+      <button data-status="in_progress">🚧 Arbetande</button>
+      <button data-status="waiting">⏳ Väntar svar</button>
+      <button data-status="on_hold">⏸️ On Hold</button>
+      <button data-status="closed">✅ Stängt</button>
+    </div>
+    <button id="update-status-btn" onclick="updateStatus()">📘 Bekräfta status</button>
+  </div>
+
+  <!-- HUVUDINNEHÅLL -->
   <div class="container">
     <!-- Ärendeinfo -->
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
-
-      <div class="status-bar">
-        <div class="status-buttons" id="status-options">
-          <button data-status="new">🆕 Nytt</button>
-          <button data-status="in_progress">🚧 Arbetande</button>
-          <button data-status="waiting">⏳ Väntar svar</button>
-          <button data-status="on_hold">⏸️ On Hold</button>
-          <button data-status="closed">✅ Stängt</button>
-        </div>
-        <button id="update-status-btn" onclick="updateStatus()">📘 Bekräfta status</button>
-      </div>
-      
 
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
@@ -230,7 +232,6 @@
       }
     }
 
-    // Statusflikar
     document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".status-buttons button").forEach(button => {
         button.addEventListener("click", () => {
@@ -240,7 +241,6 @@
       });
     });
 
-    // Uppdatera status
     function updateStatus() {
       const activeBtn = document.querySelector(".status-buttons button.active");
       if (!activeBtn) return alert("Välj en status först.");
@@ -266,7 +266,6 @@
         });
     }
 
-    // Tilldela admin
     document.getElementById("assignAdminBtn").addEventListener("click", async () => {
       const adminId = document.getElementById("assignedAdminSelect").value;
       if (!adminId) return alert("Välj en admin först.");
@@ -285,7 +284,6 @@
       }
     });
 
-    // Spara intern anteckning
     function saveNote() {
       const note = document.getElementById("internal-note").value;
       if (!note.trim()) return alert("Ange en anteckning.");
@@ -300,13 +298,13 @@
           if (result.success) {
             alert("📝 Anteckning sparad.");
             document.getElementById("internal-note").value = "";
+            loadCaseData();
           } else {
             alert("❌ Kunde inte spara anteckning.");
           }
         });
     }
 
-    // Skicka meddelande till kund
     function sendMessage() {
       const msg = document.getElementById("customer-message").value;
       if (!msg.trim()) return alert("Ange ett meddelande.");
