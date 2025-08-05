@@ -12,8 +12,17 @@ const customerConnection = mongoose.createConnection(process.env.CUSTOMER_DB_URI
   useUnifiedTopology: true
 });
 
-// 🧱 Flexibelt schema för okända fält
-const CustomerSchema = new mongoose.Schema({}, { strict: false });
+// 🧱 Schema med supportHistory inbäddat
+const CustomerSchema = new mongoose.Schema({
+  // Tillåt andra fält också
+  supportHistory: [
+    {
+      topic: String,
+      date: Date,
+      status: String
+    }
+  ]
+}, { strict: false }); // ⬅️ Gör att andra fält tillåts utöver supportHistory
 
 // 🧍 Modell baserad på "customers"-collection
 const Customer = customerConnection.model("Customer", CustomerSchema, "customers");

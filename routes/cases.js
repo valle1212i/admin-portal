@@ -135,35 +135,53 @@ router.post("/add-note", async (req, res) => {
   }
 });
 
-// 💬 Skicka meddelande till kund (lägg till i messages)
+// 💬 Skicka meddelande till kund (lägg till i messages och uppdatera kundens supporthistorik)
 router.post("/send-message", async (req, res) => {
-  const { sessionId, message } = req.body;
-
-  if (!sessionId || !message) {
-    return res.status(400).json({ success: false, message: "sessionId och message krävs." });
-  }
-
-  try {
-    const msg = {
-      sender: "admin",
-      message,
-      timestamp: new Date()
-    };
-
-    const updated = await Case.findOneAndUpdate(
-      { sessionId },
-      { $push: { messages: msg } },
-      { new: true }
-    );
-
-    if (!updated) return res.status(404).json({ success: false, message: "Ärende ej hittat." });
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("❌ Fel vid skickande av meddelande:", err);
-    res.status(500).json({ success: false });
-  }
-});
+    const { sessionId, message } = req.body;
+  
+    if (!sessionId || !message) {
+      return res.status(400).json({ success: false, message: "sessionId och message krävs." });
+    }
+  
+    try {
+      const msg = {
+        sender: "admin",
+        message,
+        timestamp: new Date()
+      };
+  
+      // 🔁 Uppdatera case med nytt meddelande
+      const caseDoc = await Case.findOneAndUpdate(
+        { sessionId },
+        { $push: { messages: msg } },
+        { new: true }
+      );
+  
+      if (!caseDoc) {
+        return res.status(404).json({ success: false, message: "Ärende ej hittat." });
+      }
+  
+      // 📌 Uppdatera kundens supporthistorik
+      const customerId = caseDoc.customerId;
+      const supportItem = {
+        topic: caseDoc.topic || "Okänt ärende",
+        date: new Date(),
+        status: caseDoc.status || "Pågående"
+      };
+  
+      await Customer.findByIdAndUpdate(
+        customerId,
+        { $push: { supportHistory: supportItem } },
+        { new: true }
+      );
+  
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ Fel vid skickande av meddelande:", err);
+      res.status(500).json({ success: false });
+    }
+  });
+  
 
 // 🧾 Hämta ett ärende via dess MongoDB _id (LÄGG DENNA SIST!)
 router.get("/:id", async (req, res) => {
