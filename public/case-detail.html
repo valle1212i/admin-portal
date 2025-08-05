@@ -19,11 +19,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: 20px;
   width: 100%;
   max-width: 1400px;
   margin-bottom: 25px;
+  flex-wrap: wrap;
 }
 
 .status-buttons {
@@ -32,7 +32,7 @@
   flex-wrap: wrap;
 }
 
-.status-buttons .status-btn {
+.status-btn {
   background: #e0e0e0;
   border: none;
   padding: 10px 16px;
@@ -42,26 +42,26 @@
   transition: all 0.2s ease-in-out;
 }
 
-.status-buttons .status-btn:hover {
+.status-btn:hover {
   background: #ccc;
 }
 
-.status-buttons .status-btn.active {
+.status-btn.active {
   background-color: #007bff;
   color: white;
   box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
 }
 
 #update-status-btn {
-  padding: 10px 14px;
   background: #007bff;
   color: white;
   border: none;
   border-radius: 6px;
+  padding: 10px 16px;
   font-weight: bold;
-  cursor: pointer;
   height: 40px;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 
