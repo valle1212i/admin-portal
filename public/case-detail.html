@@ -19,19 +19,18 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: nowrap;
       width: 100%;
       max-width: 1400px;
       margin-bottom: 25px;
-      flex-wrap: nowrap;
-      gap: 10px;
+      gap: 15px;
     }
   
     .status-buttons {
       display: flex;
       flex-direction: row;
       gap: 10px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
+      flex-wrap: wrap;
     }
   
     .status-buttons button {
@@ -56,6 +55,7 @@
     }
   
     #update-status-btn {
+      white-space: nowrap;
       padding: 10px 16px;
       background: #007bff;
       color: white;
@@ -64,10 +64,69 @@
       font-weight: bold;
       cursor: pointer;
       flex-shrink: 0;
-      white-space: nowrap;
+    }
+  
+    .container {
+      display: flex;
+      gap: 30px;
+      width: 100%;
+      max-width: 1400px;
+    }
+  
+    .card {
+      background: #ffffff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  
+    h2, h3 {
+      margin-top: 0;
+      color: #333;
+    }
+  
+    select, textarea, input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      margin-bottom: 18px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+  
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+  
+    .message {
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  
+    .message.admin {
+      background: #e8f1ff;
+    }
+  
+    .message.system {
+      background: #fff4cc;
+    }
+  
+    .note-section {
+      margin-top: 20px;
     }
   
     @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+      }
+  
       .status-bar {
         flex-direction: column;
         align-items: flex-start;
