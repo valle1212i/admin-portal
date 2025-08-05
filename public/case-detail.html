@@ -16,50 +16,52 @@
     }
 
     .status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 25px;
-  width: 100%;
-  max-width: 1400px;
-}
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 1400px;
+      margin-bottom: 25px;
+    }
 
-.status-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: nowrap;
-}
+    .status-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-.status-buttons button,
-#update-status-btn {
-  background: #e0e0e0;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  white-space: nowrap;
-}
+    .status-buttons button {
+      background: #e0e0e0;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
 
-.status-buttons button:hover,
-#update-status-btn:hover {
-  background: #ccc;
-}
+    .status-buttons button:hover {
+      background: #ccc;
+    }
 
-.status-buttons button.active {
-  background-color: #007bff;
-  color: white;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
-}
+    .status-buttons button.active {
+      background-color: #007bff;
+      color: white;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
+    }
 
-#update-status-btn {
-  background-color: #007bff;
-  color: white;
-  margin-left: 10px;
-}
+    #update-status-btn {
+      white-space: nowrap;
+      padding: 10px 16px;
+      margin-left: auto;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
     .container {
       display: flex;
@@ -78,6 +80,19 @@
       flex-direction: column;
     }
 
+    .admin-inline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .edit-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
     h2, h3 {
       margin-top: 0;
       color: #333;
@@ -91,6 +106,11 @@
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 14px;
+    }
+
+    input.inline-input {
+      width: auto;
+      flex: 1;
     }
 
     textarea {
@@ -121,13 +141,11 @@
       .container {
         flex-direction: column;
       }
-
       .status-bar {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
       }
-
       #update-status-btn {
         width: 100%;
         margin-left: 0;
@@ -136,32 +154,38 @@
   </style>
 </head>
 <body>
-    <div class="status-bar">
-        <div class="status-buttons" id="status-options">
-          <button data-status="new">🆕 Nytt</button>
-          <button data-status="in_progress">🚧 Arbetande</button>
-          <button data-status="waiting">⏳ Väntar svar</button>
-          <button data-status="on_hold">⏸️ On Hold</button>
-          <button data-status="closed">✅ Stängt</button>
-        </div>
-        <button id="update-status-btn">📘 Bekräfta status</button>
-      </div>
-      
+
+  <div class="status-bar">
+    <div class="status-buttons" id="status-options">
+      <button data-status="new">🆕 Nytt</button>
+      <button data-status="in_progress">🚧 Arbetande</button>
+      <button data-status="waiting">⏳ Väntar svar</button>
+      <button data-status="on_hold">⏸️ On Hold</button>
+      <button data-status="closed">✅ Stängt</button>
+    </div>
+    <button id="update-status-btn">📘 Bekräfta status</button>
+  </div>
 
   <div class="container">
+    <!-- Ärendeinfo -->
     <div class="card">
       <h2>📄 Ärendeinfo</h2>
+
       <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
       <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
       <p><strong>Typ:</strong> <span id="case-type">Laddar...</span></p>
       <p><strong>Beskrivning:</strong> <span id="case-description">Laddar...</span></p>
       <p><strong>Skapad:</strong> <span id="created-at">Laddar...</span></p>
 
-      <label for="assignedAdminSelect">🧑‍💼 Ansvarig admin:</label>
-      <select id="assignedAdminSelect">
-        <option value="">Välj admin...</option>
-      </select>
-      <button id="assignAdminBtn">✅ Bekräfta</button>
+      <p><strong>🧑‍💼 Ansvarig admin:</strong></p>
+      <div class="admin-inline">
+        <span id="assigned-admin-display">Ingen</span>
+        <button class="edit-icon" onclick="toggleAdminEdit()">✏️</button>
+      </div>
+      <div class="admin-inline" id="admin-edit-field" style="display:none; margin-top:10px;">
+        <input type="text" id="admin-name-input" class="inline-input" placeholder="Skriv adminnamn...">
+        <button class="edit-icon" onclick="confirmAdminAssignment()">✏️</button>
+      </div>
 
       <div class="note-section">
         <h3>📝 Intern anteckning</h3>
@@ -176,6 +200,7 @@
       </div>
     </div>
 
+    <!-- Chattranskript -->
     <div class="card">
       <h2>💬 Chatttranskript</h2>
       <div id="chat-transcript">Laddar...</div>
@@ -187,11 +212,33 @@
     const sessionId = urlParams.get("sessionId");
     let currentAssignedAdmin = null;
 
+    function toggleAdminEdit() {
+      document.getElementById("admin-edit-field").style.display = "flex";
+    }
+
+    async function confirmAdminAssignment() {
+      const adminName = document.getElementById("admin-name-input").value;
+      if (!adminName) return alert("Ange ett namn först");
+
+      const res = await fetch("/api/cases/assign-admin-by-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, adminName })
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        document.getElementById("assigned-admin-display").textContent = adminName;
+        document.getElementById("admin-edit-field").style.display = "none";
+        alert("✅ Admin uppdaterad!");
+      } else {
+        alert("❌ Kunde inte uppdatera admin.");
+      }
+    }
+
     async function loadCaseData() {
       const res = await fetch(`/api/cases/meta/${sessionId}`);
       const data = await res.json();
-      if (!data || !data._id) return;
-
       document.getElementById("case-id").textContent = data._id;
       document.getElementById("customer-name").textContent = data.customerName || "Okänd";
       document.getElementById("case-type").textContent = data.topic || "-";
@@ -203,37 +250,23 @@
         if (btn) btn.classList.add("active");
       }
 
-      currentAssignedAdmin = data.assignedAdmin;
+      if (data.assignedAdminName) {
+        document.getElementById("assigned-admin-display").textContent = data.assignedAdminName;
+      }
+
       const transcript = document.getElementById("chat-transcript");
       transcript.innerHTML = (data.messages || []).map(msg => `
-        <div class="message ${msg.sender === 'System' ? 'system' : 'admin'}">
+        <div class="message ${msg.sender === 'system' ? 'system' : 'admin'}">
           <strong>${msg.sender}:</strong> ${msg.message}<br/>
           <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
         </div>
       `).join("");
     }
 
-    async function loadAdmins() {
-      const res = await fetch("/api/admins");
-      const admins = await res.json();
-      const select = document.getElementById("assignedAdminSelect");
-
-      admins.forEach(admin => {
-        const option = document.createElement("option");
-        option.value = admin._id;
-        option.textContent = admin.name;
-        select.appendChild(option);
-      });
-
-      if (currentAssignedAdmin) select.value = currentAssignedAdmin;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".status-buttons button").forEach(button => {
-        button.addEventListener("click", () => {
-          document.querySelectorAll(".status-buttons button").forEach(b => b.classList.remove("active"));
-          button.classList.add("active");
-        });
+    document.querySelectorAll(".status-buttons button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".status-buttons button").forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
       });
     });
 
@@ -249,24 +282,12 @@
       })
         .then(res => res.json())
         .then(result => {
-          if (result.success) alert("✅ Status uppdaterad!");
-          else alert("❌ Kunde inte uppdatera status.");
+          if (result.success) {
+            alert("✅ Status uppdaterad!");
+          } else {
+            alert("❌ Kunde inte uppdatera status.");
+          }
         });
-    });
-
-    document.getElementById("assignAdminBtn").addEventListener("click", async () => {
-      const adminId = document.getElementById("assignedAdminSelect").value;
-      if (!adminId) return alert("Välj en admin först.");
-
-      const res = await fetch("/api/cases/assign-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, adminId })
-      });
-
-      const result = await res.json();
-      if (result.success) alert("✅ Admin tilldelad!");
-      else alert("❌ Misslyckades att spara.");
     });
 
     function saveNote() {
@@ -310,7 +331,7 @@
         });
     }
 
-    loadCaseData().then(loadAdmins);
+    loadCaseData();
   </script>
 </body>
 </html>
