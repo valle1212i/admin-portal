@@ -122,7 +122,7 @@ router.post("/add-note", async (req, res) => {
   try {
     const updated = await Case.findOneAndUpdate(
       { sessionId },
-      { $push: { internalNotes: { note } } },
+      { $push: { internalNotes: { note, timestamp: new Date() } } },
       { new: true }
     );
 

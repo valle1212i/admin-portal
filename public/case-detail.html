@@ -248,13 +248,13 @@
         <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
       </div>`).join("");
 
-    const noteList = document.getElementById("note-list");
-    noteList.innerHTML = (data.notes || []).map(n => `
-      <div class="note-item">
-        ${n.text}
-        <small>🧑 ${n.author || "Okänd"} – ${new Date(n.timestamp).toLocaleString("sv-SE")}</small>
-      </div>
-    `).join("");
+      const noteList = document.getElementById("note-list");
+noteList.innerHTML = (data.internalNotes || []).map(n => `
+  <div class="note-item">
+    ${n.note}
+    <small>🕒 ${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</small>
+  </div>
+`).join("");
   }
 
   async function loadAdmins() {
