@@ -143,20 +143,22 @@
       margin-top: 20px;
     }
 
-    .note-card {
-      background: #fefefe;
-      border: 1px solid #ddd;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-top: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    .note-list {
+      margin-top: 10px;
     }
 
-    .note-card time {
+    .note-item {
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .note-item small {
       display: block;
-      font-size: 0.8rem;
-      color: #888;
-      margin-bottom: 6px;
+      color: #666;
+      margin-top: 6px;
     }
 
     @media (max-width: 900px) {
@@ -173,7 +175,7 @@
 <body>
   <div class="status-bar">
     <div class="status-buttons">
-      <button class="status-btn" data-status="Nytt">📂 Nytt</button>
+      <button class="status-btn" data-status="Nytt">🗂️ Nytt</button>
       <button class="status-btn" data-status="Arbetande">🛠️ Arbetande</button>
       <button class="status-btn" data-status="Väntar svar">⏳ Väntar svar</button>
       <button class="status-btn" data-status="On Hold">🛑 On Hold</button>
@@ -202,8 +204,9 @@
       <div class="note-section">
         <h3>📝 Intern anteckning</h3>
         <textarea id="internal-note" placeholder="Skriv en intern anteckning..."></textarea>
-        <button onclick="saveNote()">📏 Spara anteckning</button>
-        <div id="internal-notes"></div>
+        <button onclick="saveNote()">💾 Spara anteckning</button>
+
+        <div class="note-list" id="note-list"></div>
       </div>
 
       <div class="note-section">
@@ -227,6 +230,7 @@
   async function loadCaseData() {
     const res = await fetch(`/api/cases/meta/${sessionId}`);
     const data = await res.json();
+
     document.getElementById("case-id").textContent = data._id;
     document.getElementById("customer-name").textContent = data.customerName || "Okänd";
     document.getElementById("case-type").textContent = data.topic || "-";
@@ -244,16 +248,11 @@
         <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
       </div>`).join("");
 
-    renderNotes(data.notes);
-  }
-
-  function renderNotes(notes) {
-    const notesContainer = document.getElementById("internal-notes");
-    if (!notesContainer) return;
-    notesContainer.innerHTML = (notes || []).reverse().map(note => `
-      <div class="note-card">
-        <time>${new Date(note.timestamp).toLocaleString("sv-SE")}</time>
-        <div>${note.content}</div>
+    const noteList = document.getElementById("note-list");
+    noteList.innerHTML = (data.notes || []).map(n => `
+      <div class="note-item">
+        ${n.text}
+        <small>🧑 ${n.author || "Okänd"} – ${new Date(n.timestamp).toLocaleString("sv-SE")}</small>
       </div>
     `).join("");
   }
@@ -289,23 +288,33 @@
   function filterAdmins(value) {
     const datalist = document.getElementById("admin-suggestions");
     datalist.innerHTML = "";
-    currentAdmins.filter(a => a.name.toLowerCase().includes(value.toLowerCase())).forEach(a => {
-      const option = document.createElement("option");
-      option.value = a.name;
-      datalist.appendChild(option);
-    });
+    currentAdmins
+      .filter(a => a.name.toLowerCase().includes(value.toLowerCase()))
+      .forEach(a => {
+        const option = document.createElement("option");
+        option.value = a.name;
+        datalist.appendChild(option);
+      });
   }
 
-  async function saveNote() {
-    const note = document.getElementById("internal-note").value.trim();
-    if (!note) return alert("Ange en anteckning.");
-    await fetch("/api/cases/add-note", {
+  function saveNote() {
+    const note = document.getElementById("internal-note").value;
+    if (!note.trim()) return alert("Ange en anteckning.");
+    fetch("/api/cases/add-note", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, note })
-    });
-    document.getElementById("internal-note").value = "";
-    loadCaseData();
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          alert("📝 Anteckning sparad.");
+          document.getElementById("internal-note").value = "";
+          loadCaseData(); // 🔄 Ladda om anteckningar direkt
+        } else {
+          alert("❌ Kunde inte spara anteckning.");
+        }
+      });
   }
 
   function sendMessage() {
