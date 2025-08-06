@@ -32,6 +32,19 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ✅ NY: Hämta alla ärenden för en specifik kund
+router.get("/customer/:customerId", async (req, res) => {
+  const { customerId } = req.params;
+
+  try {
+    const cases = await Case.find({ customerId }).sort({ createdAt: -1 }).lean();
+    res.json(cases);
+  } catch (err) {
+    console.error("❌ Fel vid hämtning av ärenden för kund:", err);
+    res.status(500).json({ message: "Fel vid hämtning av ärenden" });
+  }
+});
+
 // 🧾 Hämta metadata för ett ärende via sessionId
 router.get("/meta/:sessionId", async (req, res) => {
   try {
@@ -137,52 +150,51 @@ router.post("/add-note", async (req, res) => {
 
 // 💬 Skicka meddelande till kund (lägg till i messages och uppdatera kundens supporthistorik)
 router.post("/send-message", async (req, res) => {
-    const { sessionId, message } = req.body;
-  
-    if (!sessionId || !message) {
-      return res.status(400).json({ success: false, message: "sessionId och message krävs." });
+  const { sessionId, message } = req.body;
+
+  if (!sessionId || !message) {
+    return res.status(400).json({ success: false, message: "sessionId och message krävs." });
+  }
+
+  try {
+    const msg = {
+      sender: "admin",
+      message,
+      timestamp: new Date()
+    };
+
+    const caseDoc = await Case.findOneAndUpdate(
+      { sessionId },
+      { $push: { messages: msg } },
+      { new: true }
+    );
+
+    if (!caseDoc) {
+      return res.status(404).json({ success: false, message: "Ärende ej hittat." });
     }
-  
-    try {
-      const msg = {
-        sender: "admin",
-        message,
-        timestamp: new Date()
-      };
-  
-      // 🔁 Uppdatera case med nytt meddelande
-      const caseDoc = await Case.findOneAndUpdate(
-        { sessionId },
-        { $push: { messages: msg } },
-        { new: true }
-      );
-  
-      if (!caseDoc) {
-        return res.status(404).json({ success: false, message: "Ärende ej hittat." });
-      }
-  
-      // 📌 Uppdatera kundens supporthistorik
-      const supportItem = {
-        caseId: caseDoc._id.toString(),
-        topic: caseDoc.topic || "Okänt ärende",
-        date: new Date(),
-        status: caseDoc.status || "Pågående"
-      };
-      
-  
-      await Customer.findByIdAndUpdate(
-        customerId,
-        { $push: { supportHistory: supportItem } },
-        { new: true }
-      );
-  
-      res.json({ success: true });
-    } catch (err) {
-      console.error("❌ Fel vid skickande av meddelande:", err);
-      res.status(500).json({ success: false });
-    }
-  });
-  
+
+    // OBS! Lägg till denna rad – saknades:
+    const customerId = caseDoc.customerId;
+
+    const supportItem = {
+      caseId: caseDoc._id.toString(),
+      topic: caseDoc.topic || "Okänt ärende",
+      date: new Date(),
+      status: caseDoc.status || "Pågående"
+    };
+
+    await Customer.findByIdAndUpdate(
+      customerId,
+      { $push: { supportHistory: supportItem } },
+      { new: true }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Fel vid skickande av meddelande:", err);
+    res.status(500).json({ success: false });
+  }
+});
 
 // 🧾 Hämta ett ärende via dess MongoDB _id (LÄGG DENNA SIST!)
 router.get("/:id", async (req, res) => {
