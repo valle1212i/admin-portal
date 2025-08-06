@@ -116,7 +116,7 @@
         });
 
       // 🔹 Hämta kundens ärenden (cases)
-      fetch(`/api/cases/by-customer/${id}`)
+      fetch(`/api/cases/customer/${id}`)
         .then(res => res.json())
         .then(cases => {
           const container = document.getElementById("casesContainer");

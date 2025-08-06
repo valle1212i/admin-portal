@@ -34,16 +34,17 @@ router.get("/", async (req, res) => {
 
 // ✅ NY: Hämta alla ärenden för en specifik kund
 router.get("/customer/:customerId", async (req, res) => {
-  const { customerId } = req.params;
+    const { customerId } = req.params;
+  
+    try {
+      const cases = await Case.find({ customerId }).sort({ createdAt: -1 }).lean();
+      res.json(cases);
+    } catch (err) {
+      console.error("❌ Fel vid hämtning av ärenden för kund:", err);
+      res.status(500).json({ message: "Fel vid hämtning av ärenden" });
+    }
+  });
 
-  try {
-    const cases = await Case.find({ customerId }).sort({ createdAt: -1 }).lean();
-    res.json(cases);
-  } catch (err) {
-    console.error("❌ Fel vid hämtning av ärenden för kund:", err);
-    res.status(500).json({ message: "Fel vid hämtning av ärenden" });
-  }
-});
 
 // 🧾 Hämta metadata för ett ärende via sessionId
 router.get("/meta/:sessionId", async (req, res) => {
