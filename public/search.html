@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sök Kund</title>
+  <link rel="stylesheet" href="/css/search.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Sök Kund</h1>
+
+    <div class="search-controls">
+      <input type="text" id="searchInput" placeholder="Skriv t.ex. e-post, org.nr, ärende-ID eller info...">
+      <select id="filterSelect">
+        <option value="all">Alla fält</option>
+        <option value="email">E-post</option>
+        <option value="orgnr">Organisationsnummer</option>
+        <option value="caseId">Ärende-ID</option>
+        <option value="caseInfo">Ärendeinfo</option>
+      </select>
+    </div>
+
+    <ul id="results" class="results-list">
+      <!-- Resultat genereras här via JS -->
+    </ul>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById("searchInput");
+    const filterSelect = document.getElementById("filterSelect");
+    const results = document.getElementById("results");
+
+    searchInput.addEventListener("input", async () => {
+      const query = searchInput.value.trim();
+      const filter = filterSelect.value;
+
+      if (query.length < 2) {
+        results.innerHTML = "";
+        return;
+      }
+
+      const res = await fetch(`/api/customers/search?q=${encodeURIComponent(query)}&filter=${filter}`);
+      const data = await res.json();
+
+      results.innerHTML = data.length
+        ? data.map(kund => `
+            <li class="result-item">
+              <h3>${kund.namn || 'Okänd kund'} (${kund._id})</h3>
+              <p><strong>📧 Email:</strong> ${kund.email}</p>
+              <p><strong>🏢 Org.nr:</strong> ${kund.orgnr || '–'}</p>
+              <p><strong>💬 Ärenden:</strong> ${kund.cases?.length || 0}</p>
+              <a href="/admin-customer.html?id=${kund._id}" class="btn">Gå till kund</a>
+            </li>
+          `).join("")
+        : "<li class='no-results'>Inga kunder hittades.</li>";
+    });
+  </script>
+</body>
+</html>
