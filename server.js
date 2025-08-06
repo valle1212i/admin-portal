@@ -160,6 +160,7 @@ io.on("connection", (socket) => {
       let caseExists = await Case.findOne({ sessionId });
       if (!caseExists) {
         const newCase = new Case({
+          caseId: `CASE-${Date.now().toString(36).toUpperCase()}`, // 🆕 Lägg till detta!
           sessionId,
           customerId,
           topic,
@@ -167,6 +168,7 @@ io.on("connection", (socket) => {
           messages: [],
           createdAt: new Date()
         });
+        
 
         await newCase.save();
         console.log("🆕 Ny chatsession sparad:", sessionId);
