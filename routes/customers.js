@@ -4,9 +4,8 @@ const mongoose = require("mongoose");
 
 // 🔗 Skapa separat MongoDB-koppling till kundportalen
 const customerConnection = mongoose.createConnection(process.env.CUSTOMER_DB_URI, {
-    dbName: "kundportal", // 
-  });
-  
+  dbName: "kundportal",
+});
 
 // 🧱 Definiera Customer-modellen
 const Customer = customerConnection.model(
@@ -36,52 +35,64 @@ router.get("/latest", async (req, res) => {
     res.status(500).json({ error: "Kunde inte hämta kunddata" });
   }
 });
-// SÖK: hämta kunder baserat på sökord i namn eller e-post
+
+// 🔍 Sök kund
 router.get("/search", async (req, res) => {
-    const query = req.query.q;
-  
-    try {
-      const kunder = await Customer.find({
-        $or: [
-            { name: { $regex: query, $options: "i" } },
-            { email: { $regex: query, $options: "i" } }
-          ]          
-      });
-      res.json(kunder);
-    } catch (err) {
-      console.error("Fel vid sökning:", err);
-      res.status(500).json({ error: "Kunde inte söka kunder" });
-    }
-  });
-  // Hämta alla kunder
+  const query = req.query.q;
+
+  try {
+    const kunder = await Customer.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { email: { $regex: query, $options: "i" } },
+      ],
+    });
+    res.json(kunder);
+  } catch (err) {
+    console.error("Fel vid sökning:", err);
+    res.status(500).json({ error: "Kunde inte söka kunder" });
+  }
+});
+
+// 📋 Hämta alla kunder
 router.get("/all", async (req, res) => {
-    try {
-      const kunder = await Customer.find({});
-      res.json(kunder);
-    } catch (err) {
-      console.error("Fel vid hämtning av kunder:", err);
-      res.status(500).json({ error: "Kunde inte hämta kunder" });
+  try {
+    const kunder = await Customer.find({});
+    res.json(kunder);
+  } catch (err) {
+    console.error("Fel vid hämtning av kunder:", err);
+    res.status(500).json({ error: "Kunde inte hämta kunder" });
+  }
+});
+
+// 📄 Hämta en enskild kund via ID
+router.get("/by-id/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const kund = await Customer.findById(id);
+    if (!kund) return res.status(404).send("Kund hittades inte");
+    res.json(kund);
+  } catch (err) {
+    console.error("Fel vid hämtning av kund:", err);
+    res.status(500).json({ error: "Kunde inte hämta kund" });
+  }
+});
+
+// ✅ GET: Hämta marknadsföringsval för en specifik kund
+router.get("/:id/marketing", async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id).lean();
+
+    if (!customer) {
+      return res.status(404).json({ error: "Kund hittades inte" });
     }
-  });
-  // 📄 Hämta en enskild kund via ID
-  router.get("/by-id/:id", async (req, res) => {
-    const { id } = req.params;
-  
-    try {
-      const kund = await Customer.findById(id);
-      if (!kund) return res.status(404).send("Kund hittades inte");
-  
-      // Om du använder en vy (t.ex. admin-customer.html via res.render)
-      // res.render("admin-customer", { kund });
-  
-      // Om du vill skicka JSON (används i frontend som fetch)
-      res.json(kund);
-    } catch (err) {
-      console.error("Fel vid hämtning av kund:", err);
-      res.status(500).json({ error: "Kunde inte hämta kund" });
-    }
-  });
-  
-  
-  module.exports = router;
-  
+
+    res.json(customer.marketingData || {});
+  } catch (err) {
+    console.error("❌ Fel vid hämtning av marknadsföringsdata:", err);
+    res.status(500).json({ error: "Serverfel vid hämtning" });
+  }
+});
+
+module.exports = router;
