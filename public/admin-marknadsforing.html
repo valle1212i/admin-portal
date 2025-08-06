@@ -2,91 +2,66 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <title>Marknadsföringsdata</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/css/admin-marknadsforing.css" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f4f6f8;
-      padding: 40px;
-      max-width: 800px;
-      margin: auto;
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-    }
-
-    .section {
-      background: #fff;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-    .label {
-      font-weight: bold;
-      margin-top: 12px;
-      display: block;
-    }
-
-    .value {
-      margin-bottom: 12px;
-    }
-
-    .back-link {
-      display: inline-block;
-      margin-bottom: 20px;
-      color: #007bff;
-      text-decoration: none;
-    }
-  </style>
+  <title>Admin – Marknadsföringsansökningar</title>
+  <link rel="stylesheet" href="css/admin-marknadsforing.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body>
-  <a href="/dashboard" class="back-link">← Tillbaka till dashboard</a>
-  <h1>📈 Marknadsföringsval</h1>
-
-  <div id="content" class="section">
-    <p>⏳ Laddar kundens marknadsdata...</p>
+  <div class="sidebar">
+    <h2>Admin</h2>
+    <ul class="nav">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li class="active"><a href="admin-marknadsforing.html">Marknadsföring</a></li>
+      <li><a href="customers.html">Kunder</a></li>
+      <li><a href="settings.html">Inställningar</a></li>
+    </ul>
   </div>
 
+  <main class="content">
+    <h1>📅 Marknadsföringsval</h1>
+    <div id="submissions" class="submission-list">
+      <p>Laddar kunddata...</p>
+    </div>
+  </main>
+
   <script>
-    const customerId = new URLSearchParams(window.location.search).get("id");
+    async function fetchSubmissions() {
+      const container = document.getElementById("submissions");
+      container.innerHTML = "♻️ Hämtar data...";
 
-    if (!customerId) {
-      document.getElementById("content").innerHTML = "<p style='color:red;'>Kund-ID saknas i URL:en</p>";
-    } else {
-      fetch(`/api/customers/${customerId}/marketing`)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById("content");
+      try {
+        const res = await fetch("/api/customers/marketing-submissions");
+        const kunder = await res.json();
 
-          if (!data || Object.keys(data).length === 0) {
-            container.innerHTML = "<p>❌ Ingen marknadsföringsdata har sparats för denna kund.</p>";
-            return;
-          }
+        if (!kunder.length) {
+          return container.innerHTML = "<p>Inga inskickade val ännu.</p>";
+        }
 
-          container.innerHTML = `
-            <div>
-              <span class="label">📢 Plattformar:</span>
-              <div class="value">${Array.isArray(data.platforms) ? data.platforms.join(", ") : "-"}</div>
+        container.innerHTML = "";
 
-              <span class="label">🎯 Mål:</span>
-              <div class="value">${data.goals || "-"}</div>
+        kunder.forEach(kund => {
+          const box = document.createElement("div");
+          box.className = "submission-box";
 
-              <span class="label">💬 Kommentar:</span>
-              <div class="value">${data.comment || "-"}</div>
-            </div>
+          box.innerHTML = `
+            <h3>${kund.name || "Namn saknas"} <span>(${kund.email})</span></h3>
+            <p><strong>Google Ads:</strong> ${kund.marketing?.googleAds?.goals || "-"}</p>
+            <p><strong>Meta Ads:</strong> ${kund.marketing?.metaAds?.goals || "-"}</p>
+            <p><strong>TikTok Ads:</strong> ${kund.marketing?.tiktokAds?.goals || "-"}</p>
+            <p><strong>LinkedIn Ads:</strong> ${kund.marketing?.linkedinAds?.goals || "-"}</p>
+            <p><strong>Senast uppdaterad:</strong> ${kund.marketing?.updatedAt ? new Date(kund.marketing.updatedAt).toLocaleDateString('sv-SE') : "Okänt"}</p>
           `;
-        })
-        .catch(err => {
-          console.error("❌ Fel vid hämtning:", err);
-          document.getElementById("content").innerHTML = "<p style='color:red;'>Kunde inte hämta data.</p>";
+
+          container.appendChild(box);
         });
+      } catch (err) {
+        console.error("Fel vid hämtning:", err);
+        container.innerHTML = "<p class='error'>⛔️ Fel vid hämtning av data.</p>";
+      }
     }
+
+    fetchSubmissions();
   </script>
 </body>
 </html>

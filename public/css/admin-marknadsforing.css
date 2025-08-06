@@ -2,26 +2,26 @@
 
 body {
     font-family: 'Inter', 'Helvetica Neue', sans-serif;
-    background: #f8f9fb;
+    background: #f4f6f9;
     color: #1e1e1e;
     margin: 0;
     padding: 40px 20px;
-    max-width: 900px;
+    max-width: 1200px;
     margin-inline: auto;
     line-height: 1.6;
   }
   
   h1 {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     color: #222;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
   }
   
   a.back-link {
     display: inline-block;
     color: #007bff;
     text-decoration: none;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     font-weight: 500;
   }
   
@@ -30,36 +30,51 @@ body {
   }
   
   .section {
-    background: #fff;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 20px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease-in-out;
+    margin-bottom: 32px;
   }
   
   .section:hover {
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.07);
+  }
+  
+  .section-header {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #222;
+  }
+  
+  .customer-email {
+    color: #007bff;
+    font-weight: 500;
+    margin-bottom: 12px;
   }
   
   .label {
-    font-size: 0.95rem;
-    color: #888;
-    margin-top: 20px;
-    display: block;
+    font-size: 0.85rem;
+    color: #666;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-top: 20px;
+    display: block;
+    letter-spacing: 0.6px;
   }
   
   .value {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 500;
     color: #333;
-    background: #f1f3f7;
+    background: #f3f5f9;
     padding: 12px 16px;
     border-radius: 10px;
     margin-top: 6px;
     white-space: pre-wrap;
+    transition: background 0.3s;
   }
   
   .value:empty::after {
@@ -67,22 +82,67 @@ body {
     color: #bbb;
   }
   
-  .section p {
+  .value.stale {
+    background: #fff4f4;
+    border: 1px solid #f8c1c1;
+  }
+  
+  .stale-badge {
+    display: inline-block;
+    background-color: #ffe3e3;
+    color: #b80000;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-top: 10px;
+    font-weight: 600;
+  }
+  
+  .badge {
+    background-color: #e3f6ff;
+    color: #0277bd;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-right: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .card-footer {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #777;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .updated-at {
     font-style: italic;
     color: #666;
   }
   
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .section {
-      padding: 24px;
+      padding: 20px;
     }
   
     h1 {
-      font-size: 1.6rem;
+      font-size: 1.8rem;
+    }
+  
+    .label {
+      font-size: 0.8rem;
     }
   
     .value {
       font-size: 1rem;
+    }
+  
+    .section-header {
+      font-size: 1.2rem;
     }
   }
   

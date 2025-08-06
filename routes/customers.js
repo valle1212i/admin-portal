@@ -95,4 +95,23 @@ router.get("/:id/marketing", async (req, res) => {
   }
 });
 
+// ✅ NY: Hämta alla kunder med marknadsföringsdata
+router.get("/marketing-submissions", async (req, res) => {
+  try {
+    const kunder = await Customer.find({
+      $or: [
+        { "marketing.googleAds": { $exists: true } },
+        { "marketing.metaAds": { $exists: true } },
+        { "marketing.tiktokAds": { $exists: true } },
+        { "marketing.linkedinAds": { $exists: true } }
+      ]
+    });
+
+    res.json(kunder);
+  } catch (err) {
+    console.error("❌ Fel vid hämtning av marknadsföringsansökningar:", err);
+    res.status(500).json({ error: "Kunde inte hämta marknadsföringsdata" });
+  }
+});
+
 module.exports = router;
