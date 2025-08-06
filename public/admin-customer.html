@@ -1,119 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
+<head>
   <meta charset="UTF-8" />
   <title>Kundprofil</title>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Kundprofil</title>
-    <link rel="stylesheet" href="/css/dashboard.css" />
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        padding: 40px;
-        background: #f2f2f2;
-      }
-      .card {
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        max-width: 600px;
-        margin: auto;
-        box-shadow: 0 0 8px rgba(0,0,0,0.05);
-      }
-      h1 {
-        margin-top: 0;
-      }
-      .label {
-        font-weight: bold;
-      }
-    </style>
-  </head>
-<body>
-  <div class="card">
-    <h1 id="name">Laddar kund...</h1>
-    <p><span class="label">Email:</span> <span id="email"></span></p>
-    <p><span class="label">Status:</span> <span id="status"></span></p>
-    <p><span class="label">Skapad:</span> <span id="createdAt"></span></p>
-    <a href="/admin.html">← Tillbaka</a>
-  </div>
+  <link rel="stylesheet" href="/css/admin-customer.css" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 40px;
+      background: #f5f6fa;
+    }
 
-  <div class="card">
-    <h2>Livechat-meddelanden</h2>
-    <div id="chatMessagesAdmin" style="max-height:300px; overflow-y:auto; border:1px solid #ccc; padding:10px;"></div>
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    .label {
+      font-weight: bold;
+      display: inline-block;
+      width: 120px;
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #007bff;
+    }
+
+    .chat-message {
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #f1f1f1;
+      border-radius: 8px;
+    }
+
+    .chat-message .sender {
+      font-weight: bold;
+    }
+
+    .chat-message .timestamp {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .case-card {
+      background: #f9f9f9;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/dashboard" class="back-link">← Tillbaka till dashboard</a>
+
+    <div class="card">
+      <h1 id="name">Laddar kund...</h1>
+      <p><span class="label">📧 E-post:</span> <span id="email"></span></p>
+      <p><span class="label">🆔 ID:</span> <span id="customerId"></span></p>
+      <p><span class="label">🕒 Skapad:</span> <span id="createdAt"></span></p>
+      <p><span class="label">🏷️ Kampanj:</span> <span id="campaigns"></span></p>
+      <p><span class="label">🏭 Bransch:</span> <span id="industry"></span></p>
+      <p><span class="label">🌐 Webbplats:</span> <span id="website"></span></p>
+    </div>
+
+    <div class="card">
+      <h2>📂 Relaterade Ärenden</h2>
+      <div id="casesContainer">Laddar ärenden...</div>
+    </div>
+
+    <div class="card">
+      <h2>💬 Livechat-meddelanden</h2>
+      <div id="chatMessagesAdmin">Laddar meddelanden...</div>
+    </div>
   </div>
-  
 
   <script>
     const id = new URLSearchParams(window.location.search).get("id");
-  
+
     if (!id) {
-      document.body.innerHTML = "<p>Kund-ID saknas</p>";
+      document.body.innerHTML = "<p>Kund-ID saknas.</p>";
     } else {
-      fetch(`/api/customers/${id}`)
+      // 🔹 Hämta kunddata
+      fetch(`/api/customers/by-id/${id}`)
         .then(res => res.json())
         .then(data => {
-          console.log("Kunddata:", data);
-  
-          document.getElementById("name").textContent = data.name || "Okänd";
+          document.getElementById("name").textContent = data.name || "Okänd kund";
           document.getElementById("email").textContent = data.email || "-";
-  
-          if (data.campaigns) {
-            const p = document.createElement("p");
-            p.innerHTML = `<span class="label">Kampanj:</span> ${data.campaigns}`;
-            document.querySelector(".card").appendChild(p);
-          }
-  
-          if (data.industry) {
-            const p = document.createElement("p");
-            p.innerHTML = `<span class="label">Bransch:</span> ${data.industry}`;
-            document.querySelector(".card").appendChild(p);
-          }
-  
-          if (data.website) {
-            const p = document.createElement("p");
-            p.innerHTML = `<span class="label">Webbplats:</span> <a href="${data.website}" target="_blank">${data.website}</a>`;
-            document.querySelector(".card").appendChild(p);
-          }
-  
-        
-// 🔁 Hämta livechat-meddelanden från kund
-fetch(`/api/chat/customer/${id}`)
-  .then(res => res.json())
-  .then(chatData => {
-    const container = document.getElementById("chatMessagesAdmin");
-    container.innerHTML = "";
-
-    if (chatData.length === 0) {
-      container.innerHTML = "<p>Inga meddelanden ännu.</p>";
-    } else {
-      chatData.forEach(msg => {
-        const div = document.createElement("div");
-        div.style.marginBottom = "10px";
-        div.innerHTML = `
-          <strong>${msg.sender === "customer" ? "Kund" : "Admin"}:</strong> ${msg.message}
-          <br><small style="color:#999;">${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-        `;
-        container.appendChild(div);
-      });
-    }
-  })
-  .catch(err => {
-    console.error("Kunde inte hämta chattmeddelanden:", err);
-    const container = document.getElementById("chatMessagesAdmin");
-    container.innerHTML = "<p style='color:red;'>❌ Fel vid hämtning av chattmeddelanden.</p>";
-  });
-
-
-  
-        }) <!-- ← hit hör det -->
+          document.getElementById("customerId").textContent = data._id || "-";
+          document.getElementById("createdAt").textContent = new Date(data.createdAt).toLocaleString("sv-SE") || "-";
+          document.getElementById("campaigns").textContent = data.campaigns || "-";
+          document.getElementById("industry").textContent = data.industry || "-";
+          document.getElementById("website").innerHTML = data.website 
+            ? `<a href="${data.website}" target="_blank">${data.website}</a>` 
+            : "-";
+        })
         .catch(err => {
-          document.body.innerHTML = "<p>Kunde inte hämta kunddata.</p>";
-          console.error("Fel:", err);
+          console.error("❌ Kunde inte hämta kundinfo:", err);
+          document.querySelector(".container").innerHTML = "<p style='color:red;'>Fel vid hämtning av kunddata.</p>";
+        });
+
+      // 🔹 Hämta kundens ärenden (cases)
+      fetch(`/api/cases/by-customer/${id}`)
+        .then(res => res.json())
+        .then(cases => {
+          const container = document.getElementById("casesContainer");
+          if (!cases.length) {
+            container.innerHTML = "<p>Inga ärenden hittades.</p>";
+            return;
+          }
+
+          container.innerHTML = cases.map(c => `
+            <div class="case-card">
+              <p><strong>📌 Case ID:</strong> ${c.caseId || "–"}</p>
+              <p><strong>📝 Ämne:</strong> ${c.topic || "–"}</p>
+              <p><strong>📄 Beskrivning:</strong> ${c.description || "–"}</p>
+              <p><strong>📅 Skapad:</strong> ${new Date(c.createdAt).toLocaleString("sv-SE")}</p>
+            </div>
+          `).join("");
+        })
+        .catch(err => {
+          console.error("❌ Kunde inte hämta ärenden:", err);
+          document.getElementById("casesContainer").innerHTML = "<p style='color:red;'>Fel vid hämtning av ärenden.</p>";
+        });
+
+      // 🔹 Hämta chattmeddelanden
+      fetch(`/api/chat/customer/${id}`)
+        .then(res => res.json())
+        .then(messages => {
+          const container = document.getElementById("chatMessagesAdmin");
+          if (!messages.length) {
+            container.innerHTML = "<p>Inga meddelanden hittades.</p>";
+            return;
+          }
+
+          container.innerHTML = messages.map(msg => `
+            <div class="chat-message">
+              <div class="sender">${msg.sender === "customer" ? "👤 Kund" : "🛠️ Admin"}:</div>
+              <div>${msg.message}</div>
+              <div class="timestamp">${new Date(msg.timestamp).toLocaleString("sv-SE")}</div>
+            </div>
+          `).join("");
+        })
+        .catch(err => {
+          console.error("❌ Kunde inte hämta meddelanden:", err);
+          document.getElementById("chatMessagesAdmin").innerHTML = "<p style='color:red;'>Fel vid hämtning av chatt.</p>";
         });
     }
   </script>
-  <script src="/js/adminChat.js"></script>
-
-  
 </body>
 </html>

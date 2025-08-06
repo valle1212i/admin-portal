@@ -263,8 +263,8 @@
       const data = await res.json();
       const results = document.getElementById("searchResults");
       results.innerHTML = data.length
-        ? data.map(kund => `<li><a href="/admin-customer.html?id=${kund._id}"><strong>${kund.namn}</strong> – ${kund.email}</a></li>`).join("")
-        : "<li>Inga kunder hittades</li>";
+  ? data.map(kund => `<li><a href="/admin-customer.html?id=${kund._id}"><strong>${kund.name}</strong> – ${kund.email}</a></li>`).join("")
+  : "<li>Inga kunder hittades</li>";
     });
 
     // ⏱️ Uppdatera adminstatus var 5:e sekund
