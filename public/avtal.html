@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Avtalshantering - Adminportal</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h1 { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #eee; }
+    .upload-box { background: #fff; padding: 20px; border: 1px solid #ccc; }
+    .upload-box input, .upload-box select { margin: 10px 0; padding: 5px; }
+    .btn { background: #007bff; color: white; padding: 8px 15px; border: none; cursor: pointer; }
+    .btn:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>📑 Avtalshantering</h1>
+
+  <!-- Lista med sparade avtal -->
+  <h2>Befintliga avtal</h2>
+  <table id="contractsTable">
+    <thead>
+      <tr>
+        <th>Kund</th>
+        <th>Filnamn</th>
+        <th>Datum</th>
+        <th>Status</th>
+        <th>Länk</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Fylls dynamiskt med JS -->
+    </tbody>
+  </table>
+
+  <!-- Ladda upp nytt avtal -->
+  <div class="upload-box">
+    <h2>Ladda upp nytt avtal</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <label for="customer">Välj kund:</label><br>
+      <select id="customer" name="customerId" required></select><br>
+
+      <label for="contractFile">Avtalsfil (PDF/DOCX):</label><br>
+      <input type="file" id="contractFile" name="contractFile" accept=".pdf,.doc,.docx" required><br>
+
+      <label for="status">Status:</label><br>
+      <select id="status" name="status">
+        <option value="Aktivt">Aktivt</option>
+        <option value="Utgått">Utgått</option>
+        <option value="Pågående">Pågående</option>
+      </select><br>
+
+      <button type="submit" class="btn">📤 Ladda upp</button>
+    </form>
+  </div>
+
+  <script>
+    // 🔹 Hämta kunder för dropdown
+    async function loadCustomers() {
+      const res = await fetch('/api/customers');
+      const data = await res.json();
+      const select = document.getElementById('customer');
+      data.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c._id;
+        opt.textContent = c.name + " (" + c.email + ")";
+        select.appendChild(opt);
+      });
+    }
+
+    // 🔹 Hämta befintliga avtal
+    async function loadContracts() {
+      const res = await fetch('/api/contracts');
+      const data = await res.json();
+      const tbody = document.querySelector('#contractsTable tbody');
+      tbody.innerHTML = '';
+      data.forEach(contract => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${contract.customerName}</td>
+          <td>${contract.filename}</td>
+          <td>${new Date(contract.uploadedAt).toLocaleDateString('sv-SE')}</td>
+          <td>${contract.status}</td>
+          <td><a href="${contract.fileUrl}" target="_blank">Öppna</a></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // 🔹 Ladda upp nytt avtal
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const res = await fetch('/api/contracts/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        alert("✅ Avtalet laddades upp");
+        loadContracts();
+      } else {
+        alert("❌ Misslyckades att ladda upp avtal");
+      }
+    });
+
+    loadCustomers();
+    loadContracts();
+  </script>
+</body>
+</html>
