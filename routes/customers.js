@@ -113,5 +113,22 @@ router.get("/marketing-submissions", async (req, res) => {
     res.status(500).json({ error: "Kunde inte hämta marknadsföringsdata" });
   }
 });
+// Minimal kundlista för dropdown i avtal (endast admin)
+const { requireAuth } = require('./security');
+
+router.get('/all-basic', requireAuth, async (req, res) => {
+  try {
+    const user = req.session?.user;
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Åtkomst nekad' });
+    }
+
+    const customers = await Customer.find({}, { name: 1, email: 1 }).sort({ name: 1 }).lean();
+    res.json(customers);
+  } catch (err) {
+    console.error('❌ /api/customers/all-basic fel:', err);
+    res.status(500).json({ success: false, message: 'Serverfel' });
+  }
+});
 
 module.exports = router;

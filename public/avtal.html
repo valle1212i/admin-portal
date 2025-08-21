@@ -31,21 +31,18 @@
         <th>Länk</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Fylls dynamiskt med JS -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <!-- Ladda upp nytt avtal -->
   <div class="upload-box">
     <h2>Ladda upp nytt avtal</h2>
     <form id="uploadForm" enctype="multipart/form-data">
-        <label for="customerSearch">Välj kund:</label><br>
-        <input id="customerSearch" list="customersList" placeholder="Sök namn eller e-post" autocomplete="off" required />
-        <datalist id="customersList"></datalist>
-        <input type="hidden" id="customerId" name="customerId" />
-        <br>
-        
+      <label for="customerSearch">Välj kund:</label><br>
+      <input id="customerSearch" list="customersList" placeholder="Sök namn eller e-post" autocomplete="off" required />
+      <datalist id="customersList"></datalist>
+      <input type="hidden" id="customerId" name="customerId" />
+      <br>
 
       <label for="contractFile">Avtalsfil (PDF/DOCX):</label><br>
       <input type="file" id="contractFile" name="contractFile" accept=".pdf,.doc,.docx" required><br>
@@ -62,100 +59,111 @@
   </div>
 
   <script>
-   // 🔹 Hämta kunder för söklistan (datalist) och mappa label -> id
-let CUSTOMER_LABEL_TO_ID = new Map();
+    // Label -> _id mappning för datalist
+    let CUSTOMER_LABEL_TO_ID = new Map();
 
-async function loadCustomers() {
-  try {
-    const res = await fetch('/api/customers', { credentials: 'include' });
-    if (!res.ok) throw new Error('Kunde inte hämta kunder');
+    // Hämta kunder (admin-skyddad minimal-lista)
+    async function loadCustomers() {
+      try {
+        const res = await fetch('/api/customers/all-basic', { credentials: 'include' });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          console.warn('❌ Kundlista svar:', res.status, txt);
+          throw new Error(`Kunde inte hämta kunder (${res.status})`);
+        }
 
-    const customers = await res.json();
-    const dl = document.getElementById('customersList');
-    dl.innerHTML = '';
-    CUSTOMER_LABEL_TO_ID.clear();
+        const customers = await res.json();
+        const dl = document.getElementById('customersList');
+        dl.innerHTML = '';
+        CUSTOMER_LABEL_TO_ID.clear();
 
-    customers.forEach(c => {
-      const label = `${c.name || 'Namnlös'} (${c.email || 'okänd'})`;
-      const opt = document.createElement('option');
-      opt.value = label; // visas i sökfältet
-      dl.appendChild(opt);
-      CUSTOMER_LABEL_TO_ID.set(label, c._id); // för att slå upp ID
-    });
-
-  } catch (err) {
-    console.error('❌ loadCustomers fel:', err);
-    alert('Kunde inte ladda kundlistan.');
-  }
-}
-
-// 🔹 Lyssna på inmatning och sätt hidden customerId
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('customerSearch');
-  const hiddenId = document.getElementById('customerId');
-
-  // När användaren väljer ett förslag eller skriver exakt label
-  input.addEventListener('input', () => {
-    const typed = input.value;
-    const id = CUSTOMER_LABEL_TO_ID.get(typed) || '';
-    hiddenId.value = id;
-  });
-});
-
-
-    // 🔹 Hämta befintliga avtal
-    async function loadContracts() {
-      const res = await fetch('/api/contracts');
-      const data = await res.json();
-      const tbody = document.querySelector('#contractsTable tbody');
-      tbody.innerHTML = '';
-      data.forEach(contract => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${contract.customerName}</td>
-          <td>${contract.filename}</td>
-          <td>${new Date(contract.uploadedAt).toLocaleDateString('sv-SE')}</td>
-          <td>${contract.status}</td>
-          <td><a href="${contract.fileUrl}" target="_blank">Öppna</a></td>
-        `;
-        tbody.appendChild(row);
-      });
+        customers.forEach(c => {
+          const label = `${c.name || 'Namnlös'} (${c.email || 'okänd'})`;
+          const opt = document.createElement('option');
+          opt.value = label;          // visas i förslagen
+          dl.appendChild(opt);
+          CUSTOMER_LABEL_TO_ID.set(label, c._id); // label -> id
+        });
+      } catch (err) {
+        console.error('❌ loadCustomers fel:', err);
+        alert('Kunde inte ladda kundlistan.');
+      }
     }
 
-    //Ladda upp ett nytt avtal
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+    // Sätt hidden customerId när man väljer ett förslag
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('customerSearch');
+      const hiddenId = document.getElementById('customerId');
 
-  const customerId = document.getElementById('customerId').value;
-  if (!customerId) {
-    alert('Välj en kund från listan (använd förslagen).');
-    document.getElementById('customerSearch').focus();
-    return;
-  }
-
-  const formData = new FormData(e.target);
-
-  try {
-    const res = await fetch('/api/contracts/upload', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include'
+      input.addEventListener('input', () => {
+        const typed = input.value;
+        hiddenId.value = CUSTOMER_LABEL_TO_ID.get(typed) || '';
+      });
     });
-    if (!res.ok) throw new Error('Upload misslyckades');
 
-    alert('✅ Avtalet laddades upp');
-    // Nollställ fälten
-    e.target.reset();
-    document.getElementById('customerId').value = '';
-    loadContracts();
+    // Hämta befintliga avtal
+    async function loadContracts() {
+      try {
+        const res = await fetch('/api/contracts', { credentials: 'include' });
+        if (!res.ok) throw new Error('Kunde inte hämta avtal');
 
-  } catch (err) {
-    console.error('❌ Upload-fel:', err);
-    alert('❌ Misslyckades att ladda upp avtal');
-  }
-});
+        const data = await res.json();
+        const tbody = document.querySelector('#contractsTable tbody');
+        tbody.innerHTML = '';
 
+        data.forEach(contract => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${contract.customerName}</td>
+            <td>${contract.filename}</td>
+            <td>${new Date(contract.uploadedAt).toLocaleDateString('sv-SE')}</td>
+            <td>${contract.status}</td>
+            <td><a href="${contract.fileUrl}" target="_blank" rel="noopener">Öppna</a></td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error('❌ loadContracts fel:', err);
+        alert('Kunde inte ladda avtalen.');
+      }
+    }
 
+    // Ladda upp nytt avtal
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const customerId = document.getElementById('customerId').value;
+      if (!customerId) {
+        alert('Välj en kund från listan (använd förslagen).');
+        document.getElementById('customerSearch').focus();
+        return;
+      }
+
+      const formData = new FormData(e.target);
+
+      try {
+        const res = await fetch('/api/contracts/upload', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          console.warn('❌ Upload svar:', res.status, txt);
+          throw new Error('Upload misslyckades');
+        }
+
+        alert('✅ Avtalet laddades upp');
+        e.target.reset();
+        document.getElementById('customerId').value = '';
+        loadContracts();
+      } catch (err) {
+        console.error('❌ Upload-fel:', err);
+        alert('❌ Misslyckades att ladda upp avtal');
+      }
+    });
+
+    // Init
     loadCustomers();
     loadContracts();
   </script>
