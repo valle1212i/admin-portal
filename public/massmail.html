@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <title>Massutskick – Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0b0f19; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#3b82f6; --ok:#10b981; --err:#ef4444; }
+    body { margin:0; padding:24px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
+    h1 { margin:0 0 16px; font-size:22px; }
+    .row { display:grid; gap:16px; grid-template-columns: 1fr; }
+    @media (min-width: 980px) { .row { grid-template-columns: 1.2fr 1fr; } }
+    .card { background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:18px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; }
+    input[type="text"], input[type="number"], textarea {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #243041; background:#0f172a; color:var(--text);
+    }
+    textarea { min-height:180px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .row-2 { display:grid; gap:12px; grid-template-columns:1fr 1fr; }
+    .row-3 { display:grid; gap:12px; grid-template-columns:1fr 1fr 1fr; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    button {
+      background:var(--accent); border:none; padding:10px 14px; border-radius:10px; color:white; cursor:pointer; font-weight:600;
+    }
+    button.secondary { background:#334155; }
+    button.ok { background:var(--ok); }
+    button.danger { background:var(--err); }
+    .badge { padding:2px 8px; border-radius:999px; font-size:11px; display:inline-block; }
+    .muted { color:var(--muted); font-size:13px; }
+    .log { font-size:12px; white-space:pre-wrap; background:#0a1222; border:1px solid #1f2937; padding:10px; border-radius:10px; max-height:240px; overflow:auto; }
+    .inline { display:flex; align-items:center; gap:8px; }
+    .hint { font-size:12px; color:#9ca3af; }
+    .pill { background:#0a1222; border:1px solid #1f2937; padding:8px 10px; border-radius:10px; }
+    .divider { height:1px; background:#1f2937; margin:14px 0; }
+  </style>
+</head>
+<body>
+  <h1>📬 Massutskick</h1>
+
+  <div class="row">
+    <!-- Vänster: Innehåll -->
+    <div class="card">
+      <div class="row-2">
+        <div>
+          <label>Ämnesrad</label>
+          <input id="subject" type="text" placeholder="Ex: Ny funktion i Source – se vad som är nytt!" />
+        </div>
+        <div>
+          <label>Limit (max antal som skickas)</label>
+          <input id="limit" type="number" min="1" placeholder="t.ex. 300" />
+          <div class="hint">Sätt vid behov för att matcha Brevo-kvoten.</div>
+        </div>
+      </div>
+
+      <label>HTML-innehåll</label>
+      <textarea id="html" placeholder="<h1>Hej!</h1><p>Vi har lanserat ..."></textarea>
+
+      <label>Text-fallback (valfritt)</label>
+      <textarea id="text" placeholder="Lämna tomt för auto-konvertering från HTML"></textarea>
+
+      <div class="actions">
+        <button id="sendTest" class="secondary">Skicka enskilt test → /api/email/send</button>
+        <button id="verifySmtp" class="secondary">Verify SMTP</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="muted">Tips: kör först <span class="badge" style="background:#1f2937">Dry run</span> för att se urval & sample.</div>
+    </div>
+
+    <!-- Höger: Segment, test-läge & kontroll -->
+    <div class="card">
+      <div class="row-2">
+        <div>
+          <label>Segment – plan</label>
+          <input id="segPlan" type="text" placeholder="Ex: Pro, Gratis, Enterprise" />
+        </div>
+        <div>
+          <label>Segment – bransch (industry)</label>
+          <input id="segIndustry" type="text" placeholder="Ex: E-handel, SaaS, Konsult" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="inline">
+        <input id="testMode" type="checkbox" />
+        <label for="testMode" class="inline">Test-läge (skicka bara till listan nedan)</label>
+      </div>
+      <label>Testmottagare (komma-separerade e-post)</label>
+      <input id="testRecipients" type="text" placeholder="anna@ex.se, kalle@ex.se" />
+
+      <div class="divider"></div>
+
+      <div class="row-3">
+        <button id="dryRun" class="secondary">Dry run</button>
+        <button id="massSend" class="ok">Massutskick</button>
+        <button id="resetForm" class="danger">Rensa formulär</button>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="muted">Resultat & logg</div>
+        <div id="log" class="log">Redo.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const logEl = $("log");
+
+    function log(msg, type="info") {
+      const time = new Date().toLocaleTimeString("sv-SE");
+      const prefix = type === "error" ? "❌" : type === "ok" ? "✅" : "•";
+      logEl.textContent += `\n${prefix} [${time}] ${msg}`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function getPayload({ dryRun = false } = {}) {
+      const subject = $("subject").value.trim();
+      const html = $("html").value.trim();
+      const text = $("text").value.trim();
+      const limit = Number($("limit").value) || undefined;
+      const plan = $("segPlan").value.trim();
+      const industry = $("segIndustry").value.trim();
+      const test = $("testMode").checked;
+      const testRecipients = $("testRecipients").value
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const segment = {};
+      if (plan) segment.plan = plan;
+      if (industry) segment.industry = industry;
+
+      return {
+        subject,
+        html,
+        text: text || undefined,
+        limit,
+        segment,
+        test,
+        testRecipients,
+        dryRun
+      };
+    }
+
+    $("verifySmtp").addEventListener("click", async () => {
+      log("Kontrollerar SMTP...");
+      try {
+        const res = await fetch("/api/email/verify", { credentials: "include" });
+        const data = await res.json();
+        if (data.success) log("SMTP OK ✅", "ok");
+        else log(`SMTP fel: ${data.message || "okänt fel"}`, "error");
+      } catch (e) {
+        log(`SMTP exception: ${e?.message}`, "error");
+      }
+    });
+
+    $("sendTest").addEventListener("click", async () => {
+      const to = prompt("Ange testmottagare (e-post):");
+      if (!to) return;
+
+      const { subject, html, text } = getPayload();
+      if (!subject || !html) {
+        return log("subject och html krävs för testutskick.", "error");
+      }
+
+      log(`Skickar enskilt test till ${to}...`);
+      try {
+        const res = await fetch("/api/email/send", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to, subject, html, text })
+        });
+        const data = await res.json();
+        if (data.success) log("Testmejl skickat ✅", "ok");
+        else log(`Misslyckades: ${data.message || data.error}`, "error");
+      } catch (e) {
+        log(`Exception: ${e?.message}`, "error");
+      }
+    });
+
+    $("dryRun").addEventListener("click", async () => {
+      const payload = getPayload({ dryRun: true });
+      if (!payload.subject || !payload.html) {
+        return log("subject och html krävs även för dry run.", "error");
+      }
+      log("Kör dry run (hämtar urval & sample)...");
+      try {
+        const res = await fetch("/api/email/masssend", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) {
+          return log(`Dry run misslyckades: ${data.message || data.error}`, "error");
+        }
+        log(`Dry run klart. Antal i urval: ${data.count}. Sample: ${Array.isArray(data.sample) ? data.sample.join(", ") : "-"}`, "ok");
+      } catch (e) {
+        log(`Exception: ${e?.message}`, "error");
+      }
+    });
+
+    $("massSend").addEventListener("click", async () => {
+      if (!confirm("Är du säker på att du vill starta massutskicket?")) return;
+
+      const payload = getPayload();
+      if (!payload.subject || !payload.html) {
+        return log("subject och html krävs.", "error");
+      }
+      log("Startar massutskick...");
+      try {
+        const res = await fetch("/api/email/masssend", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) {
+          return log(`Misslyckades: ${data.message || data.error}`, "error");
+        }
+        log(`Klart! Skickat: ${data.sent}, Misslyckade: ${data.failed}`, "ok");
+        if (data.errors?.length) {
+          log(`Felposter: ${JSON.stringify(data.errors.slice(0,5))} …`, "error");
+        }
+      } catch (e) {
+        log(`Exception: ${e?.message}`, "error");
+      }
+    });
+
+    $("resetForm").addEventListener("click", () => {
+      ["subject", "html", "text", "limit", "segPlan", "segIndustry", "testRecipients"].forEach(id => $(id).value = "");
+      $("testMode").checked = false;
+      log("Formulär nollställt.");
+    });
+  </script>
+</body>
+</html>
