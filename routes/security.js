@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const LoginEvent = require("../models/LoginEvent");
-const AdminUser  = require("../models/AdminUser"); // ✅ kolla i adminusers-kollektionen
+const AdminUser = require("../models/Admin"); // ✅ kolla i adminusers-kollektionen
 
 /** =========================
  *  Auth: kräver inloggning
