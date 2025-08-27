@@ -18,15 +18,21 @@ try {
    Admin-middleware (session)
    ========================= */
 async function requireAdmin(req, res, next) {
-  // Redan admin i sessionen?
-  if (req.session?.user?.role === "admin") return next();
+  // ✅ Acceptera både admin-session och user-session med role=admin
+  if (req.session?.admin?.role === "admin" || req.session?.user?.role === "admin") {
+    return next();
+  }
 
   // Försök uppgradera: om användaren är inloggad med e-post som finns i adminusers
-  const email = req.session?.user?.email;
+  const email = req.session?.admin?.email || req.session?.user?.email;
   if (email && AdminUser) {
     const admin = await AdminUser.findOne({ email }).lean();
     if (admin) {
-      req.session.user.role = "admin";
+      if (req.session.admin) {
+        req.session.admin.role = "admin";
+      } else {
+        req.session.user = { ...(req.session.user || {}), role: "admin", email };
+      }
       return next();
     }
   }
@@ -52,7 +58,7 @@ const transporter = nodemailer.createTransport({
 /* =========================
    Hjälpare
    ========================= */
-const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER; // t.ex. "Source AB <info@yoursource.se>"
+const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER;
 const REPLY_TO = process.env.SMTP_REPLY_TO || undefined;
 
 async function sendOne({ to, subject, html, text }) {
@@ -71,7 +77,7 @@ async function sendOne({ to, subject, html, text }) {
    DEBUG: Se sessionen
    ========================= */
 router.get("/debug-session", (req, res) => {
-  res.json({ sessionUser: req.session?.user || null });
+  res.json({ sessionUser: req.session?.user || null, sessionAdmin: req.session?.admin || null });
 });
 
 /* =========================
@@ -92,7 +98,6 @@ router.get("/verify", requireAdmin, async (_req, res) => {
 /* =========================
    2) Enskilt utskick
    POST /api/email/send
-   body: { to, subject, html, text? }
    ========================= */
 router.post("/send", requireAdmin, async (req, res) => {
   try {
@@ -115,16 +120,6 @@ router.post("/send", requireAdmin, async (req, res) => {
 /* =========================
    3) Massutskick
    POST /api/email/masssend
-   body: {
-     subject: string,
-     html: string,
-     text?: string,
-     segment?: { plan?: string, industry?: string },
-     limit?: number,
-     test?: boolean,
-     testRecipients?: string[],
-     dryRun?: boolean
-   }
    ========================= */
 router.post("/masssend", requireAdmin, async (req, res) => {
   try {
