@@ -1,15 +1,55 @@
 // routes/security.js
 const express = require("express");
 const router = express.Router();
-const LoginEvent = require("../models/LoginEvent");
 
-// Middleware: kräver inloggning via session
+const LoginEvent = require("../models/LoginEvent");
+const AdminUser  = require("../models/AdminUser"); // ✅ kolla i adminusers-kollektionen
+
+/** =========================
+ *  Auth: kräver inloggning
+ *  ========================= */
 function requireAuth(req, res, next) {
   if (req.session?.user?._id) return next();
   return res.status(401).json({ success: false, message: "Inte inloggad" });
 }
 
-// Senaste inloggningar för inloggad användare
+/** =========================
+ *  Admin: uppgradera sessionen
+ *  om user.email finns i adminusers
+ *  ========================= */
+async function requireAdmin(req, res, next) {
+  // redan admin?
+  if (req.session?.user?.role === "admin") return next();
+
+  const email = req.session?.user?.email;
+  if (!email) {
+    return res.status(403).json({ success: false, message: "Åtkomst nekad" });
+  }
+
+  try {
+    const adminDoc = await AdminUser.findOne({ email }).lean();
+    if (adminDoc) {
+      // uppgradera rollen i sessionen så resten av appen ser det
+      req.session.user.role = "admin";
+      return next();
+    }
+    return res.status(403).json({ success: false, message: "Åtkomst nekad" });
+  } catch (err) {
+    console.error("requireAdmin fel:", err);
+    return res.status(500).json({ success: false, message: "Serverfel i security" });
+  }
+}
+
+/** =========================
+ *  Debug: se vad sessionen innehåller
+ *  ========================= */
+router.get("/whoami", (req, res) => {
+  res.json({ user: req.session?.user || null });
+});
+
+/** =========================
+ *  Senaste inloggningar (per användare)
+ *  ========================= */
 router.get("/logins", requireAuth, async (req, res) => {
   try {
     const logins = await LoginEvent.find({ userId: req.session.user._id })
@@ -18,10 +58,10 @@ router.get("/logins", requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      logins: logins.map(entry => ({
-        timestamp: new Date(entry.timestamp).toLocaleString("sv-SE"),
-        ip: entry.ip,
-        device: entry.device,
+      logins: logins.map((e) => ({
+        timestamp: new Date(e.timestamp).toLocaleString("sv-SE"),
+        ip: e.ip,
+        device: e.device,
       })),
     });
   } catch (err) {
@@ -30,23 +70,22 @@ router.get("/logins", requireAuth, async (req, res) => {
   }
 });
 
-// Alla inloggningar (endast admin)
-router.get("/all-logins", requireAuth, async (req, res) => {
-  const isAdmin = req.session.user?.role === "admin";
-  if (!isAdmin) return res.status(403).json({ success: false, message: "Åtkomst nekad" });
-
+/** =========================
+ *  Alla inloggningar (endast admin)
+ *  ========================= */
+router.get("/all-logins", requireAuth, requireAdmin, async (_req, res) => {
   try {
     const events = await LoginEvent.find({})
       .sort({ timestamp: -1 })
       .limit(50)
       .populate("userId", "name email");
 
-    const formatted = events.map(entry => ({
-      timestamp: new Date(entry.timestamp).toLocaleString("sv-SE"),
-      ip: entry.ip,
-      device: entry.device,
-      name: entry.userId?.name || "Okänd",
-      email: entry.userId?.email || "okänd@domän.se",
+    const formatted = events.map((e) => ({
+      timestamp: new Date(e.timestamp).toLocaleString("sv-SE"),
+      ip: e.ip,
+      device: e.device,
+      name: e.userId?.name || "Okänd",
+      email: e.userId?.email || "okänd@domän.se",
     }));
 
     res.json({ success: true, logins: formatted });
@@ -56,4 +95,4 @@ router.get("/all-logins", requireAuth, async (req, res) => {
   }
 });
 
-module.exports = { router, requireAuth }; // ✅ exportera båda
+module.exports = { router, requireAuth, requireAdmin };
