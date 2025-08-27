@@ -5,12 +5,12 @@
   <title>Massutskick – Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root { --bg:#0b0f19; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#3b82f6; --ok:#10b981; --err:#ef4444; }
+    :root { --bg:#0b0f19; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#3b82f6; --ok:#10b981; --err:#ef4444; --border:#1f2937; --mono:#0a1222; }
     body { margin:0; padding:24px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
     h1 { margin:0 0 16px; font-size:22px; }
     .row { display:grid; gap:16px; grid-template-columns: 1fr; }
     @media (min-width: 980px) { .row { grid-template-columns: 1.2fr 1fr; } }
-    .card { background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:18px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; }
     label { display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; }
     input[type="text"], input[type="number"], textarea {
       width:100%; padding:10px 12px; border-radius:10px; border:1px solid #243041; background:#0f172a; color:var(--text);
@@ -25,13 +25,12 @@
     button.secondary { background:#334155; }
     button.ok { background:var(--ok); }
     button.danger { background:var(--err); }
-    .badge { padding:2px 8px; border-radius:999px; font-size:11px; display:inline-block; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
     .muted { color:var(--muted); font-size:13px; }
-    .log { font-size:12px; white-space:pre-wrap; background:#0a1222; border:1px solid #1f2937; padding:10px; border-radius:10px; max-height:240px; overflow:auto; }
+    .log { font-size:12px; white-space:pre-wrap; background:var(--mono); border:1px solid var(--border); padding:10px; border-radius:10px; max-height:260px; overflow:auto; }
     .inline { display:flex; align-items:center; gap:8px; }
     .hint { font-size:12px; color:#9ca3af; }
-    .pill { background:#0a1222; border:1px solid #1f2937; padding:8px 10px; border-radius:10px; }
-    .divider { height:1px; background:#1f2937; margin:14px 0; }
+    .divider { height:1px; background:var(--border); margin:14px 0; }
   </style>
 </head>
 <body>
@@ -42,20 +41,20 @@
     <div class="card">
       <div class="row-2">
         <div>
-          <label>Ämnesrad</label>
+          <label for="subject">Ämnesrad</label>
           <input id="subject" type="text" placeholder="Ex: Ny funktion i Source – se vad som är nytt!" />
         </div>
         <div>
-          <label>Limit (max antal som skickas)</label>
+          <label for="limit">Limit (max antal som skickas)</label>
           <input id="limit" type="number" min="1" placeholder="t.ex. 300" />
           <div class="hint">Sätt vid behov för att matcha Brevo-kvoten.</div>
         </div>
       </div>
 
-      <label>HTML-innehåll</label>
+      <label for="html">HTML-innehåll</label>
       <textarea id="html" placeholder="<h1>Hej!</h1><p>Vi har lanserat ..."></textarea>
 
-      <label>Text-fallback (valfritt)</label>
+      <label for="text">Text-fallback (valfritt)</label>
       <textarea id="text" placeholder="Lämna tomt för auto-konvertering från HTML"></textarea>
 
       <div class="actions">
@@ -64,19 +63,18 @@
       </div>
 
       <div class="divider"></div>
-
-      <div class="muted">Tips: kör först <span class="badge" style="background:#1f2937">Dry run</span> för att se urval & sample.</div>
+      <div class="muted">Tips: kör först <strong>Dry run</strong> för att se urval & sample.</div>
     </div>
 
     <!-- Höger: Segment, test-läge & kontroll -->
     <div class="card">
       <div class="row-2">
         <div>
-          <label>Segment – plan</label>
+          <label for="segPlan">Segment – plan</label>
           <input id="segPlan" type="text" placeholder="Ex: Pro, Gratis, Enterprise" />
         </div>
         <div>
-          <label>Segment – bransch (industry)</label>
+          <label for="segIndustry">Segment – bransch (industry)</label>
           <input id="segIndustry" type="text" placeholder="Ex: E-handel, SaaS, Konsult" />
         </div>
       </div>
@@ -87,7 +85,7 @@
         <input id="testMode" type="checkbox" />
         <label for="testMode" class="inline">Test-läge (skicka bara till listan nedan)</label>
       </div>
-      <label>Testmottagare (komma-separerade e-post)</label>
+      <label for="testRecipients">Testmottagare (komma-separerade e-post)</label>
       <input id="testRecipients" type="text" placeholder="anna@ex.se, kalle@ex.se" />
 
       <div class="divider"></div>
@@ -108,9 +106,14 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const logEl = $("log");
+    const buttons = ["sendTest","verifySmtp","dryRun","massSend","resetForm"].map($);
+
+    function setBusy(busy) {
+      buttons.forEach(b => b.disabled = !!busy);
+    }
 
     function log(msg, type="info") {
-      const time = new Date().toLocaleTimeString("sv-SE");
+      const time = new Date().toLocaleTimeString("sv-SE", { hour12:false });
       const prefix = type === "error" ? "❌" : type === "ok" ? "✅" : "•";
       logEl.textContent += `\n${prefix} [${time}] ${msg}`;
       logEl.scrollTop = logEl.scrollHeight;
@@ -118,7 +121,7 @@
 
     function getPayload({ dryRun = false } = {}) {
       const subject = $("subject").value.trim();
-      const html = $("html").value.trim();
+      const html = $("html").value;
       const text = $("text").value.trim();
       const limit = Number($("limit").value) || undefined;
       const plan = $("segPlan").value.trim();
@@ -146,15 +149,21 @@
     }
 
     $("verifySmtp").addEventListener("click", async () => {
-      log("Kontrollerar SMTP...");
+      log("Kontrollerar SMTP…");
+      setBusy(true);
       try {
         const res = await fetch("/api/email/verify", { credentials: "include" });
-        const data = await res.json();
-        if (data.success) log("SMTP OK ✅", "ok");
-        else log(`SMTP fel: ${data.message || "okänt fel"}`, "error");
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 403) {
+          log("Åtkomst nekad (logga in som admin).", "error");
+        } else if (data.success) {
+          log("SMTP OK", "ok");
+        } else {
+          log(`SMTP fel: ${data.message || res.status}`, "error");
+        }
       } catch (e) {
         log(`SMTP exception: ${e?.message}`, "error");
-      }
+      } finally { setBusy(false); }
     });
 
     $("sendTest").addEventListener("click", async () => {
@@ -162,11 +171,10 @@
       if (!to) return;
 
       const { subject, html, text } = getPayload();
-      if (!subject || !html) {
-        return log("subject och html krävs för testutskick.", "error");
-      }
+      if (!subject || !html) return log("subject och html krävs för testutskick.", "error");
 
-      log(`Skickar enskilt test till ${to}...`);
+      log(`Skickar enskilt test till ${to}…`);
+      setBusy(true);
       try {
         const res = await fetch("/api/email/send", {
           method: "POST",
@@ -174,20 +182,23 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ to, subject, html, text })
         });
-        const data = await res.json();
-        if (data.success) log("Testmejl skickat ✅", "ok");
-        else log(`Misslyckades: ${data.message || data.error}`, "error");
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) log("Testmejl skickat", "ok");
+        else log(`Misslyckades: ${data.message || data.error || res.status}`, "error");
       } catch (e) {
         log(`Exception: ${e?.message}`, "error");
-      }
+      } finally { setBusy(false); }
     });
 
     $("dryRun").addEventListener("click", async () => {
       const payload = getPayload({ dryRun: true });
-      if (!payload.subject || !payload.html) {
-        return log("subject och html krävs även för dry run.", "error");
+      if (!payload.subject || !payload.html) return log("subject och html krävs även för dry run.", "error");
+      if (payload.test && (!payload.testRecipients || payload.testRecipients.length === 0)) {
+        return log("Test-läge kräver minst en testmottagare.", "error");
       }
-      log("Kör dry run (hämtar urval & sample)...");
+
+      log("Kör dry run (hämtar urval & sample)…");
+      setBusy(true);
       try {
         const res = await fetch("/api/email/masssend", {
           method: "POST",
@@ -195,24 +206,24 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (!data.success) {
-          return log(`Dry run misslyckades: ${data.message || data.error}`, "error");
-        }
-        log(`Dry run klart. Antal i urval: ${data.count}. Sample: ${Array.isArray(data.sample) ? data.sample.join(", ") : "-"}`, "ok");
+        const data = await res.json().catch(() => ({}));
+        if (!data.success) return log(`Dry run misslyckades: ${data.message || data.error || res.status}`, "error");
+        log(`Dry run klart. Antal i urval: ${data.count ?? "okänt"}. Sample: ${Array.isArray(data.sample) ? data.sample.join(", ") : "-"}`, "ok");
       } catch (e) {
         log(`Exception: ${e?.message}`, "error");
-      }
+      } finally { setBusy(false); }
     });
 
     $("massSend").addEventListener("click", async () => {
+      const payload = getPayload();
+      if (!payload.subject || !payload.html) return log("subject och html krävs.", "error");
+      if (payload.test && (!payload.testRecipients || payload.testRecipients.length === 0)) {
+        return log("Test-läge kräver minst en testmottagare.", "error");
+      }
       if (!confirm("Är du säker på att du vill starta massutskicket?")) return;
 
-      const payload = getPayload();
-      if (!payload.subject || !payload.html) {
-        return log("subject och html krävs.", "error");
-      }
-      log("Startar massutskick...");
+      log("Startar massutskick…");
+      setBusy(true);
       try {
         const res = await fetch("/api/email/masssend", {
           method: "POST",
@@ -220,21 +231,20 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (!data.success) {
-          return log(`Misslyckades: ${data.message || data.error}`, "error");
-        }
+        const data = await res.json().catch(() => ({}));
+        if (!data.success) return log(`Misslyckades: ${data.message || data.error || res.status}`, "error");
         log(`Klart! Skickat: ${data.sent}, Misslyckade: ${data.failed}`, "ok");
-        if (data.errors?.length) {
-          log(`Felposter: ${JSON.stringify(data.errors.slice(0,5))} …`, "error");
+        if (Array.isArray(data.errors) && data.errors.length) {
+          const preview = data.errors.slice(0,5).map(e => `${e.to}: ${e.error}`).join(" | ");
+          log(`Felposter: ${preview}${data.errors.length>5 ? " …" : ""}`, "error");
         }
       } catch (e) {
         log(`Exception: ${e?.message}`, "error");
-      }
+      } finally { setBusy(false); }
     });
 
     $("resetForm").addEventListener("click", () => {
-      ["subject", "html", "text", "limit", "segPlan", "segIndustry", "testRecipients"].forEach(id => $(id).value = "");
+      ["subject","html","text","limit","segPlan","segIndustry","testRecipients"].forEach(id => $(id).value = "");
       $("testMode").checked = false;
       log("Formulär nollställt.");
     });
