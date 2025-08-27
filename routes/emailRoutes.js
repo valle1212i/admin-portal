@@ -4,27 +4,44 @@ const router = express.Router();
 const nodemailer = require("nodemailer");
 const { convert } = require("html-to-text");
 const Customer = require("../models/Customer");
+const Broadcast = require("../models/Broadcast");
+
+// (valfritt) om du har en separat admin-kollektion
+let AdminUser;
+try {
+  AdminUser = require("../models/AdminUser"); // finns i samlingen "adminusers"
+} catch (_) {
+  AdminUser = null;
+}
 
 /* =========================
    Admin-middleware (session)
    ========================= */
-function requireAdmin(req, res, next) {
-  const role = req.session?.user?.role;
-  if (role !== "admin") {
-    return res.status(403).json({ success: false, message: "Åtkomst nekad" });
+async function requireAdmin(req, res, next) {
+  // Redan admin i sessionen?
+  if (req.session?.user?.role === "admin") return next();
+
+  // Försök uppgradera: om användaren är inloggad med e-post som finns i adminusers
+  const email = req.session?.user?.email;
+  if (email && AdminUser) {
+    const admin = await AdminUser.findOne({ email }).lean();
+    if (admin) {
+      req.session.user.role = "admin";
+      return next();
+    }
   }
-  next();
+  return res.status(403).json({ success: false, message: "Åtkomst nekad" });
 }
 
 /* =========================
    Nodemailer (Brevo SMTP)
    ========================= */
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: false, // STARTTLS på 587
+  host: process.env.SMTP_HOST,                         // t.ex. smtp-relay.brevo.com
+  port: Number(process.env.SMTP_PORT || 587),          // 587 för STARTTLS
+  secure: false,
   auth: {
-    user: process.env.SMTP_USER,
+    user: process.env.SMTP_USER,                       // din Brevo-inlogg
     pass: process.env.SMTP_PASS,
   },
   pool: true,
@@ -35,10 +52,9 @@ const transporter = nodemailer.createTransport({
 /* =========================
    Hjälpare
    ========================= */
-const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER;
+const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER; // t.ex. "Source AB <info@yoursource.se>"
 const REPLY_TO = process.env.SMTP_REPLY_TO || undefined;
 
-// Skicka ett mail (wrap för konsekvent from/replyTo)
 async function sendOne({ to, subject, html, text }) {
   const textFallback = text || convert(html || "", { wordwrap: 120 });
   return transporter.sendMail({
@@ -50,6 +66,13 @@ async function sendOne({ to, subject, html, text }) {
     replyTo: REPLY_TO,
   });
 }
+
+/* =========================
+   DEBUG: Se sessionen
+   ========================= */
+router.get("/debug-session", (req, res) => {
+  res.json({ sessionUser: req.session?.user || null });
+});
 
 /* =========================
    1) SMTP verify
@@ -79,7 +102,6 @@ router.post("/send", requireAdmin, async (req, res) => {
         .status(400)
         .json({ success: false, message: "to, subject och html krävs" });
     }
-
     await sendOne({ to, subject, html, text });
     res.json({ success: true, message: "Mejlet skickat" });
   } catch (err) {
@@ -98,10 +120,10 @@ router.post("/send", requireAdmin, async (req, res) => {
      html: string,
      text?: string,
      segment?: { plan?: string, industry?: string },
-     limit?: number,          // t.ex. 300 (Brevo free-kvot)
-     test?: boolean,          // true => skicka endast till testRecipients
-     testRecipients?: string[],// manuella testmottagare
-     dryRun?: boolean         // true => skickar inte, returnerar bara urvalet
+     limit?: number,
+     test?: boolean,
+     testRecipients?: string[],
+     dryRun?: boolean
    }
    ========================= */
 router.post("/masssend", requireAdmin, async (req, res) => {
@@ -123,7 +145,7 @@ router.post("/masssend", requireAdmin, async (req, res) => {
         .json({ success: false, message: "subject och html krävs" });
     }
 
-    // 1) Hämta mottagare
+    // 1) Mottagare
     let recipients = [];
     let users = [];
 
@@ -144,7 +166,6 @@ router.post("/masssend", requireAdmin, async (req, res) => {
         .json({ success: false, message: "Inga mottagare hittades" });
     }
 
-    // Respektera valfri limit (t.ex. 300/dag)
     if (limit && recipients.length > limit) {
       recipients = recipients.slice(0, limit);
     }
@@ -158,24 +179,22 @@ router.post("/masssend", requireAdmin, async (req, res) => {
       });
     }
 
-    // 2) Förbered innehåll
+    // 2) Innehåll
     const textFallback = text || convert(html, { wordwrap: 120 });
 
-    // 3) Skicka i BCC-batchar (mindre SMTP-overhead)
-    const BATCH_SIZE = 50; // justera vid behov
+    // 3) Skicka i BCC-batchar
+    const BATCH_SIZE = 50;
     let sent = 0;
     let failed = 0;
     const errors = [];
 
     for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
       const chunk = recipients.slice(i, i + BATCH_SIZE);
-
       try {
         await transporter.sendMail({
           from: FROM_ADDRESS,
-          // Skicka till en "to" (kan vara egen adress) och lägg kunder i BCC
-          to: FROM_ADDRESS,
-          bcc: chunk.join(","),
+          to: FROM_ADDRESS,               // primary to (kan vara din egen)
+          bcc: chunk.join(","),           // kunder i BCC
           subject,
           html,
           text: textFallback,
