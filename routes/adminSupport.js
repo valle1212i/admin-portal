@@ -13,6 +13,17 @@ const requireAdminLogin = require('../middleware/requireAdminLogin');
 const Case = require('../models/Case');
 const Customer = require('../models/Customer');
 
+
+// Säkerställ att API alltid svarar JSON 401 om admin-session saknas (ingen HTML-redirect)
+router.use((req, res, next) => {
+  const hasSession = !!(req.session && req.session.admin);
+  if (!hasSession) {
+    console.warn('⚠️ /api/admin/support utan admin-session:', { path: req.path });
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+});
+
 // Hjälpmetoder
 function toDate(val){ try { return val ? new Date(val) : null; } catch { return null; } }
 function safeStr(x){ return (x ?? '').toString(); }

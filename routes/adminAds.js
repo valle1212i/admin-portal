@@ -8,6 +8,15 @@ const router = express.Router();
 console.log('🟢 routes/adminAds.js laddad');
 router.get('/ping', (_req, res) => res.json({ ok: true, route: 'ads' }));
 
+// Säkerställ att API alltid svarar JSON 401 om admin-session saknas (ingen HTML-redirect)
+router.use((req, res, next) => {
+  const hasSession = !!(req.session && req.session.admin);
+  if (!hasSession) {
+    console.warn('⚠️ /api/admin/ads utan admin-session:', { path: req.path });
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+});
 
 // Valfritt: sätt via .env om din collection heter något annat
 const ADS_COLLECTION_CANDIDATES = (process.env.ADS_COLLECTIONS || 'Ad,ads,marketingBriefs,adbriefs,campaignBriefs')
