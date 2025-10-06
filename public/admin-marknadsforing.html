@@ -1,14 +1,56 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin – Marknadsföringsansökningar</title>
-  <link rel="stylesheet" href="css/admin-marknadsforing.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Marknadsföring</title>
+  <link rel="stylesheet" href="css/admin-marknadsforing.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    :root{--bd:#e5e7eb;--muted:#6b7280}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f8fafc;color:#0f172a;margin:0}
+    .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+    .sidebar{padding:16px;border-right:1px solid var(--bd);background:#fff}
+    .sidebar h2{margin:.25rem 0 1rem 0}
+    .nav{list-style:none;margin:0;padding:0}
+    .nav li{margin:.25rem 0}
+    .nav a{display:block;padding:.5rem .65rem;border-radius:.5rem;color:#111827;text-decoration:none}
+    .nav .active a,.nav a:hover{background:#eef2ff;color:#3730a3}
+    main{padding:20px}
+    h1{margin:.25rem 0 1rem 0}
+    .toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+    .toolbar .pill{border:1px solid var(--bd);padding:.35rem .6rem;border-radius:999px;background:#fff;font-size:.9rem}
+    .toolbar input[type="search"], .toolbar input[type="date"], .toolbar select{
+      padding:.5rem .65rem;border:1px solid var(--bd);border-radius:.55rem;background:#fff
+    }
+    .toolbar .btn{padding:.5rem .75rem;border:1px solid var(--bd);background:#fff;border-radius:.55rem;cursor:pointer}
+    .status{font-size:.9rem;color:var(--muted)}
+    .grid{display:grid;gap:12px}
+    .card{background:#fff;border:1px solid var(--bd);border-radius:.75rem;padding:12px}
+    .row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .badges{display:flex;gap:.4rem;flex-wrap:wrap}
+    .badge{font-size:.72rem;padding:.2rem .45rem;border-radius:.45rem;background:#eef2ff;color:#3730a3}
+    .badge.gray{background:#f3f4f6;color:#374151}
+    .badge.green{background:#ecfdf5;color:#065f46}
+    .badge.orange{background:#fff7ed;color:#9a3412}
+    .platforms{display:flex;gap:.35rem;color:#6b7280}
+    .platforms i{opacity:.9}
+    .meta{color:#6b7280;font-size:.85rem}
+    .kv{display:grid;grid-template-columns:160px 1fr;gap:.35rem .75rem;margin:.5rem 0}
+    details{border:1px dashed var(--bd);border-radius:.6rem;padding:.5rem;margin-top:.5rem}
+    details[open]{background:#fafafa}
+    .pager{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .pillchip{border:1px solid var(--bd);padding:.25rem .55rem;border-radius:999px;font-size:.8rem}
+    .empty{color:var(--muted)}
+    .error{color:#b91c1c}
+    .split{display:grid;grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:16px}
+    @media (max-width: 1100px){.layout{grid-template-columns:1fr}.split{grid-template-columns:1fr}}
+    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem}
+  </style>
 </head>
 <body>
-  <div class="sidebar">
+<div class="layout">
+  <aside class="sidebar">
     <h2>Admin</h2>
     <ul class="nav">
       <li><a href="dashboard.html">Dashboard</a></li>
@@ -16,52 +58,283 @@
       <li><a href="customers.html">Kunder</a></li>
       <li><a href="settings.html">Inställningar</a></li>
     </ul>
-  </div>
+  </aside>
 
-  <main class="content">
-    <h1>📅 Marknadsföringsval</h1>
-    <div id="submissions" class="submission-list">
-      <p>Laddar kunddata...</p>
+  <main>
+    <h1>📣 Marknadsföring</h1>
+
+    <!-- Filter/verktyg för BRIEFS -->
+    <section class="card">
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Sök i svaren (q1–q7, extraInfo)…"/>
+        <input id="from" type="date"/>
+        <input id="to" type="date"/>
+        <select id="platform">
+          <option value="">Alla plattformar</option>
+          <option value="google">Google</option>
+          <option value="meta">Meta</option>
+          <option value="tiktok">TikTok</option>
+          <option value="linkedin">LinkedIn</option>
+        </select>
+        <button id="filterBtn" class="btn">Filtrera</button>
+        <span id="adsStatus" class="status">–</span>
+      </div>
+
+      <div id="adsList" class="grid">
+        <p class="meta">Laddar briefs…</p>
+      </div>
+
+      <div class="pager">
+        <button id="prevAds" class="btn">Föregående</button>
+        <span id="adsPageLbl" class="status"></span>
+        <button id="nextAds" class="btn">Nästa</button>
+      </div>
+    </section>
+
+    <div class="split">
+      <!-- SUPPORT-ÖVERSIKT -->
+      <section class="card">
+        <div class="row">
+          <h2 style="margin:.25rem 0">Rådgivning & Support</h2>
+          <span id="supportStatus" class="status">–</span>
+        </div>
+        <div class="toolbar">
+          <input id="sq" type="search" placeholder="Sök i meddelande/etiketter/e-post…"/>
+          <select id="sstatus">
+            <option value="">Alla statusar</option>
+            <option value="open">Öppna</option>
+            <option value="closed">Stängda</option>
+          </select>
+          <input id="sfrom" type="date"/>
+          <input id="sto" type="date"/>
+          <button id="sbtn" class="btn">Filtrera</button>
+        </div>
+        <div id="supportList" class="grid">
+          <p class="meta">Laddar support…</p>
+        </div>
+      </section>
+
+      <!-- LIVE-SUMMOR & HÄLSA -->
+      <section class="card">
+        <h2 style="margin:.25rem 0">Sammanfattning</h2>
+        <div id="summaryBox" class="kv">
+          <div>Antal briefs</div><div id="sumBriefs">–</div>
+          <div>Källa</div><div id="sumSource">–</div>
+          <div>Öppna ärenden</div><div id="sumOpen">–</div>
+          <div>Stängda ärenden</div><div id="sumClosed">–</div>
+          <div>DB-hälsa</div><div id="dbHealth" class="mono">–</div>
+        </div>
+      </section>
     </div>
   </main>
+</div>
 
-  <script>
-    async function fetchSubmissions() {
-      const container = document.getElementById("submissions");
-      container.innerHTML = "♻️ Hämtar data...";
+<script>
+  // === Util ===
+  function esc(s){ return String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+  function dse(x){ try{ return new Date(x).toLocaleString('sv-SE'); } catch{ return '–'; } }
+  function short(s, n=160){ s=String(s||''); return s.length>n? s.slice(0,n)+'…' : s; }
 
-      try {
-        const res = await fetch("/api/customers/marketing-submissions");
-        const kunder = await res.json();
+  // === State ===
+  let page=1, limit=20, lastTotal=0, lastSource='primary';
+  let s_last = { open:0, closed:0 };
 
-        if (!kunder.length) {
-          return container.innerHTML = "<p>Inga inskickade val ännu.</p>";
-        }
+  // === ADS (briefs) ===
+  async function loadAds(){
+    const elList = document.getElementById('adsList');
+    const elLbl  = document.getElementById('adsPageLbl');
+    const elSt   = document.getElementById('adsStatus');
 
-        container.innerHTML = "";
+    const q = document.getElementById('q').value.trim();
+    const from = document.getElementById('from').value;
+    const to   = document.getElementById('to').value;
+    const platform = document.getElementById('platform').value;
 
-        kunder.forEach(kund => {
-          const box = document.createElement("div");
-          box.className = "submission-box";
+    const params = new URLSearchParams({ page, limit });
+    if (q) params.set('q', q);
+    if (platform) params.set('platform', platform);
+    if (from) params.set('from', new Date(from).toISOString());
+    if (to)   params.set('to', new Date(to).toISOString());
 
-          box.innerHTML = `
-            <h3>${kund.name || "Namn saknas"} <span>(${kund.email})</span></h3>
-            <p><strong>Google Ads:</strong> ${kund.marketing?.googleAds?.goals || "-"}</p>
-            <p><strong>Meta Ads:</strong> ${kund.marketing?.metaAds?.goals || "-"}</p>
-            <p><strong>TikTok Ads:</strong> ${kund.marketing?.tiktokAds?.goals || "-"}</p>
-            <p><strong>LinkedIn Ads:</strong> ${kund.marketing?.linkedinAds?.goals || "-"}</p>
-            <p><strong>Senast uppdaterad:</strong> ${kund.marketing?.updatedAt ? new Date(kund.marketing.updatedAt).toLocaleDateString('sv-SE') : "Okänt"}</p>
-          `;
+    elList.innerHTML = '<p class="meta">Hämtar…</p>';
 
-          container.appendChild(box);
-        });
-      } catch (err) {
-        console.error("Fel vid hämtning:", err);
-        container.innerHTML = "<p class='error'>⛔️ Fel vid hämtning av data.</p>";
+    try{
+      const res = await fetch('/api/admin/ads?'+params.toString(), { credentials: 'include' });
+      if (!res.ok) throw new Error('GET /api/admin/ads: '+res.status);
+      const data = await res.json();
+
+      lastTotal = data.total || 0;
+      lastSource = data.source || 'primary';
+      elLbl.textContent = `Sida ${data.page} • ${data.total} poster`;
+      elSt.textContent  = `Källa: ${lastSource}`;
+
+      if (!data.items?.length){
+        elList.innerHTML = `<p class="empty">Inga briefs hittades.</p>`;
+        document.getElementById('sumBriefs').textContent = '0';
+        document.getElementById('sumSource').textContent = lastSource;
+        return;
       }
-    }
 
-    fetchSubmissions();
-  </script>
+      document.getElementById('sumBriefs').textContent = data.total;
+      document.getElementById('sumSource').textContent = lastSource;
+
+      elList.innerHTML = data.items.map(renderAdItem).join('');
+      bindAdDetailButtons();
+    }catch(err){
+      console.error(err);
+      elList.innerHTML = `<p class="error">⛔️ Kunde inte hämta briefs. Har du lagt till <code>/api/admin/ads</code> i servern?</p>`;
+      elLbl.textContent = '';
+      elSt.textContent  = 'Fel';
+    }
+  }
+
+  function renderAdItem(it){
+    const isFallback = !!it._fallback;
+    const sourceBadge = `<span class="badge ${isFallback?'orange':'green'}">${isFallback?'fallback':'primary'}</span>`;
+    const idBtn = it._id ? `<button class="btn btn-detail" data-id="${esc(it._id)}">Visa detalj</button>` : `<span class="badge gray">Ingen detalj (legacy)</span>`;
+
+    const lines = ['q1','q2','q3','q4','q5','q6','q7'].map(k => it[k]).filter(Boolean);
+    const preview = esc(short(lines.join(' | ')));
+
+    return `
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="badges">${sourceBadge} <span class="badge">${esc(it.platform||'-')}</span></div>
+            <h3 style="margin:.35rem 0 .15rem 0">${esc(it.userEmail || it.userId || 'Okänd användare')}</h3>
+            <div class="meta">Skapad: ${dse(it.createdAt)}</div>
+          </div>
+          <div class="platforms" title="Plattform">${iconFor(it.platform)}</div>
+        </div>
+        <div class="meta" style="margin-top:.4rem">${preview || '<span class="meta">–</span>'}</div>
+        <details>
+          <summary>Visa fälten</summary>
+          <div class="kv">
+            ${['q1','q2','q3','q4','q5','q6','q7','extraInfo'].map(k=>`<div>${k.toUpperCase()}</div><div>${esc(it[k]||'')}</div>`).join('')}
+          </div>
+        </details>
+        <div style="margin-top:.5rem">${idBtn}</div>
+      </div>
+    `;
+  }
+
+  function iconFor(p){
+    const map = { google:'fa-google', meta:'fa-facebook', tiktok:'fa-tiktok', linkedin:'fa-linkedin' };
+    const i = map[p] || 'fa-bullhorn';
+    return `<i class="fa-brands ${i}"></i>`;
+  }
+
+  function bindAdDetailButtons(){
+    document.querySelectorAll('.btn-detail').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const id = e.currentTarget.getAttribute('data-id');
+        if (!id) return;
+        try{
+          const res = await fetch('/api/admin/ads/'+encodeURIComponent(id), { credentials:'include' });
+          if (!res.ok) throw new Error('GET /api/admin/ads/:id '+res.status);
+          const d = await res.json();
+          alert(renderDoc(d)); // byt gärna mot modal
+        }catch(err){
+          alert('Kunde inte hämta detalj: '+err.message);
+        }
+      });
+    });
+  }
+
+  function renderDoc(d){
+    const fields = ['platform','createdAt','q1','q2','q3','q4','q5','q6','q7','extraInfo'];
+    return fields.map(f => `${f}: ${f==='createdAt'? dse(d[f]) : (d[f]??'')}`).join('\n');
+  }
+
+  // Pager
+  document.getElementById('filterBtn').addEventListener('click', ()=>{page=1; loadAds();});
+  document.getElementById('prevAds').addEventListener('click', ()=>{ if (page>1){ page--; loadAds(); }});
+  document.getElementById('nextAds').addEventListener('click', ()=>{ if (page*limit < lastTotal){ page++; loadAds(); }});
+
+  // === SUPPORT ===
+  async function loadSupport(){
+    const el = document.getElementById('supportList');
+    const st = document.getElementById('supportStatus');
+    const sq = document.getElementById('sq').value.trim();
+    const sstatus = document.getElementById('sstatus').value;
+    const sfrom = document.getElementById('sfrom').value;
+    const sto   = document.getElementById('sto').value;
+
+    const params = new URLSearchParams({ page:1, limit:200 });
+    if (sq) params.set('q', sq);
+    if (sstatus) params.set('status', sstatus);
+    if (sfrom) params.set('from', new Date(sfrom).toISOString());
+    if (sto)   params.set('to', new Date(sto).toISOString());
+
+    el.innerHTML = '<p class="meta">Hämtar…</p>';
+
+    try{
+      const res = await fetch('/api/admin/support?'+params.toString(), { credentials:'include' });
+      if (!res.ok) throw new Error('GET /api/admin/support: '+res.status);
+      const data = await res.json();
+
+      if (!data.items?.length){
+        el.innerHTML = `<p class="empty">Inga ärenden hittades.</p>`;
+        st.textContent = '0 ärenden';
+        s_last = { open:0, closed:0 };
+        updateSummary();
+        return;
+      }
+
+      // summera statusar
+      const open = data.items.filter(t=>String(t.status).toLowerCase()==='open').length;
+      const closed = data.items.filter(t=>String(t.status).toLowerCase()==='closed').length;
+      s_last = { open, closed };
+      st.textContent = `${data.total} ärenden (öppna: ${open}, stängda: ${closed})`;
+      updateSummary();
+
+      el.innerHTML = data.items.map(renderTicket).join('');
+    }catch(err){
+      console.error(err);
+      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta support. Har du lagt till <code>/api/admin/support</code> i servern?</p>`;
+      st.textContent = 'Fel';
+      s_last = { open:0, closed:0 };
+      updateSummary();
+    }
+  }
+
+  function renderTicket(t){
+    const b = `<span class="badge ${t.status==='open'?'green':'gray'}">${esc(t.status)}</span>`;
+    return `
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="badges">${b}</div>
+            <strong>${esc(t.customerEmail || 'okänd kund')}</strong>
+            <div class="meta">${dse(t.createdAt)}</div>
+          </div>
+        </div>
+        <div class="meta" style="margin-top:.25rem">${esc(short(t.message||'',180))}</div>
+        ${t.tags?.length ? `<div class="meta" style="margin-top:.25rem">Taggar: ${t.tags.map(esc).join(', ')}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // === SUMMARY & HEALTH ===
+  async function health(){
+    try{
+      const res = await fetch('/_health/db', { credentials:'include' });
+      const j = await res.json();
+      document.getElementById('dbHealth').textContent = JSON.stringify(j);
+    }catch(e){
+      document.getElementById('dbHealth').textContent = 'N/A';
+    }
+  }
+  function updateSummary(){
+    document.getElementById('sumOpen').textContent = s_last.open;
+    document.getElementById('sumClosed').textContent = s_last.closed;
+  }
+
+  // === Init ===
+  document.getElementById('sbtn').addEventListener('click', loadSupport);
+  loadAds();
+  loadSupport();
+  health();
+</script>
 </body>
 </html>
