@@ -5,6 +5,10 @@ const { ObjectId } = mongoose.Types;
 
 const router = express.Router();
 
+console.log('🟢 routes/adminAds.js laddad');
+router.get('/ping', (_req, res) => res.json({ ok: true, route: 'ads' }));
+
+
 // Valfritt: sätt via .env om din collection heter något annat
 const ADS_COLLECTION_CANDIDATES = (process.env.ADS_COLLECTIONS || 'Ad,ads,marketingBriefs,adbriefs,campaignBriefs')
   .split(',')

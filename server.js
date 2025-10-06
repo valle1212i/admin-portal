@@ -21,6 +21,8 @@ const Customer = require("./models/Customer");
 const app = express();
 const server = http.createServer(app);
 
+console.log('ENV:', { NODE_ENV: process.env.NODE_ENV, PORT: process.env.PORT, MONGO_URI: !!process.env.MONGO_URI });
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
@@ -102,6 +104,31 @@ app.use('/api/security', securityRouter);
 
 // … efter session & static …
 app.use('/api/email', require('./routes/emailRoutes'));
+
+// ✅ MONTERA ADMIN-ROUTERNA + LOGGA
+try {
+  const adminAds = require('./routes/adminAds');
+  app.use('/api/admin/ads', adminAds);
+  console.log('✅ Mounted: /api/admin/ads');
+} catch (e) { console.error('❌ Kunde inte montera /api/admin/ads:', e); }
+
+try {
+  const adminSupport = require('./routes/adminSupport');
+  app.use('/api/admin/support', adminSupport);
+  console.log('✅ Mounted: /api/admin/support');
+} catch (e) { console.error('❌ Kunde inte montera /api/admin/support:', e); }
+
+// ✅ HEALTH måste ligga före 404-fallback
+app.get("/_health/db", (_req, res) => {
+  const conn = mongoose.connection;
+  const map = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
+  res.json({
+    ok: conn.readyState === 1,
+    state: map[conn.readyState] || String(conn.readyState),
+    name: conn.name,
+    host: conn.host
+  });
+});
 
 app.use('/api/admin/ads', require('./routes/adminAds'));
 app.use('/api/admin/support', require('./routes/adminSupport'));

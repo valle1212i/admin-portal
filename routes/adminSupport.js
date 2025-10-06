@@ -5,6 +5,10 @@ const { ObjectId } = mongoose.Types;
 
 const router = express.Router();
 
+
+console.log('🟢 routes/adminSupport.js laddad');
+router.get('/ping', (_req, res) => res.json({ ok: true, route: 'support' }));
+
 const requireAdminLogin = require('../middleware/requireAdminLogin');
 const Case = require('../models/Case');
 const Customer = require('../models/Customer');
