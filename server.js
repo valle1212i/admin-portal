@@ -37,12 +37,20 @@ app.use(cors({
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","X-Requested-With","X-Tenant","CSRF-Token"],
+  exposedHeaders: ["X-CSRF-Token"]
 }));
 app.options("*", cors());
 
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Render/Proxy kräver trust proxy för att secure cookies ska fungera korrekt
+app.set("trust proxy", 1);
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "admin_secret_key",
@@ -53,12 +61,14 @@ app.use(session({
     dbName: "adminportal"
   }),
   cookie: {
-    secure: false,
-    sameSite: "Lax",
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 2
+    // 'none' + secure i prod (korsdomän), annars 'lax' lokalt
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure:    process.env.NODE_ENV === "production",
+    httpOnly:  true,
+    maxAge:    1000 * 60 * 60 * 2
   }
 }));
+
 
 // 🔄 Uppdatera lastSeen varje gång en admin gör en request
 app.use(async (req, res, next) => {
@@ -93,7 +103,21 @@ app.use('/api/security', securityRouter);
 // … efter session & static …
 app.use('/api/email', require('./routes/emailRoutes'));
 
+app.use('/api/admin/ads', require('./routes/adminAds'));
+app.use('/api/admin/support', require('./routes/adminSupport'));
 
+
+// Healthcheck för frontendens /_health/db
+app.get("/_health/db", (_req, res) => {
+  const conn = mongoose.connection;
+  const map = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
+  res.json({
+    ok: conn.readyState === 1,
+    state: map[conn.readyState] || String(conn.readyState),
+    name: conn.name,
+    host: conn.host
+  });
+});
 
 
 
