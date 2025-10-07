@@ -59,8 +59,45 @@ Creates an impersonation token and returns redirect URL.
 }
 ```
 
+#### `POST /api/admin/direct-login`
+Creates a direct login session for impersonated customer.
+
+**Request Body:**
+```json
+{
+  "sessionData": {
+    "customerId": "customer_id",
+    "customerEmail": "customer@example.com",
+    "sessionToken": "jwt_token",
+    "isImpersonated": true
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Direkt login lyckades",
+  "customer": {
+    "_id": "customer_id",
+    "name": "Customer Name",
+    "email": "customer@example.com"
+  },
+  "session": {
+    "customerId": "customer_id",
+    "customerEmail": "customer@example.com",
+    "isImpersonated": true,
+    "impersonatedBy": "admin_id",
+    "impersonatedByName": "Admin Name",
+    "impersonatedAt": "2025-01-11T...",
+    "loginTime": "2025-01-11T..."
+  }
+}
+```
+
 #### `GET /api/admin/verify-impersonation`
-Verifies impersonation token (called from customer portal).
+Verifies impersonation token (legacy endpoint, still available).
 
 **Query Parameters:**
 - `token`: JWT impersonation token
@@ -84,50 +121,139 @@ Verifies impersonation token (called from customer portal).
 
 ## Customer Portal Integration
 
-To support impersonation in your customer portal, implement the following:
+To support direct impersonation login in your customer portal, implement the following:
 
-### 1. **Token Verification**
+### 1. **Direct Login Handler**
+Create a page at `/impersonate-login` in your customer portal:
+
 ```javascript
-// Check for impersonation token in URL
-const urlParams = new URLSearchParams(window.location.search);
-const impersonationToken = urlParams.get('impersonate');
-
-if (impersonationToken) {
-  // Verify token with admin portal
-  fetch(`https://admin-portal-rn5z.onrender.com/api/admin/verify-impersonation?token=${impersonationToken}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        // Set customer session with impersonated user
-        setCustomerSession(data.customer);
-        showImpersonationBanner(data.impersonation);
-      } else {
-        console.error('Impersonation verification failed:', data.message);
-      }
-    })
-    .catch(err => {
-      console.error('Error verifying impersonation token:', err);
-    });
-}
+// impersonate-login.html or impersonate-login.js
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionDataParam = urlParams.get('session');
+  
+  if (sessionDataParam) {
+    try {
+      const sessionData = JSON.parse(decodeURIComponent(sessionDataParam));
+      
+      // Call direct login endpoint
+      fetch('https://admin-portal-rn5z.onrender.com/api/admin/direct-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionData })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Set customer session
+          setCustomerSession(data.customer);
+          
+          // Show impersonation banner
+          showImpersonationBanner(data.session);
+          
+          // Redirect to main customer portal
+          window.location.href = '/dashboard'; // or your main customer page
+        } else {
+          console.error('Direct login failed:', data.message);
+          // Redirect to normal login page
+          window.location.href = '/login';
+        }
+      })
+      .catch(err => {
+        console.error('Error during direct login:', err);
+        window.location.href = '/login';
+      });
+    } catch (err) {
+      console.error('Error parsing session data:', err);
+      window.location.href = '/login';
+    }
+  } else {
+    // No session data, redirect to login
+    window.location.href = '/login';
+  }
+});
 ```
 
-### 2. **Impersonation Banner**
-Show a banner indicating impersonation mode:
+### 2. **Session Management**
 ```javascript
-function showImpersonationBanner(impersonation) {
+function setCustomerSession(customer) {
+  // Store customer data in session/localStorage
+  sessionStorage.setItem('customer', JSON.stringify(customer));
+  sessionStorage.setItem('isLoggedIn', 'true');
+  
+  // Set any other session variables your app needs
+  // This bypasses the normal login flow
+}
+
+function showImpersonationBanner(session) {
   const banner = document.createElement('div');
   banner.className = 'impersonation-banner';
   banner.innerHTML = `
     <div class="banner-content">
       <span class="banner-icon">👤</span>
       <span class="banner-text">
-        Impersonerar: ${impersonation.impersonatedByName} 
-        (${new Date(impersonation.impersonatedAt).toLocaleString()})
+        Impersonerar: ${session.impersonatedByName} 
+        (${new Date(session.impersonatedAt).toLocaleString()})
       </span>
       <button onclick="exitImpersonation()" class="exit-btn">Avsluta</button>
     </div>
   `;
   document.body.insertBefore(banner, document.body.firstChild);
+}
+
+function exitImpersonation() {
+  // Clear session and redirect to admin portal
+  sessionStorage.clear();
+  window.location.href = 'https://admin-portal-rn5z.onrender.com/dashboard';
+}
+```
+
+### 3. **CSS for Impersonation Banner**
+```css
+.impersonation-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 12px 20px;
+  z-index: 9999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banner-icon {
+  font-size: 18px;
+}
+
+.banner-text {
+  font-weight: 500;
+}
+
+.exit-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.exit-btn:hover {
+  background: rgba(255,255,255,0.3);
 }
 ```
 

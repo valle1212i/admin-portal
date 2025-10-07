@@ -81,19 +81,32 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
     console.log(`🔐 Admin ${req.session.admin.name} (${req.session.admin.email}) impersonerar kund ${customer.name} (${customer.email})`);
     console.log(`🔑 Token skapad med secret: ${process.env.SESSION_SECRET ? 'SESSION_SECRET finns' : 'SESSION_SECRET saknas'}`);
 
-    // Returnera redirect URL med token
+    // Skapa en direkt login-session för kunden
+    const sessionData = {
+      customerId: customer._id,
+      customerEmail: customer.email,
+      customerName: customer.name,
+      isImpersonated: true,
+      impersonatedBy: req.session.admin._id,
+      impersonatedByName: req.session.admin.name,
+      impersonatedAt: new Date(),
+      sessionToken: impersonationToken
+    };
+
+    // Returnera redirect URL med session data
     const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL || 'https://source-database.onrender.com';
-    const redirectUrl = `${customerPortalUrl}/?impersonate=${impersonationToken}`;
+    const redirectUrl = `${customerPortalUrl}/impersonate-login?session=${encodeURIComponent(JSON.stringify(sessionData))}`;
 
     res.json({
       success: true,
-      message: "Impersonation token skapad",
+      message: "Impersonation session skapad",
       redirectUrl,
       customer: {
         name: customer.name,
         email: customer.email,
         id: customer._id
-      }
+      },
+      sessionData: sessionData
     });
 
   } catch (err) {
@@ -177,6 +190,99 @@ router.get("/verify-impersonation", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internt serverfel vid verifiering"
+    });
+  }
+});
+
+// 🚪 Direkt login för impersonation (anropas från kundportalen)
+router.post("/direct-login", async (req, res) => {
+  try {
+    const { sessionData } = req.body;
+    
+    if (!sessionData) {
+      return res.status(400).json({
+        success: false,
+        message: "Session data krävs"
+      });
+    }
+
+    // Verifiera att session data är giltig
+    const { customerId, customerEmail, sessionToken, isImpersonated } = sessionData;
+    
+    if (!isImpersonated || !sessionToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Ogiltig impersonation session"
+      });
+    }
+
+    // Verifiera JWT token
+    const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'admin_secret_key';
+    const decoded = jwt.verify(sessionToken, secret);
+    
+    if (decoded.type !== 'impersonation' || decoded.customerId !== customerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Ogiltig impersonation token"
+      });
+    }
+
+    // Hitta kunden för att säkerställa att den fortfarande finns
+    const customer = await Customer.findById(customerId);
+    
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Kund hittades inte"
+      });
+    }
+
+    // Skapa en session för kunden
+    const customerSession = {
+      customerId: customer._id,
+      customerEmail: customer.email,
+      customerName: customer.name,
+      isImpersonated: true,
+      impersonatedBy: decoded.impersonatedBy,
+      impersonatedByName: decoded.impersonatedByName,
+      impersonatedAt: decoded.impersonatedAt,
+      loginTime: new Date()
+    };
+
+    console.log(`🚪 Direkt login för impersonerad kund: ${customer.name} (${customer.email})`);
+
+    res.json({
+      success: true,
+      message: "Direkt login lyckades",
+      customer: {
+        _id: customer._id,
+        name: customer.name,
+        email: customer.email,
+        ...customer.toObject()
+      },
+      session: customerSession
+    });
+
+  } catch (err) {
+    console.error("❌ Fel vid direkt login:", err);
+    
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: "Ogiltig session token"
+      });
+    }
+    
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: "Session token har gått ut"
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internt serverfel vid direkt login"
     });
   }
 });
