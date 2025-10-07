@@ -10,8 +10,18 @@ const Ad = require('../models/Ad'); // admin-modellen vi skapade
 
 console.log('🟢 routes/adminAds.js laddad');
 
+// Säkerställ att API alltid svarar JSON 401 om admin-session saknas (ingen HTML-redirect)
+router.use((req, res, next) => {
+  const hasSession = !!(req.session && req.session.admin);
+  if (!hasSession) {
+    console.warn('⚠️ /api/admin/ads utan admin-session:', { path: req.path });
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+});
+
 // GET /api/admin/ads - Main handler using Mongoose Ad model
-router.get('/', requireAdminLogin, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     // --- filter & paginering ---
     const filter = {};
@@ -143,7 +153,7 @@ async function getAdsCollection() {
 
 // Note: The main GET handler is defined above (lines 12-71) using Mongoose Ad model
 // DEBUG: lista collections och storlekar (GDPR-säkert, inga dokument returneras)
-router.get('/_debug', requireAdminLogin, async (_req, res) => {
+router.get('/_debug', async (_req, res) => {
   try {
     const { db, dbName } = getTargetDb();
     const cur = db.listCollections({}, { nameOnly: true });
@@ -173,7 +183,7 @@ router.get('/_debug', requireAdminLogin, async (_req, res) => {
 });
 
 // GET /api/admin/ads/:id
-router.get('/:id', requireAdminLogin, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { ObjectId } = require('mongoose').Types;
     const id = req.params.id;

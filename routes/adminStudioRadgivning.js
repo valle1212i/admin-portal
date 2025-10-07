@@ -8,6 +8,16 @@ const requireAdminLogin = require('../middleware/requireAdminLogin');
 
 console.log('🟢 routes/adminStudioRadgivning.js laddad');
 
+// Säkerställ att API alltid svarar JSON 401 om admin-session saknas (ingen HTML-redirect)
+router.use((req, res, next) => {
+  const hasSession = !!(req.session && req.session.admin);
+  if (!hasSession) {
+    console.warn('⚠️ /api/admin/studio-radgivning utan admin-session:', { path: req.path });
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+});
+
 // Helper functions
 function toDate(val) {
   try { 
@@ -33,7 +43,7 @@ function getStudioRadgivningDb() {
 }
 
 // GET /api/admin/studio-radgivning - Main handler for AI Studio and Rådgivning data
-router.get('/', requireAdminLogin, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { db, dbName } = getStudioRadgivningDb();
     const collection = db.collection('studioradgivning');
@@ -165,7 +175,7 @@ router.get('/', requireAdminLogin, async (req, res) => {
 });
 
 // GET /api/admin/studio-radgivning/:id - Get specific document
-router.get('/:id', requireAdminLogin, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { db } = getStudioRadgivningDb();
     const collection = db.collection('studioradgivning');
@@ -188,7 +198,7 @@ router.get('/:id', requireAdminLogin, async (req, res) => {
 });
 
 // GET /api/admin/studio-radgivning/_debug - Debug endpoint to check collection info
-router.get('/_debug', requireAdminLogin, async (req, res) => {
+router.get('/_debug', async (req, res) => {
   try {
     const { db, dbName } = getStudioRadgivningDb();
     const collection = db.collection('studioradgivning');
