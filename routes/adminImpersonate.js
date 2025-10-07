@@ -117,6 +117,22 @@ router.options("/verify-impersonation", (req, res) => {
   res.sendStatus(200);
 });
 
+// 🧪 Test endpoint för att verifiera att customer portal kan nå admin portal
+router.get("/test-connection", (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  console.log(`🧪 Test connection från: ${req.headers.origin || req.headers.host}`);
+  
+  res.json({
+    success: true,
+    message: "Admin portal är tillgänglig från customer portal",
+    timestamp: new Date().toISOString(),
+    origin: req.headers.origin || req.headers.host
+  });
+});
+
 router.get("/verify-impersonation", async (req, res) => {
   try {
     const { token } = req.query;
