@@ -2,17 +2,104 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <title>Ärendedetaljer</title>
+  <title>Ärendedetaljer - Source Admin Portal</title>
+  <meta name="description" content="Detaljerad vy över supportärende med chattranskript och hanteringsverktyg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header class="status-bar" aria-labelledby="status-heading">
+      <h1 id="status-heading" class="sr-only">Ärende status</h1>
+      <div class="status-buttons" role="group" aria-label="Välj ärende status">
+        <button class="status-btn btn-secondary" data-status="Nytt" aria-pressed="false">🗂️ Nytt</button>
+        <button class="status-btn btn-secondary" data-status="Arbetande" aria-pressed="false">🛠️ Arbetande</button>
+        <button class="status-btn btn-secondary" data-status="Väntar svar" aria-pressed="false">⏳ Väntar svar</button>
+        <button class="status-btn btn-secondary" data-status="On Hold" aria-pressed="false">🛑 On Hold</button>
+        <button class="status-btn btn-secondary" data-status="Stängt" aria-pressed="false">✅ Stängt</button>
+      </div>
+      <button id="update-status-btn" class="btn-primary">📁 Bekräfta status</button>
+    </header>
+
+    <main class="case-detail-main">
+      <div class="section">
+        <article class="card case-info" aria-labelledby="case-info-heading">
+          <h2 id="case-info-heading">📄 Ärendeinfo</h2>
+          
+          <dl class="case-details">
+            <div class="detail-item">
+              <dt>ID:</dt>
+              <dd id="case-id">Laddar...</dd>
+            </div>
+            <div class="detail-item">
+              <dt>Kund:</dt>
+              <dd id="customer-name">Laddar...</dd>
+            </div>
+            <div class="detail-item">
+              <dt>Typ:</dt>
+              <dd id="case-type">Laddar...</dd>
+            </div>
+            <div class="detail-item">
+              <dt>Beskrivning:</dt>
+              <dd id="case-description">Laddar...</dd>
+            </div>
+            <div class="detail-item">
+              <dt>Skapad:</dt>
+              <dd id="created-at">Laddar...</dd>
+            </div>
+          </dl>
+
+          <div class="admin-assignment">
+            <label for="admin-display">🧑‍💼 Ansvarig admin:</label>
+            <div class="readonly-box">
+              <input type="text" id="admin-display" readonly aria-label="Tilldelad admin" />
+              <button type="button" class="edit-icon" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">✏️</button>
+            </div>
+            <input type="text" id="admin-input" style="display: none;" placeholder="Sök admin..." oninput="filterAdmins(this.value)" list="admin-suggestions" aria-label="Sök och välj admin" />
+            <datalist id="admin-suggestions"></datalist>
+          </div>
+
+          <section class="note-section" aria-labelledby="notes-heading">
+            <h3 id="notes-heading">📝 Intern anteckning</h3>
+            <label for="internal-note" class="sr-only">Skriv intern anteckning</label>
+            <textarea id="internal-note" placeholder="Skriv en intern anteckning..." aria-describedby="note-help"></textarea>
+            <div id="note-help" class="sr-only">Skriv interna anteckningar som bara admin kan se</div>
+            <button type="button" class="btn-primary" onclick="saveNote()">💾 Spara anteckning</button>
+
+            <div class="note-list" id="note-list" role="list" aria-label="Interna anteckningar"></div>
+          </section>
+
+          <section class="message-section" aria-labelledby="message-heading">
+            <h3 id="message-heading">📨 Skicka meddelande till kund</h3>
+            <label for="customer-message" class="sr-only">Skriv meddelande till kund</label>
+            <textarea id="customer-message" placeholder="Skriv meddelande till kund..." aria-describedby="message-help"></textarea>
+            <div id="message-help" class="sr-only">Skriv ett meddelande som skickas till kunden</div>
+            <button type="button" class="btn-primary" onclick="sendMessage()">📤 Skicka</button>
+          </section>
+        </article>
+
+        <article class="card chat-transcript" aria-labelledby="transcript-heading">
+          <h2 id="transcript-heading">💬 Chatttranskript</h2>
+          <div id="chat-transcript" role="log" aria-live="polite" aria-label="Chattmeddelanden">Laddar...</div>
+        </article>
+      </div>
+    </main>
+  </div>
+
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .status-bar {
@@ -21,206 +108,167 @@
       align-items: center;
       width: 100%;
       max-width: 1400px;
-      margin-bottom: 25px;
+      margin-bottom: var(--space-8);
+      padding: var(--space-6);
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--gray-200);
     }
 
     .status-buttons {
       display: flex;
       flex-direction: row;
-      gap: 10px;
-      flex-wrap: nowrap;
+      gap: var(--space-3);
+      flex-wrap: wrap;
       justify-content: center;
-      margin-bottom: 10px;
+      margin-bottom: var(--space-4);
     }
 
     .status-btn {
-      background: #f5f5f5;
-      border: 1px solid #ccc;
-      color: #333;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-weight: 500;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      transition: all var(--transition-fast);
+      border: 2px solid var(--gray-300);
     }
 
     .status-btn:hover {
-      background: #eaeaea;
-      border-color: #999;
+      background: var(--gray-100);
+      border-color: var(--gray-400);
     }
 
     .status-btn.active {
-      background-color: #111;
-      color: #fff;
-      border: 1px solid #111;
+      background-color: var(--primary-600);
+      color: white;
+      border-color: var(--primary-600);
     }
 
-    #update-status-btn {
-      background-color: #000;
-      color: #0a7e3e;
-      padding: 10px 20px;
-      border: 1px solid #0a7e3e;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-    }
-
-    #update-status-btn:hover {
-      background-color: #111;
-      color: #11a84a;
-      border-color: #11a84a;
-    }
-
-    .container {
-      display: flex;
-      gap: 30px;
+    .case-detail-main {
       width: 100%;
       max-width: 1400px;
     }
 
-    .card {
-      background: #ffffff;
-      padding: 25px 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-      flex: 1;
+    .case-details {
+      display: grid;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+
+    .detail-item {
       display: flex;
-      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
     }
 
-    h2, h3 {
-      margin-top: 0;
-      color: #333;
+    .detail-item dt {
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-700);
+      min-width: 120px;
     }
 
-    select, textarea, input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      margin-bottom: 18px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
+    .detail-item dd {
+      margin: 0;
+      flex: 1;
+      color: var(--gray-600);
+    }
+
+    .admin-assignment {
+      margin-bottom: var(--space-6);
     }
 
     .readonly-box {
       display: flex;
       align-items: center;
-      gap: 10px;
-      background: #eee;
-      padding: 10px;
-      border-radius: 6px;
+      gap: var(--space-3);
+      background: var(--gray-100);
+      padding: var(--space-3);
+      border-radius: var(--radius-lg);
+      margin-top: var(--space-2);
+    }
+
+    .readonly-box input {
+      margin: 0;
+      background: transparent;
+      border: none;
     }
 
     .edit-icon {
       cursor: pointer;
-      font-size: 18px;
-      color: #666;
+      font-size: var(--font-size-lg);
+      color: var(--gray-600);
+      transition: color var(--transition-fast);
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
+    .edit-icon:hover {
+      color: var(--primary-600);
     }
 
-    .message {
-      margin-bottom: 15px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    .message.admin {
-      background: #e8f1ff;
-    }
-
-    .message.system {
-      background: #fff4cc;
-    }
-
-    .note-section {
-      margin-top: 20px;
+    .note-section, .message-section {
+      margin-top: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--gray-200);
     }
 
     .note-list {
-      margin-top: 10px;
+      margin-top: var(--space-4);
     }
 
     .note-item {
-      background: #f0f0f0;
-      padding: 12px;
-      border-radius: 6px;
-      margin-top: 10px;
-      font-size: 14px;
+      background: var(--gray-50);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      margin-top: var(--space-3);
+      border-left: 4px solid var(--primary-500);
     }
 
     .note-item small {
       display: block;
-      color: #666;
-      margin-top: 6px;
+      color: var(--gray-500);
+      margin-top: var(--space-2);
+      font-size: var(--font-size-sm);
     }
 
-    @media (max-width: 900px) {
-      .container {
-        flex-direction: column;
+    .message {
+      margin-bottom: var(--space-4);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      font-size: var(--font-size-sm);
+    }
+
+    .message.admin {
+      background: var(--primary-50);
+      border-left: 4px solid var(--primary-500);
+    }
+
+    .message.system {
+      background: var(--warning-50);
+      border-left: 4px solid var(--warning-500);
+    }
+
+    @media (max-width: 1024px) {
+      .case-detail-main .section {
+        grid-template-columns: 1fr;
       }
+    }
+
+    @media (max-width: 768px) {
       .status-buttons {
-        flex-wrap: wrap;
-        justify-content: center;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .detail-item {
+        flex-direction: column;
+        gap: var(--space-1);
+      }
+      
+      .detail-item dt {
+        min-width: auto;
       }
     }
   </style>
-</head>
-<body>
-  <div class="status-bar">
-    <div class="status-buttons">
-      <button class="status-btn" data-status="Nytt">🗂️ Nytt</button>
-      <button class="status-btn" data-status="Arbetande">🛠️ Arbetande</button>
-      <button class="status-btn" data-status="Väntar svar">⏳ Väntar svar</button>
-      <button class="status-btn" data-status="On Hold">🛑 On Hold</button>
-      <button class="status-btn" data-status="Stängt">✅ Stängt</button>
-    </div>
-    <button id="update-status-btn">📁 Bekräfta status</button>
-  </div>
-
-  <div class="container">
-    <div class="card">
-      <h2>📄 Ärendeinfo</h2>
-      <p><strong>ID:</strong> <span id="case-id">Laddar...</span></p>
-      <p><strong>Kund:</strong> <span id="customer-name">Laddar...</span></p>
-      <p><strong>Typ:</strong> <span id="case-type">Laddar...</span></p>
-      <p><strong>Beskrivning:</strong> <span id="case-description">Laddar...</span></p>
-      <p><strong>Skapad:</strong> <span id="created-at">Laddar...</span></p>
-
-      <p><strong>🧑‍💼 Ansvarig admin:</strong></p>
-      <div class="readonly-box">
-        <input type="text" id="admin-display" readonly />
-        <span class="edit-icon" onclick="toggleEditAdmin()">✏️</span>
-      </div>
-      <input type="text" id="admin-input" style="display: none;" placeholder="Sök admin..." oninput="filterAdmins(this.value)" list="admin-suggestions" />
-      <datalist id="admin-suggestions"></datalist>
-
-      <div class="note-section">
-        <h3>📝 Intern anteckning</h3>
-        <textarea id="internal-note" placeholder="Skriv en intern anteckning..."></textarea>
-        <button onclick="saveNote()">💾 Spara anteckning</button>
-
-        <div class="note-list" id="note-list"></div>
-      </div>
-
-      <div class="note-section">
-        <h3>📨 Skicka meddelande till kund</h3>
-        <textarea id="customer-message" placeholder="Skriv meddelande till kund..."></textarea>
-        <button onclick="sendMessage()">📤 Skicka</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>💬 Chatttranskript</h2>
-      <div id="chat-transcript">Laddar...</div>
-    </div>
-  </div>
 
 <script>
   const sessionId = new URLSearchParams(window.location.search).get("sessionId");

@@ -1,22 +1,71 @@
-<!-- public/login.html -->
 <!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Login</title>
+  <title>Admin Login - Source Admin Portal</title>
+  <meta name="description" content="Logga in på Source Admin Portal för att hantera kunder och ärenden" />
   <link rel="stylesheet" href="/css/admin-login.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h2>Admin Login</h2>
-  <form action="/admin-login" method="POST">
-    <label for="email">E-post:</label>
-    <input type="email" id="email" name="email" required /><br />
+  <div class="login-container">
+    <header class="login-header">
+      <h2>Source Admin Portal</h2>
+      <p>Logga in för att fortsätta</p>
+    </header>
 
-    <label for="password">Lösenord:</label>
-    <input type="password" id="password" name="password" required /><br />
+    <form class="login-form" action="/admin-login" method="POST" role="form" aria-labelledby="login-heading">
+      <h1 id="login-heading" class="sr-only">Admin Login</h1>
+      
+      <div class="form-group">
+        <label for="email">E-postadress</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          placeholder="admin@example.com"
+          required 
+          autocomplete="email"
+          aria-describedby="email-help"
+        />
+        <div id="email-help" class="sr-only">Ange din admin e-postadress</div>
+      </div>
 
-    <button type="submit">Logga in</button>
-  </form>
+      <div class="form-group">
+        <label for="password">Lösenord</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          placeholder="Ditt lösenord"
+          required 
+          autocomplete="current-password"
+          aria-describedby="password-help"
+        />
+        <div id="password-help" class="sr-only">Ange ditt admin lösenord</div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        Logga in
+      </button>
+    </form>
+  </div>
+
+  <style>
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
 </body>
 </html>

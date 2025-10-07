@@ -3,117 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📂 Supportärenden – Admin</title>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    input, select {
-      padding: 10px;
-      font-size: 14px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .case-card {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .case-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .case-header h3 {
-      margin: 0;
-    }
-
-    .case-meta {
-      font-size: 0.9rem;
-      color: #555;
-      margin-top: 10px;
-    }
-
-    .view-btn {
-      background-color: #007bff;
-      color: white;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .view-btn:hover {
-      background-color: #0056b3;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 8px;
-    }
-
-    .status-nytt { background: #e6f7e6; color: #2e7d32; }
-    .status-arbetande { background: #e3f2fd; color: #1565c0; }
-    .status-väntar { background: #fff8e1; color: #ff6f00; }
-    .status-onhold { background: #fce4ec; color: #c2185b; }
-    .status-stängt { background: #eeeeee; color: #424242; }
-  </style>
+  <title>Supportärenden - Source Admin Portal</title>
+  <meta name="description" content="Hantera och översikt över alla supportärenden i Source Admin Portal" />
+  <link rel="stylesheet" href="/css/cases.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>📂 Alla supportärenden</h1>
+    <header>
+      <h1>📂 Alla supportärenden</h1>
+    </header>
 
-    <div class="controls">
-      <input type="text" id="searchInput" placeholder="🔍 Sök på ID, namn, email eller ämne..." oninput="filterAndRender()">
+    <section class="controls-section" aria-labelledby="controls-heading">
+      <h2 id="controls-heading" class="sr-only">Filter och sökning</h2>
+      <div class="controls">
+        <label for="searchInput" class="sr-only">Sök i ärenden</label>
+        <input type="text" id="searchInput" placeholder="🔍 Sök på ID, namn, email eller ämne..." oninput="filterAndRender()" aria-describedby="search-help">
+        <div id="search-help" class="sr-only">Sök efter ärende-ID, kundnamn, e-postadress eller ämne</div>
 
-      <select id="statusFilter" onchange="filterAndRender()">
-        <option value="">📁 Alla statusar</option>
-        <option value="nytt">🗂️ Nytt</option>
-        <option value="arbetande">🛠️ Arbetande</option>
-        <option value="väntar svar">⏳ Väntar svar</option>
-        <option value="on hold">🛑 On Hold</option>
-        <option value="stängt">✅ Stängt</option>
-      </select>
+        <label for="statusFilter" class="sr-only">Filtrera efter status</label>
+        <select id="statusFilter" onchange="filterAndRender()" aria-label="Välj status att filtrera på">
+          <option value="">📁 Alla statusar</option>
+          <option value="nytt">🗂️ Nytt</option>
+          <option value="arbetande">🛠️ Arbetande</option>
+          <option value="väntar svar">⏳ Väntar svar</option>
+          <option value="on hold">🛑 On Hold</option>
+          <option value="stängt">✅ Stängt</option>
+        </select>
 
-      <select id="sortOrder" onchange="filterAndRender()">
-        <option value="desc">🔽 Nyast först</option>
-        <option value="asc">🔼 Äldst först</option>
-      </select>
-    </div>
+        <label for="sortOrder" class="sr-only">Sorteringsordning</label>
+        <select id="sortOrder" onchange="filterAndRender()" aria-label="Välj sorteringsordning">
+          <option value="desc">🔽 Nyast först</option>
+          <option value="asc">🔼 Äldst först</option>
+        </select>
+      </div>
+    </section>
 
-    <div id="caseList"></div>
+    <main class="cases-main" aria-labelledby="cases-heading">
+      <h2 id="cases-heading" class="sr-only">Lista över supportärenden</h2>
+      <div id="caseList" role="list" aria-live="polite" aria-label="Supportärenden"></div>
+    </main>
   </div>
 
   <script>

@@ -3,27 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sök Kund</title>
+  <title>Sök Kund - Source Admin Portal</title>
+  <meta name="description" content="Sök efter kunder i Source Admin Portal med avancerade filteralternativ" />
   <link rel="stylesheet" href="/css/search.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>🔍 Sök Kund</h1>
+    <header>
+      <h1>🔍 Sök Kund</h1>
+    </header>
 
-    <div class="search-controls">
-      <input type="text" id="searchInput" placeholder="Skriv t.ex. e-post, org.nr, ärende-ID eller info...">
-      <select id="filterSelect">
-        <option value="all">Alla fält</option>
-        <option value="email">E-post</option>
-        <option value="orgnr">Organisationsnummer</option>
-        <option value="caseId">Ärende-ID</option>
-        <option value="caseInfo">Ärendeinfo</option>
-      </select>
-    </div>
+    <section class="search-section" aria-labelledby="search-heading">
+      <h2 id="search-heading" class="sr-only">Sökfunktion</h2>
+      <div class="search-controls">
+        <label for="searchInput" class="sr-only">Sök efter kund</label>
+        <input type="text" id="searchInput" placeholder="Skriv t.ex. e-post, org.nr, ärende-ID eller info..." aria-describedby="search-help">
+        <div id="search-help" class="sr-only">Sök efter e-postadress, organisationsnummer, ärende-ID eller annan kundinformation</div>
+        
+        <label for="filterSelect" class="sr-only">Välj sökfält</label>
+        <select id="filterSelect" aria-label="Välj vilka fält som ska sökas i">
+          <option value="all">Alla fält</option>
+          <option value="email">E-post</option>
+          <option value="orgnr">Organisationsnummer</option>
+          <option value="caseId">Ärende-ID</option>
+          <option value="caseInfo">Ärendeinfo</option>
+        </select>
+      </div>
+    </section>
 
-    <ul id="results" class="results-list">
-      <!-- Resultat genereras här via JS -->
-    </ul>
+    <main class="results-section" aria-labelledby="results-heading">
+      <h2 id="results-heading" class="sr-only">Sökresultat</h2>
+      <ul id="results" class="results-list" role="list" aria-live="polite" aria-label="Kundsökresultat">
+        <!-- Resultat genereras här via JS -->
+      </ul>
+    </main>
   </div>
 
   <script>

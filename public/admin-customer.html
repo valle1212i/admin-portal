@@ -2,92 +2,61 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <title>Kundprofil</title>
+  <title>Kundprofil - Source Admin Portal</title>
+  <meta name="description" content="Detaljerad kundprofil med ärenden och chattmeddelanden i Source Admin Portal" />
   <link rel="stylesheet" href="/css/admin-customer.css" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      padding: 40px;
-      background: #f5f6fa;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-
-    .card {
-      background: #fff;
-      padding: 24px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
-
-    h1, h2, h3 {
-      margin-top: 0;
-    }
-
-    .label {
-      font-weight: bold;
-      display: inline-block;
-      width: 120px;
-    }
-
-    a.back-link {
-      display: inline-block;
-      margin-bottom: 20px;
-      text-decoration: none;
-      color: #007bff;
-    }
-
-    .chat-message {
-      margin-bottom: 12px;
-      padding: 10px;
-      background: #f1f1f1;
-      border-radius: 8px;
-    }
-
-    .chat-message .sender {
-      font-weight: bold;
-    }
-
-    .chat-message .timestamp {
-      font-size: 0.85rem;
-      color: #888;
-    }
-
-    .case-card {
-      background: #f9f9f9;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <a href="/dashboard" class="back-link">← Tillbaka till dashboard</a>
+    <nav aria-label="Breadcrumb">
+      <a href="/dashboard" class="back-link">← Tillbaka till dashboard</a>
+    </nav>
 
-    <div class="card">
-      <h1 id="name">Laddar kund...</h1>
-      <p><span class="label">📧 E-post:</span> <span id="email"></span></p>
-      <p><span class="label">🆔 ID:</span> <span id="customerId"></span></p>
-      <p><span class="label">🕒 Skapad:</span> <span id="createdAt"></span></p>
-      <p><span class="label">🏷️ Kampanj:</span> <span id="campaigns"></span></p>
-      <p><span class="label">🏭 Bransch:</span> <span id="industry"></span></p>
-      <p><span class="label">🌐 Webbplats:</span> <span id="website"></span></p>
-    </div>
+    <main class="customer-profile" aria-labelledby="customer-heading">
+      <article class="card customer-info" aria-labelledby="customer-info-heading">
+        <h1 id="customer-info-heading">Kundinformation</h1>
+        <h2 id="customer-heading">Laddar kund...</h2>
+        <dl class="customer-details">
+          <div class="detail-item">
+            <dt class="label">📧 E-post:</dt>
+            <dd id="email"></dd>
+          </div>
+          <div class="detail-item">
+            <dt class="label">🆔 ID:</dt>
+            <dd id="customerId"></dd>
+          </div>
+          <div class="detail-item">
+            <dt class="label">🕒 Skapad:</dt>
+            <dd id="createdAt"></dd>
+          </div>
+          <div class="detail-item">
+            <dt class="label">🏷️ Kampanj:</dt>
+            <dd id="campaigns"></dd>
+          </div>
+          <div class="detail-item">
+            <dt class="label">🏭 Bransch:</dt>
+            <dd id="industry"></dd>
+          </div>
+          <div class="detail-item">
+            <dt class="label">🌐 Webbplats:</dt>
+            <dd id="website"></dd>
+          </div>
+        </dl>
+      </article>
 
-    <div class="card">
-      <h2>📂 Relaterade Ärenden</h2>
-      <div id="casesContainer">Laddar ärenden...</div>
-    </div>
+      <section class="card cases-section" aria-labelledby="cases-heading">
+        <h2 id="cases-heading">📂 Relaterade Ärenden</h2>
+        <div id="casesContainer" role="list" aria-live="polite" aria-label="Kundens ärenden">Laddar ärenden...</div>
+      </section>
 
-    <div class="card">
-      <h2>💬 Livechat-meddelanden</h2>
-      <div id="chatMessagesAdmin">Laddar meddelanden...</div>
-    </div>
+      <section class="card chat-section" aria-labelledby="chat-heading">
+        <h2 id="chat-heading">💬 Livechat-meddelanden</h2>
+        <div id="chatMessagesAdmin" role="log" aria-live="polite" aria-label="Chattmeddelanden">Laddar meddelanden...</div>
+      </section>
+    </main>
   </div>
 
   <script>
@@ -100,14 +69,14 @@
       fetch(`/api/customers/by-id/${id}`)
         .then(res => res.json())
         .then(data => {
-          document.getElementById("name").textContent = data.name || "Okänd kund";
+          document.getElementById("customer-heading").textContent = data.name || "Okänd kund";
           document.getElementById("email").textContent = data.email || "-";
           document.getElementById("customerId").textContent = data._id || "-";
           document.getElementById("createdAt").textContent = new Date(data.createdAt).toLocaleString("sv-SE") || "-";
           document.getElementById("campaigns").textContent = data.campaigns || "-";
           document.getElementById("industry").textContent = data.industry || "-";
           document.getElementById("website").innerHTML = data.website 
-            ? `<a href="${data.website}" target="_blank">${data.website}</a>` 
+            ? `<a href="${data.website}" target="_blank" rel="noopener">${data.website}</a>` 
             : "-";
         })
         .catch(err => {
