@@ -80,8 +80,36 @@ router.get('/', requireAdminLogin, async (req, res) => {
       if (to)   match.createdAt.$lte = to;
     }
 
+    // Base constraints to ensure we only read actual ad briefs
+    const allowedPlatforms = ['google','meta','tiktok','linkedin'];
+    const includeIsAd = {
+      $or: [
+        { platform: { $in: allowedPlatforms } },
+        { answers: { $type: 'object' } },
+        { q1: { $exists: true } },
+        { q2: { $exists: true } },
+        { q3: { $exists: true } },
+        { q4: { $exists: true } },
+        { q5: { $exists: true } },
+        { q6: { $exists: true } },
+        { q7: { $exists: true } },
+        { extraInfo: { $exists: true } },
+        { idempotencyKey: { $exists: true } }
+      ]
+    };
+    // Exclude chat/case-like docs commonly found in other collections
+    const excludeNonAds = {
+      $and: [
+        { messages: { $exists: false } },
+        { sessionId: { $exists: false } }
+      ]
+    };
+    const combinedMatch = Object.keys(match).length
+      ? { $and: [includeIsAd, excludeNonAds, match] }
+      : { $and: [includeIsAd, excludeNonAds] };
+
     const pipeline = [
-      { $match: match },
+      { $match: combinedMatch },
       { $sort: { createdAt: -1, _id: -1 } },
       {
         $facet: {
