@@ -2,6 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const AdminStudioRådgivning = require('../models/AdminStudioRådgivning');
 
 const router = express.Router();
 const requireAdminLogin = require('../middleware/requireAdminLogin');
@@ -45,22 +46,6 @@ function getStudioRadgivningDb() {
 // GET /api/admin/studio-radgivning - Main handler for AI Studio and Rådgivning data
 router.get('/', async (req, res) => {
   try {
-    const { db, dbName } = getStudioRadgivningDb();
-    const collection = db.collection('studioradgivning');
-    
-    // Check if collection exists
-    const collections = await db.listCollections({ name: 'studioradgivning' }).toArray();
-    if (collections.length === 0) {
-      return res.json({
-        page: 1,
-        limit: 20,
-        total: 0,
-        source: `${dbName}.studioradgivning`,
-        items: [],
-        message: 'Collection studioradgivning not found'
-      });
-    }
-
     // Build filter
     const filter = {};
     
@@ -103,23 +88,20 @@ router.get('/', async (req, res) => {
     const limit = Math.min(200, Math.max(1, parseInt(req.query.limit || '20', 10)));
     const skip = (page - 1) * limit;
 
-    // Execute query
+    // Execute query using Mongoose model
     const [items, total] = await Promise.all([
-      collection.find(filter)
+      AdminStudioRådgivning.find(filter)
         .sort({ createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
-        .toArray(),
-      collection.countDocuments(filter)
+        .lean(),
+      AdminStudioRådgivning.countDocuments(filter)
     ]);
 
     // Transform data for admin UI
     const transformedItems = items.map(item => {
-      // Determine if it's AI Studio or Rådgivning data
-      const isAIStudio = item.platform || item.answers || item.q1 || item.q2 || item.q3 || item.q4 || item.q5 || item.q6 || item.q7;
-      const isRadgivning = item.sessionId || item.messages || item.customerId;
-      
-      const dataType = isAIStudio ? 'ai-studio' : isRadgivning ? 'radgivning' : 'unknown';
+      // Determine data type
+      const dataType = item.source || 'unknown';
       
       // Extract answers (both new schema and legacy)
       const answers = item.answers || {};
@@ -131,23 +113,15 @@ router.get('/', async (req, res) => {
         });
       }
 
-      // Determine status
-      let status = 'open';
-      if (item.status) {
-        status = item.status.toLowerCase();
-      } else if (item.closedAt || (item.messages && item.messages.length > 0)) {
-        status = 'closed';
-      }
-
       return {
         _id: item._id,
         dataType,
         platform: item.platform || null,
-        customerEmail: item.customerEmail || item.email || null,
-        customerName: item.customerName || item.name || null,
-        createdAt: item.createdAt || item.timestamp || null,
-        status,
-        message: item.message || item.description || item.topic || '',
+        customerEmail: item.customerEmail || null,
+        customerName: item.customerName || null,
+        createdAt: item.createdAt || null,
+        status: item.status || 'open',
+        message: item.description || item.topic || '',
         tags: Array.isArray(item.tags) ? item.tags : [],
         answers,
         sessionId: item.sessionId || null,
@@ -164,7 +138,7 @@ router.get('/', async (req, res) => {
       page,
       limit,
       total,
-      source: `${dbName}.studioradgivning`,
+      source: 'mongoose-model',
       items: transformedItems
     });
 
@@ -177,15 +151,12 @@ router.get('/', async (req, res) => {
 // GET /api/admin/studio-radgivning/:id - Get specific document
 router.get('/:id', async (req, res) => {
   try {
-    const { db } = getStudioRadgivningDb();
-    const collection = db.collection('studioradgivning');
-    
     const id = req.params.id;
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'Ogiltigt id' });
     }
 
-    const doc = await collection.findOne({ _id: new ObjectId(id) });
+    const doc = await AdminStudioRådgivning.findById(id).lean();
     if (!doc) {
       return res.status(404).json({ error: 'Hittades ej' });
     }
@@ -200,25 +171,31 @@ router.get('/:id', async (req, res) => {
 // GET /api/admin/studio-radgivning/_debug - Debug endpoint to check collection info
 router.get('/_debug', async (req, res) => {
   try {
-    const { db, dbName } = getStudioRadgivningDb();
-    const collection = db.collection('studioradgivning');
+    const count = await AdminStudioRådgivning.estimatedDocumentCount();
+    const sample = await AdminStudioRådgivning.findOne({}, {}, { sort: { createdAt: -1 } }).lean();
     
-    const count = await collection.estimatedDocumentCount();
-    const sample = await collection.findOne({}, { sort: { createdAt: -1 } });
+    const sourceCounts = await AdminStudioRådgivning.aggregate([
+      {
+        $group: {
+          _id: '$source',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
     
     res.json({
-      db: dbName,
-      collection: 'studioradgivning',
+      model: 'AdminStudioRådgivning',
       count,
+      sourceCounts,
       sample: sample ? {
         _id: sample._id,
         createdAt: sample.createdAt,
+        source: sample.source,
         hasAnswers: !!sample.answers,
         hasPlatform: !!sample.platform,
         hasSessionId: !!sample.sessionId,
         hasMessages: !!sample.messages,
-        customerEmail: sample.customerEmail || sample.email,
-        dataType: sample.platform ? 'ai-studio' : sample.sessionId ? 'radgivning' : 'unknown'
+        customerEmail: sample.customerEmail
       } : null
     });
   } catch (err) {
