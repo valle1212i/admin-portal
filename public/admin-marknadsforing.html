@@ -9,14 +9,11 @@
   <style>
     :root{--bd:#e5e7eb;--muted:#6b7280}
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f8fafc;color:#0f172a;margin:0}
-    .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
-    .sidebar{padding:16px;border-right:1px solid var(--bd);background:#fff}
-    .sidebar h2{margin:.25rem 0 1rem 0}
-    .nav{list-style:none;margin:0;padding:0}
-    .nav li{margin:.25rem 0}
-    .nav a{display:block;padding:.5rem .65rem;border-radius:.5rem;color:#111827;text-decoration:none}
-    .nav .active a,.nav a:hover{background:#eef2ff;color:#3730a3}
+    .layout{display:block;min-height:100vh}
     main{padding:20px}
+    .back-button{margin-bottom:20px}
+    .back-button a{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:#f8fafc;border:1px solid var(--bd);border-radius:8px;color:#374151;text-decoration:none;font-size:14px;transition:all 0.2s}
+    .back-button a:hover{background:#e5e7eb;color:#111827}
     h1{margin:.25rem 0 1rem 0}
     .toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
     .toolbar .pill{border:1px solid var(--bd);padding:.35rem .6rem;border-radius:999px;background:#fff;font-size:.9rem}
@@ -45,27 +42,37 @@
     .empty{color:var(--muted)}
     .error{color:#b91c1c}
     .split{display:grid;grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:16px}
-    @media (max-width: 1100px){.layout{grid-template-columns:1fr}.split{grid-template-columns:1fr}}
+    @media (max-width: 1100px){.split{grid-template-columns:1fr}}
+    .sort-controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    .sort-controls select{padding:6px 12px;border:1px solid var(--bd);border-radius:6px;background:#fff;font-size:14px}
+    .sort-controls label{font-size:14px;color:#374151;font-weight:500}
     .mono{font-family: ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem}
   </style>
 </head>
 <body>
 <div class="layout">
-  <aside class="sidebar">
-    <h2>Admin</h2>
-    <ul class="nav">
-      <li><a href="dashboard.html">Dashboard</a></li>
-      <li class="active"><a href="admin-marknadsforing.html">Marknadsföring</a></li>
-      <li><a href="customers.html">Kunder</a></li>
-      <li><a href="settings.html">Inställningar</a></li>
-    </ul>
-  </aside>
-
   <main>
+    <div class="back-button">
+      <a href="admin-dashboard.html">
+        <i class="fas fa-arrow-left"></i>
+        Tillbaka till Dashboard
+      </a>
+    </div>
     <h1>📣 Marknadsföring</h1>
 
     <!-- Filter/verktyg för BRIEFS -->
     <section class="card">
+      <div class="sort-controls">
+        <label for="adsSort">Sortera briefs:</label>
+        <select id="adsSort">
+          <option value="createdAt-desc">Senast skapade (nyast först)</option>
+          <option value="createdAt-asc">Äldst skapade (äldst först)</option>
+          <option value="platform-asc">Plattform (A-Ö)</option>
+          <option value="platform-desc">Plattform (Ö-A)</option>
+          <option value="userEmail-asc">Användare (A-Ö)</option>
+          <option value="userEmail-desc">Användare (Ö-A)</option>
+        </select>
+      </div>
       <div class="toolbar">
         <input id="q" type="search" placeholder="Sök i svaren (q1–q7, extraInfo)…"/>
         <input id="from" type="date"/>
@@ -98,6 +105,19 @@
         <div class="row">
           <h2 style="margin:.25rem 0">AI Studio & Rådgivning</h2>
           <span id="supportStatus" class="status">–</span>
+        </div>
+        <div class="sort-controls">
+          <label for="supportSort">Sortera ärenden:</label>
+          <select id="supportSort">
+            <option value="createdAt-desc">Senast skapade (nyast först)</option>
+            <option value="createdAt-asc">Äldst skapade (äldst först)</option>
+            <option value="status-asc">Status (A-Ö)</option>
+            <option value="status-desc">Status (Ö-A)</option>
+            <option value="customerEmail-asc">Kund e-post (A-Ö)</option>
+            <option value="customerEmail-desc">Kund e-post (Ö-A)</option>
+            <option value="dataType-asc">Datatyp (A-Ö)</option>
+            <option value="dataType-desc">Datatyp (Ö-A)</option>
+          </select>
         </div>
         <div class="toolbar">
           <input id="sq" type="search" placeholder="Sök i AI Studio svar/rådgivning/e-post…"/>
@@ -140,6 +160,8 @@
   // === State ===
   let page=1, limit=20, lastTotal=0, lastSource='primary';
   let s_last = { open:0, closed:0 };
+  let adsSortBy = 'createdAt-desc';
+  let supportSortBy = 'createdAt-desc';
 
   // Plocka ut answers oavsett schema (nytt eller legacy)
   function extractAnswers(it){
@@ -204,6 +226,7 @@
     if (platform) params.set('platform', platform);
     if (from) params.set('from', new Date(from).toISOString());
     if (to)   params.set('to', new Date(to).toISOString());
+    if (adsSortBy) params.set('sort', adsSortBy);
 
     elList.innerHTML = '<p class="meta">Hämtar…</p>';
 
@@ -303,10 +326,12 @@
     return `${hdr}\n---\n${kv}`;
   }
 
-  // Pager + filter
+  // Pager + filter + sort
   document.getElementById('filterBtn').addEventListener('click', ()=>{page=1; loadAds();});
   document.getElementById('prevAds').addEventListener('click', ()=>{ if (page>1){ page--; loadAds(); }});
   document.getElementById('nextAds').addEventListener('click', ()=>{ if (page*limit < lastTotal){ page++; loadAds(); }});
+  document.getElementById('adsSort').addEventListener('change', (e)=>{adsSortBy=e.target.value; page=1; loadAds();});
+  document.getElementById('supportSort').addEventListener('change', (e)=>{supportSortBy=e.target.value; loadSupport();});
 
   // === SUPPORT ===
   async function loadSupport(){
@@ -322,6 +347,7 @@
     if (sstatus) params.set('status', sstatus);
     if (sfrom) params.set('from', new Date(sfrom).toISOString());
     if (sto)   params.set('to', new Date(sto).toISOString());
+    if (supportSortBy) params.set('sort', supportSortBy);
 
     el.innerHTML = '<p class="meta">Hämtar…</p>';
 
@@ -407,6 +433,11 @@
 
   // === Init ===
   document.getElementById('sbtn').addEventListener('click', loadSupport);
+  
+  // Set initial sort values
+  document.getElementById('adsSort').value = adsSortBy;
+  document.getElementById('supportSort').value = supportSortBy;
+  
   loadAds();
   loadSupport();
   health();
