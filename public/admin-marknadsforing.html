@@ -346,7 +346,7 @@
       el.innerHTML = data.items.map(renderTicket).join('');
     }catch(err){
       console.error(err);
-      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta support. Är <code>/admin/api/support</code> implementerad?</p>`;
+      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta support. ${err.message.includes('401') ? 'Logga in först.' : 'Kontrollera att /api/admin/support är implementerad.'}</p>`;
       st.textContent = 'Fel';
       s_last = { open:0, closed:0 };
       updateSummary();
