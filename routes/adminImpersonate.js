@@ -82,7 +82,7 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
 
     // Logga impersonation för säkerhet
     console.log(`🔐 Admin ${req.session.admin.name} (${req.session.admin.email}) impersonerar kund ${customer.name} (${customer.email})`);
-    console.log(`🔑 Token skapad med secret: ${process.env.SESSION_SECRET ? 'SESSION_SECRET finns' : 'SESSION_SECRET saknas'}`);
+    console.log(`🔑 Token skapad med secret: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
 
     // Skapa en enkel redirect URL med token som query parameter
     const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL || 'https://source-database.onrender.com';
@@ -110,13 +110,30 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
 });
 
 // 🔍 Verifiera impersonation token (anropas från kundportalen)
+router.options("/verify-impersonation", (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.sendStatus(200);
+});
+
 router.get("/verify-impersonation", async (req, res) => {
   try {
     const { token } = req.query;
     
+    // Set CORS headers för customer portal access
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    // Logga request details för debugging
+    console.log(`🌐 Verification request från: ${req.headers.origin || req.headers.host}`);
+    console.log(`📋 Request headers: ${JSON.stringify(req.headers, null, 2)}`);
+    
     console.log(`🔍 Verifierar impersonation token: ${token ? token.substring(0, 50) + '...' : 'INGEN TOKEN'}`);
     
     if (!token) {
+      console.log('❌ Ingen token mottagen');
       return res.status(400).json({
         success: false,
         message: "Token krävs"
@@ -128,6 +145,7 @@ router.get("/verify-impersonation", async (req, res) => {
     console.log(`🔑 Använder secret för verifiering: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
     
     const decoded = jwt.verify(token, secret);
+    console.log(`✅ Token verifierad för kund: ${decoded.customerName} (${decoded.customerEmail})`);
     
     if (decoded.type !== 'impersonation') {
       return res.status(400).json({
