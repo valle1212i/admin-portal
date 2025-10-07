@@ -36,10 +36,10 @@ function esc(s) {
   return String(s != null ? s : '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m]); 
 }
 
-// Get target database connection for Admin Panel.studioradgivning
+// Get target database connection for adminportal.studioradgivning
 function getStudioRadgivningDb() {
   const client = mongoose.connection.getClient();
-  const dbName = 'Admin Panel'; // Database name
+  const dbName = 'adminportal'; // Database name
   return { db: client.db(dbName), dbName };
 }
 
