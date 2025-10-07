@@ -17,34 +17,68 @@
 
     <main class="customer-profile" aria-labelledby="customer-heading">
       <article class="card customer-info" aria-labelledby="customer-info-heading">
-        <h1 id="customer-info-heading">Kundinformation</h1>
-        <h2 id="customer-heading">Laddar kund...</h2>
-        <dl class="customer-details">
-          <div class="detail-item">
-            <dt class="label">📧 E-post:</dt>
-            <dd id="email"></dd>
+        <div class="customer-header">
+          <div class="customer-title-section">
+            <h1 id="customer-info-heading">Kundinformation</h1>
+            <h2 id="customer-heading">Laddar kund...</h2>
           </div>
-          <div class="detail-item">
-            <dt class="label">🆔 ID:</dt>
-            <dd id="customerId"></dd>
+          <div class="customer-actions">
+            <button id="impersonateBtn" class="impersonate-btn" disabled>
+              <span class="btn-icon">👤</span>
+              <span class="btn-text">Impersonera Kund</span>
+            </button>
           </div>
-          <div class="detail-item">
-            <dt class="label">🕒 Skapad:</dt>
-            <dd id="createdAt"></dd>
+        </div>
+        
+        <div class="customer-details-grid">
+          <div class="detail-card">
+            <div class="detail-icon">📧</div>
+            <div class="detail-content">
+              <label class="detail-label">E-post</label>
+              <div id="email" class="detail-value">-</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <dt class="label">🏷️ Kampanj:</dt>
-            <dd id="campaigns"></dd>
+          
+          <div class="detail-card">
+            <div class="detail-icon">🆔</div>
+            <div class="detail-content">
+              <label class="detail-label">Kund-ID</label>
+              <div id="customerId" class="detail-value">-</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <dt class="label">🏭 Bransch:</dt>
-            <dd id="industry"></dd>
+          
+          <div class="detail-card">
+            <div class="detail-icon">🕒</div>
+            <div class="detail-content">
+              <label class="detail-label">Skapad</label>
+              <div id="createdAt" class="detail-value">-</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <dt class="label">🌐 Webbplats:</dt>
-            <dd id="website"></dd>
+          
+          <div class="detail-card">
+            <div class="detail-icon">🏷️</div>
+            <div class="detail-content">
+              <label class="detail-label">Kampanj</label>
+              <div id="campaigns" class="detail-value">-</div>
+            </div>
           </div>
-        </dl>
+          
+          <div class="detail-card">
+            <div class="detail-icon">🏭</div>
+            <div class="detail-content">
+              <label class="detail-label">Bransch</label>
+              <div id="industry" class="detail-value">-</div>
+            </div>
+          </div>
+          
+          <div class="detail-card">
+            <div class="detail-icon">🌐</div>
+            <div class="detail-content">
+              <label class="detail-label">Webbplats</label>
+              <div id="website" class="detail-value">-</div>
+            </div>
+          </div>
+        </div>
       </article>
 
       <section class="card cases-section" aria-labelledby="cases-heading">
@@ -61,6 +95,7 @@
 
   <script>
     const id = new URLSearchParams(window.location.search).get("id");
+    let customerData = null;
 
     if (!id) {
       document.body.innerHTML = "<p>Kund-ID saknas.</p>";
@@ -69,20 +104,78 @@
       fetch(`/api/customers/by-id/${id}`)
         .then(res => res.json())
         .then(data => {
+          customerData = data;
           document.getElementById("customer-heading").textContent = data.name || "Okänd kund";
           document.getElementById("email").textContent = data.email || "-";
           document.getElementById("customerId").textContent = data._id || "-";
-          document.getElementById("createdAt").textContent = new Date(data.createdAt).toLocaleString("sv-SE") || "-";
+          document.getElementById("createdAt").textContent = data.createdAt 
+            ? new Date(data.createdAt).toLocaleString("sv-SE") 
+            : "-";
           document.getElementById("campaigns").textContent = data.campaigns || "-";
           document.getElementById("industry").textContent = data.industry || "-";
           document.getElementById("website").innerHTML = data.website 
-            ? `<a href="${data.website}" target="_blank" rel="noopener">${data.website}</a>` 
+            ? `<a href="${data.website}" target="_blank" rel="noopener" class="website-link">${data.website}</a>` 
             : "-";
+          
+          // Enable impersonate button
+          const impersonateBtn = document.getElementById("impersonateBtn");
+          impersonateBtn.disabled = false;
+          impersonateBtn.addEventListener("click", handleImpersonate);
         })
         .catch(err => {
           console.error("❌ Kunde inte hämta kundinfo:", err);
           document.querySelector(".container").innerHTML = "<p style='color:red;'>Fel vid hämtning av kunddata.</p>";
         });
+
+      // 🔹 Impersonate functionality
+      function handleImpersonate() {
+        if (!customerData) {
+          alert("Kunddata inte tillgänglig");
+          return;
+        }
+
+        const confirmMessage = `Är du säker på att du vill impersonera kunden "${customerData.name || 'Okänd kund'}"?\n\nDetta ger dig full åtkomst till deras kundportal.`;
+        
+        if (confirm(confirmMessage)) {
+          // Show loading state
+          const btn = document.getElementById("impersonateBtn");
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Impersonerar...</span>';
+          btn.disabled = true;
+
+          // Call impersonate API
+          fetch('/api/admin/impersonate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              customerId: id,
+              customerEmail: customerData.email
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              // Redirect to customer portal with impersonation token
+              window.open(data.redirectUrl, '_blank');
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+            } else {
+              alert('Fel vid impersonation: ' + (data.message || 'Okänt fel'));
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+            }
+          })
+          .catch(err => {
+            console.error('❌ Impersonation error:', err);
+            alert('Fel vid impersonation. Försök igen.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          });
+        }
+      }
 
       // 🔹 Hämta kundens ärenden (cases)
       fetch(`/api/cases/customer/${id}`)

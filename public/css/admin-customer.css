@@ -210,26 +210,157 @@ body {
   border: 0;
 }
 
-/* Customer Details */
-.customer-details {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.detail-item {
+/* Customer Header */
+.customer-header {
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
-  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  gap: var(--space-6);
 }
 
-.detail-item .label {
-  min-width: 120px;
-  margin-right: 0;
-}
-
-.detail-item dd {
-  margin: 0;
+.customer-title-section {
   flex: 1;
+}
+
+.customer-actions {
+  flex-shrink: 0;
+}
+
+/* Impersonate Button */
+.impersonate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.impersonate-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.impersonate-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-md);
+}
+
+.impersonate-btn:disabled {
+  background: var(--gray-300);
+  color: var(--gray-500);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.impersonate-btn .btn-icon {
+  font-size: var(--font-size-base);
+}
+
+.impersonate-btn .btn-text {
+  font-weight: var(--font-weight-medium);
+}
+
+/* Customer Details Grid */
+.customer-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.detail-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--gray-50);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-card:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-200);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.detail-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.detail-card:hover::before {
+  opacity: 1;
+}
+
+.detail-icon {
+  font-size: var(--font-size-2xl);
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.detail-value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--gray-900);
+  word-break: break-word;
+}
+
+.website-link {
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.website-link:hover {
+  color: var(--primary-700);
+  text-decoration: underline;
 }
 
 .card p {
@@ -355,6 +486,11 @@ body {
   .card {
     padding: var(--space-6);
   }
+  
+  .customer-details-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+  }
 }
 
 @media (max-width: 768px) {
@@ -379,16 +515,34 @@ body {
     font-size: var(--font-size-xl);
   }
   
-  .card p {
+  .customer-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
+    align-items: stretch;
+    gap: var(--space-4);
   }
   
-  .label {
-    min-width: auto;
-    margin-right: 0;
-    margin-bottom: var(--space-1);
+  .customer-actions {
+    align-self: flex-start;
+  }
+  
+  .customer-details-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .detail-card {
+    padding: var(--space-4);
+  }
+  
+  .detail-icon {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-xl);
+  }
+  
+  .impersonate-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

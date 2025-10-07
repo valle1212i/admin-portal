@@ -165,6 +165,7 @@ app.use("/api/admin-status", require("./routes/adminStatus"));
 app.use("/api/admins", require("./routes/admins"));
 app.use('/api/contracts', require('./routes/contracts'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/admin', require('./routes/adminImpersonate'));
 const { router: securityRouter, requireAdmin } = require('./routes/security');
 app.use('/api/security', securityRouter);
 
