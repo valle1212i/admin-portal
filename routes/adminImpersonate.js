@@ -62,7 +62,10 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
       });
     }
 
-    // Skapa impersonation token
+    // Skapa impersonation token med samma secret som används för sessioner
+    const secret = process.env.SESSION_SECRET || 'admin_secret_key';
+    console.log(`🔑 Använder secret för token: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
+    
     const impersonationToken = jwt.sign(
       {
         customerId: customer._id,
@@ -73,7 +76,7 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
         impersonatedAt: new Date(),
         type: 'impersonation'
       },
-      process.env.SESSION_SECRET || process.env.JWT_SECRET || 'admin_secret_key',
+      secret,
       { expiresIn: '1h' } // Token giltig i 1 timme
     );
 
@@ -81,32 +84,20 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
     console.log(`🔐 Admin ${req.session.admin.name} (${req.session.admin.email}) impersonerar kund ${customer.name} (${customer.email})`);
     console.log(`🔑 Token skapad med secret: ${process.env.SESSION_SECRET ? 'SESSION_SECRET finns' : 'SESSION_SECRET saknas'}`);
 
-    // Skapa en direkt login-session för kunden
-    const sessionData = {
-      customerId: customer._id,
-      customerEmail: customer.email,
-      customerName: customer.name,
-      isImpersonated: true,
-      impersonatedBy: req.session.admin._id,
-      impersonatedByName: req.session.admin.name,
-      impersonatedAt: new Date(),
-      sessionToken: impersonationToken
-    };
-
-    // Returnera redirect URL med session data
+    // Skapa en enkel redirect URL med token som query parameter
     const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL || 'https://source-database.onrender.com';
-    const redirectUrl = `${customerPortalUrl}/impersonate-login?session=${encodeURIComponent(JSON.stringify(sessionData))}`;
+    const redirectUrl = `${customerPortalUrl}/?impersonate=${impersonationToken}`;
 
     res.json({
       success: true,
-      message: "Impersonation session skapad",
+      message: "Impersonation token skapad",
       redirectUrl,
       customer: {
         name: customer.name,
         email: customer.email,
         id: customer._id
       },
-      sessionData: sessionData
+      token: impersonationToken
     });
 
   } catch (err) {
@@ -132,9 +123,9 @@ router.get("/verify-impersonation", async (req, res) => {
       });
     }
 
-    // Verifiera token
-    const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'admin_secret_key';
-    console.log(`🔑 Använder secret: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
+    // Verifiera token med samma secret som används för sessioner
+    const secret = process.env.SESSION_SECRET || 'admin_secret_key';
+    console.log(`🔑 Använder secret för verifiering: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
     
     const decoded = jwt.verify(token, secret);
     
@@ -216,8 +207,8 @@ router.post("/direct-login", async (req, res) => {
       });
     }
 
-    // Verifiera JWT token
-    const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'admin_secret_key';
+    // Verifiera JWT token med samma secret som används för sessioner
+    const secret = process.env.SESSION_SECRET || 'admin_secret_key';
     const decoded = jwt.verify(sessionToken, secret);
     
     if (decoded.type !== 'impersonation' || decoded.customerId !== customerId) {

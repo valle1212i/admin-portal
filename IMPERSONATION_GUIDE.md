@@ -121,57 +121,47 @@ Verifies impersonation token (legacy endpoint, still available).
 
 ## Customer Portal Integration
 
-To support direct impersonation login in your customer portal, implement the following:
+To support impersonation in your customer portal, add this JavaScript to your main page (e.g., index.html or dashboard.html):
 
-### 1. **Direct Login Handler**
-Create a page at `/impersonate-login` in your customer portal:
+### 1. **Simple Impersonation Handler**
+Add this code to your customer portal's main page:
 
 ```javascript
-// impersonate-login.html or impersonate-login.js
+// Add this to your main customer portal page (index.html, dashboard.html, etc.)
 document.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
-  const sessionDataParam = urlParams.get('session');
+  const impersonationToken = urlParams.get('impersonate');
   
-  if (sessionDataParam) {
-    try {
-      const sessionData = JSON.parse(decodeURIComponent(sessionDataParam));
-      
-      // Call direct login endpoint
-      fetch('https://admin-portal-rn5z.onrender.com/api/admin/direct-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionData })
-      })
+  if (impersonationToken) {
+    console.log('🔍 Impersonation token detected, verifying...');
+    
+    // Verify token with admin portal
+    fetch('https://admin-portal-rn5z.onrender.com/api/admin/verify-impersonation?token=' + impersonationToken)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          // Set customer session
+          console.log('✅ Impersonation verified, logging in customer:', data.customer.name);
+          
+          // Set customer session (bypass normal login)
           setCustomerSession(data.customer);
           
           // Show impersonation banner
-          showImpersonationBanner(data.session);
+          showImpersonationBanner(data.impersonation);
           
-          // Redirect to main customer portal
-          window.location.href = '/dashboard'; // or your main customer page
+          // Remove token from URL
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+          
         } else {
-          console.error('Direct login failed:', data.message);
+          console.error('❌ Impersonation verification failed:', data.message);
           // Redirect to normal login page
           window.location.href = '/login';
         }
       })
       .catch(err => {
-        console.error('Error during direct login:', err);
+        console.error('❌ Error verifying impersonation token:', err);
         window.location.href = '/login';
       });
-    } catch (err) {
-      console.error('Error parsing session data:', err);
-      window.location.href = '/login';
-    }
-  } else {
-    // No session data, redirect to login
-    window.location.href = '/login';
   }
 });
 ```
