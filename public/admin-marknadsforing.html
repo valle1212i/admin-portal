@@ -33,6 +33,7 @@
     .badge.gray{background:#f3f4f6;color:#374151}
     .badge.green{background:#ecfdf5;color:#065f46}
     .badge.orange{background:#fff7ed;color:#9a3412}
+    .badge.blue{background:#eff6ff;color:#1d4ed8}
     .platforms{display:flex;gap:.35rem;color:#6b7280}
     .platforms i{opacity:.9}
     .meta{color:#6b7280;font-size:.85rem}
@@ -95,11 +96,11 @@
       <!-- SUPPORT-ÖVERSIKT -->
       <section class="card">
         <div class="row">
-          <h2 style="margin:.25rem 0">Rådgivning & Support</h2>
+          <h2 style="margin:.25rem 0">AI Studio & Rådgivning</h2>
           <span id="supportStatus" class="status">–</span>
         </div>
         <div class="toolbar">
-          <input id="sq" type="search" placeholder="Sök i meddelande/etiketter/e-post…"/>
+          <input id="sq" type="search" placeholder="Sök i AI Studio svar/rådgivning/e-post…"/>
           <select id="sstatus">
             <option value="">Alla statusar</option>
             <option value="open">Öppna</option>
@@ -325,8 +326,8 @@
     el.innerHTML = '<p class="meta">Hämtar…</p>';
 
     try{
-      const res = await fetch('/api/admin/support?'+params.toString(), { credentials:'include' });
-      if (!res.ok) throw new Error('GET /admin/api/support: '+res.status);
+      const res = await fetch('/api/admin/studio-radgivning?'+params.toString(), { credentials:'include' });
+      if (!res.ok) throw new Error('GET /api/admin/studio-radgivning: '+res.status);
       const data = await res.json();
 
       if (!data.items?.length){
@@ -346,7 +347,7 @@
       el.innerHTML = data.items.map(renderTicket).join('');
     }catch(err){
       console.error(err);
-      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta support. ${err.message.includes('401') ? 'Logga in först.' : 'Kontrollera att /api/admin/support är implementerad.'}</p>`;
+      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta studio/rådgivning data. ${err.message.includes('401') ? 'Logga in först.' : 'Kontrollera att /api/admin/studio-radgivning är implementerad.'}</p>`;
       st.textContent = 'Fel';
       s_last = { open:0, closed:0 };
       updateSummary();
@@ -355,17 +356,36 @@
 
   function renderTicket(t){
     const b = `<span class="badge ${t.status==='open'?'green':'gray'}">${esc(t.status)}</span>`;
+    const dataTypeBadge = `<span class="badge ${t.dataType==='ai-studio'?'orange':'blue'}">${t.dataType==='ai-studio'?'AI Studio':'Rådgivning'}</span>`;
+    
+    // Extract preview text
+    let preview = '';
+    if (t.dataType === 'ai-studio') {
+      const answers = t.answers || {};
+      const previewTexts = [];
+      ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'extraInfo'].forEach(k => {
+        if (answers[k] && answers[k].trim()) {
+          previewTexts.push(answers[k].trim());
+        }
+      });
+      preview = previewTexts.slice(0, 3).join(' | ');
+    } else {
+      preview = t.message || t.description || t.topic || '';
+    }
+
     return `
       <div class="card">
         <div class="row">
           <div>
-            <div class="badges">${b}</div>
-            <strong>${esc(t.customerEmail || 'okänd kund')}</strong>
+            <div class="badges">${b} ${dataTypeBadge}</div>
+            <strong>${esc(t.customerEmail || t.customerName || 'okänd kund')}</strong>
             <div class="meta">${dse(t.createdAt)}</div>
           </div>
         </div>
-        <div class="meta" style="margin-top:.25rem">${esc(short(t.message||'',180))}</div>
+        <div class="meta" style="margin-top:.25rem">${esc(short(preview,180))}</div>
         ${t.tags?.length ? `<div class="meta" style="margin-top:.25rem">Taggar: ${t.tags.map(esc).join(', ')}</div>` : ''}
+        ${t.platform ? `<div class="meta" style="margin-top:.25rem">Plattform: ${esc(t.platform)}</div>` : ''}
+        ${t.sessionId ? `<div class="meta" style="margin-top:.25rem">Session: ${esc(t.sessionId)}</div>` : ''}
       </div>
     `;
   }

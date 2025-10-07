@@ -183,6 +183,12 @@ try {
   console.log('✅ Mounted: /api/admin/support');
 } catch (e) { console.error('❌ Kunde inte montera /api/admin/support:', e); }
 
+try {
+  const adminStudioRadgivning = require('./routes/adminStudioRadgivning');
+  app.use('/api/admin/studio-radgivning', adminStudioRadgivning);
+  console.log('✅ Mounted: /api/admin/studio-radgivning');
+} catch (e) { console.error('❌ Kunde inte montera /api/admin/studio-radgivning:', e); }
+
 // ✅ HEALTH måste ligga före 404-fallback
 app.get("/_health/db", (_req, res) => {
   const conn = mongoose.connection;
