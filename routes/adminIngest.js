@@ -30,8 +30,8 @@ function determineSource(data) {
   return 'manual';
 }
 
-// POST /admin/api/ingest/rådgivning - Ingest rådgivning data
-router.post('/rådgivning', validateSecret, async (req, res) => {
+// POST /admin/api/ingest/radgivning - Ingest rådgivning data
+router.post('/radgivning', validateSecret, async (req, res) => {
   try {
     const data = req.body;
     
@@ -161,7 +161,7 @@ router.get('/status', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     endpoints: [
-      'POST /admin/api/ingest/rådgivning',
+      'POST /admin/api/ingest/radgivning',
       'POST /admin/api/ingest/ai-studio',
       'GET /admin/api/ingest/status'
     ]
