@@ -346,7 +346,7 @@ io.on("connection", (socket) => {
 });
 
 mongoose
-  .connect(process.env.MONGO_URI, { dbName: "Admin Panel" })
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB (Admin Panel) ansluten");
     if (process.env.PROCESS_OUTBOX === 'true') startOutboxWorker();

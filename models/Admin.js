@@ -48,5 +48,5 @@ AdminSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// 🧠 Rätt collection-namn: "adminusers"
+// 🧠 Rätt collection-namn: "adminusers" (no spaces)
 module.exports = mongoose.model("Admin", AdminSchema, "adminusers");
