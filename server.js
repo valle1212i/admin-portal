@@ -348,7 +348,7 @@ io.on("connection", (socket) => {
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("✅ MongoDB (Admin Panel) ansluten");
+    console.log("✅ MongoDB (adminportal) ansluten");
     if (process.env.PROCESS_OUTBOX === 'true') startOutboxWorker();
   })
   .catch((err) => console.error("❌ MongoDB-anslutning misslyckades:", err));
