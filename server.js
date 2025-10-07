@@ -347,7 +347,7 @@ io.on("connection", (socket) => {
 });
 
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, { dbName: "adminportal" })
   .then(() => {
     console.log("✅ MongoDB (adminportal) ansluten");
     if (process.env.PROCESS_OUTBOX === 'true') startOutboxWorker();
