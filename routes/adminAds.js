@@ -4,82 +4,11 @@ const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 
 const router = express.Router();
-
+const requireAdminLogin = require('../middleware/requireAdminLogin');
 const Ad = require('../models/Ad'); // admin-modellen vi skapade
 
 
 console.log('🟢 routes/adminAds.js laddad');
-router.get('/', requireAdminLogin, async (req, res) => {
-  try {
-    // --- filter & paginering ---
-    const filter = {};
-    if (req.query.tenant)   filter.tenantId = req.query.tenant;
-    if (req.query.platform) filter.platform = req.query.platform;
-    if (req.query.status)   filter.status   = req.query.status;
-
-    if (req.query.from || req.query.to) {
-      filter.createdAt = {};
-      if (req.query.from) filter.createdAt.$gte = new Date(req.query.from);
-      if (req.query.to)   filter.createdAt.$lte = new Date(req.query.to);
-    }
-
-    // Free-text q: sök i både nytt schema (answers.q1..q7) och ev. legacy q1..q7
-    const q = (req.query.q || '').trim();
-    if (q) {
-      const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.$or = [
-        // nytt schema
-        { 'answers.q1': rx }, { 'answers.q2': rx }, { 'answers.q3': rx },
-        { 'answers.q4': rx }, { 'answers.q5': rx }, { 'answers.q6': rx }, { 'answers.q7': rx },
-        // legacy
-        { q1: rx }, { q2: rx }, { q3: rx }, { q4: rx }, { q5: rx }, { q6: rx }, { q7: rx },
-        // övrigt
-        { extraInfo: rx }, { userEmail: rx }, { userId: rx }
-      ];
-    }
-
-    const page  = Math.max(1, parseInt(req.query.page || '1', 10));
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || '20', 10)));
-    const skip  = (page - 1) * limit;
-
-    const [items, total] = await Promise.all([
-      Ad.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit).lean(),
-      Ad.countDocuments(filter)
-    ]);
-
-    // Behåll fälten som admin-UI:t förväntar (preview funkar ändå mot answers)
-    res.json({
-      page, limit, total, source: 'primary',
-      items: items.map(d => ({
-        _id: d._id,
-        platform: d.platform || null,
-        createdAt: d.createdAt || null,
-        // passera vidare ev. legacy fält för kompatibilitet
-        q1: d.q1, q2: d.q2, q3: d.q3, q4: d.q4, q5: d.q5, q6: d.q6, q7: d.q7,
-        extraInfo: d.extraInfo,
-        userEmail: d.userEmail,
-        userId: d.userId,
-        // viktigast: answers (nytt schema) – admin-marknadsföring.html läser detta
-        answers: d.answers || {},
-        tenantId: d.tenantId || null
-      }))
-    });
-  } catch (err) {
-    console.error('❌ /api/admin/ads fel:', err);
-    res.status(500).json({ error: 'Internt serverfel' });
-  }
-});
-
-
-// Säkerställ att API alltid svarar JSON 401 om admin-session saknas (ingen HTML-redirect)
-router.use((req, res, next) => {
-  const hasSession = !!(req.session && req.session.admin);
-  if (!hasSession) {
-    console.warn('⚠️ /api/admin/ads utan admin-session:', { path: req.path });
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
-});
 
 // Valfritt: sätt via .env om din collection heter något annat
 const ADS_COLLECTION_CANDIDATES = (process.env.ADS_COLLECTIONS || 'Ad,ads,marketingBriefs,adbriefs,campaignBriefs')
@@ -96,8 +25,7 @@ function getTargetDb() {
 
 
 
-// Admin-skydd: återanvänd middleware om du har den (annars kommentera bort nästa rad)
-const requireAdminLogin = require('../middleware/requireAdminLogin');
+// Admin-skydd middleware importeras upptill
 
 function toDate(val) {
   try { return val ? new Date(val) : null; } catch { return null; }

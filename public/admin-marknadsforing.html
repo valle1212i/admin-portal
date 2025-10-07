@@ -207,7 +207,7 @@
     elList.innerHTML = '<p class="meta">Hämtar…</p>';
 
     try{
-      const res = await fetch('/admin/api/ads?'+params.toString(), { credentials: 'include' });
+      const res = await fetch('/api/admin/ads?'+params.toString(), { credentials: 'include' });
       if (!res.ok) throw new Error('GET /admin/api/ads: '+res.status);
       const data = await res.json();
 
@@ -280,7 +280,7 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (!id) return;
         try{
-          const res = await fetch('/admin/api/ads/'+encodeURIComponent(id), { credentials:'include' });
+          const res = await fetch('/api/admin/ads/'+encodeURIComponent(id), { credentials:'include' });
           if (!res.ok) throw new Error('GET /admin/api/ads/:id '+res.status);
           const d = await res.json();
           alert(renderDoc(d)); // TODO: byt gärna till modal
@@ -325,7 +325,7 @@
     el.innerHTML = '<p class="meta">Hämtar…</p>';
 
     try{
-      const res = await fetch('/admin/api/support?'+params.toString(), { credentials:'include' });
+      const res = await fetch('/api/admin/support?'+params.toString(), { credentials:'include' });
       if (!res.ok) throw new Error('GET /admin/api/support: '+res.status);
       const data = await res.json();
 
