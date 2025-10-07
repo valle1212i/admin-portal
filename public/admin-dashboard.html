@@ -60,15 +60,15 @@
         <div class="stats">
           <div class="card">
             <h3>Total Customers</h3>
-            <p aria-label="Antal totala kunder">1,250</p>
+            <p aria-label="Antal totala kunder" id="total-customers">Laddar...</p>
           </div>
           <div class="card">
             <h3>Active</h3>
-            <p aria-label="Antal aktiva kunder">1,180</p>
+            <p aria-label="Antal aktiva kunder" id="active-customers">Laddar...</p>
           </div>
           <div class="card">
             <h3>Currently Online</h3>
-            <p aria-label="Antal kunder online just nu">320</p>
+            <p aria-label="Antal kunder online just nu" id="currently-online">Laddar...</p>
           </div>
         </div>
       </section>
@@ -252,6 +252,29 @@
 
     loadAdminStatus();
     setInterval(loadAdminStatus, 5000);
+
+    // 📊 Ladda dashboard-statistik
+    async function loadDashboardStats() {
+      try {
+        const res = await fetch("/api/dashboard/stats");
+        const data = await res.json();
+        
+        // Uppdatera widget-värden
+        document.getElementById("total-customers").textContent = data.totalCustomers.toLocaleString();
+        document.getElementById("active-customers").textContent = data.activeCustomers.toLocaleString();
+        document.getElementById("currently-online").textContent = data.currentlyOnline.toLocaleString();
+      } catch (err) {
+        console.error("⚠️ Kunde inte hämta dashboard-statistik:", err);
+        // Visa fallback-värden vid fel
+        document.getElementById("total-customers").textContent = "N/A";
+        document.getElementById("active-customers").textContent = "N/A";
+        document.getElementById("currently-online").textContent = "N/A";
+      }
+    }
+
+    // Ladda statistik vid sidladdning och uppdatera var 30:e sekund
+    loadDashboardStats();
+    setInterval(loadDashboardStats, 30000);
 
     window.addEventListener("load", () => {
       setInterval(() => {
