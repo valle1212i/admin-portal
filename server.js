@@ -1,4 +1,5 @@
 // server.js (adminportalen) - komplett version med Socket.IO, chatt-sessioner och meddelandehantering
+const OutboundMessage = require('./models/OutboundMessage'); // importera modellen
 
 require("dotenv").config();
 console.log("✅ STARTAR SERVER");
@@ -12,6 +13,7 @@ const { Server } = require("socket.io");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const bcrypt = require("bcrypt");
+const rateLimit = require('express-rate-limit');
 
 const Admin = require("./models/Admin");
 const Case = require("./models/Case");
@@ -30,6 +32,56 @@ const allowedOrigins = [
   "https://admin-portal-rn5z.onrender.com"
 ];
 
+// === Outbox Worker ===
+async function processOutboxBatch(limit = 50) {
+  // Hämta äldst & minst försökt först
+  const items = await OutboundMessage
+    .find({})
+    .sort({ attempts: 1, createdAt: 1 })
+    .limit(limit)
+    .lean();
+
+  for (const m of items) {
+    try {
+      const res = await fetch(m.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(m.headers || {}) },
+        body: JSON.stringify(m.body)
+      });
+
+      if (res.ok) {
+        await OutboundMessage.deleteOne({ _id: m._id });
+      } else {
+        await OutboundMessage.updateOne(
+          { _id: m._id },
+          { $inc: { attempts: 1 }, $set: { lastError: `HTTP ${res.status}` } }
+        );
+      }
+    } catch (e) {
+      await OutboundMessage.updateOne(
+        { _id: m._id },
+        { $inc: { attempts: 1 }, $set: { lastError: e?.message || String(e) } }
+      );
+    }
+  }
+}
+
+let OUTBOX_TIMER = null;
+function startOutboxWorker() {
+  if (OUTBOX_TIMER) return; // idempotent
+  const intervalMs = Number(process.env.OUTBOX_INTERVAL_MS || 30_000);
+  console.log('🛫 Outbox-worker startar, intervall:', intervalMs, 'ms');
+
+  OUTBOX_TIMER = setInterval(() => {
+    processOutboxBatch().catch(err => console.error('Outbox fel:', err));
+  }, intervalMs);
+
+  // soft shutdown
+  const stop = () => { if (OUTBOX_TIMER) clearInterval(OUTBOX_TIMER); };
+  process.on('SIGINT', stop);
+  process.on('SIGTERM', stop);
+}
+
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -41,10 +93,23 @@ app.use(cors({
   },
   credentials: true,
   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","X-Requested-With","X-Tenant","CSRF-Token"],
+  allowedHeaders: ["Content-Type","X-Requested-With","X-Tenant","CSRF-Token","X-Signature","X-Idempotency-Key"],
   exposedHeaders: ["X-CSRF-Token"]
 }));
 app.options("*", cors());
+
+// --- HMAC-ingest: läs rå JSON body för exakt denna path (måste ligga före express.json()) ---
+const adminIngestAdsRouter = require('./routes/adminIngestAds');
+
+// Rate limit för ingest (skydd mot brus)
+const ingestLimiter = rateLimit({ windowMs: 60_000, max: 60 }); // 60 requests/min/IP
+
+app.use(
+  '/admin/api/ingest/ads',
+  ingestLimiter, // <- viktig: limiter före raw parsern
+  express.raw({ type: 'application/json', limit: '200kb' }), // ger req.body = Buffer
+  adminIngestAdsRouter
+);
 
 
 
@@ -130,21 +195,6 @@ app.get("/_health/db", (_req, res) => {
   });
 });
 
-app.use('/api/admin/ads', require('./routes/adminAds'));
-app.use('/api/admin/support', require('./routes/adminSupport'));
-
-
-// Healthcheck för frontendens /_health/db
-app.get("/_health/db", (_req, res) => {
-  const conn = mongoose.connection;
-  const map = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
-  res.json({
-    ok: conn.readyState === 1,
-    state: map[conn.readyState] || String(conn.readyState),
-    name: conn.name,
-    host: conn.host
-  });
-});
 
 
 
@@ -285,8 +335,12 @@ io.on("connection", (socket) => {
 
 mongoose
   .connect(process.env.MONGO_URI, { dbName: "adminportal" })
-  .then(() => console.log("✅ MongoDB (adminportal) ansluten"))
+  .then(() => {
+    console.log("✅ MongoDB (adminportal) ansluten");
+    if (process.env.PROCESS_OUTBOX === 'true') startOutboxWorker();
+  })
   .catch((err) => console.error("❌ MongoDB-anslutning misslyckades:", err));
+
 
 app.use((req, res) => {
   const fallbackPath = path.join(__dirname, "public", "404.html");

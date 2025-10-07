@@ -130,14 +130,62 @@
 </div>
 
 <script>
-  // === Util ===
-  function esc(s){ return String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+  // === Små utils ===
+  function esc(s){ return String(s != null ? s : '').replace(/[&<>"]/g, m => ( {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'} )[m]); }
   function dse(x){ try{ return new Date(x).toLocaleString('sv-SE'); } catch{ return '–'; } }
   function short(s, n=160){ s=String(s||''); return s.length>n? s.slice(0,n)+'…' : s; }
+  function isObj(x){ return x && typeof x === 'object' && !Array.isArray(x); }
 
   // === State ===
   let page=1, limit=20, lastTotal=0, lastSource='primary';
   let s_last = { open:0, closed:0 };
+
+  // Plocka ut answers oavsett schema (nytt eller legacy)
+  function extractAnswers(it){
+    if (isObj(it.answers)) return it.answers;
+    const legacy = {};
+    ['q1','q2','q3','q4','q5','q6','q7','extraInfo'].forEach(k => {
+      if (it[k] != null && it[k] !== '') legacy[k] = it[k];
+    });
+    return legacy;
+  }
+
+  // Förhandsvisning av answers
+  function answersPreview(ans){
+    const vals = [];
+    for (const [k,v] of Object.entries(ans)){
+      if (v == null) continue;
+      const val = typeof v === 'string' ? v : JSON.stringify(v);
+      if (val.trim()) vals.push(val.trim());
+      if (vals.length >= 6) break; // lagom preview
+    }
+    return short(vals.join(' | '));
+  }
+
+  // Renderar alla fält nyckel → värde (stabil ordning: q1..q7 först, därefter övriga)
+  function renderAnswersTable(ans){
+    const keys = Object.keys(ans);
+    const preferred = ['q1','q2','q3','q4','q5','q6','q7','extraInfo'];
+    const first = preferred.filter(k => keys.includes(k));
+    const rest  = keys.filter(k => !preferred.includes(k)).sort();
+    const order = [...first, ...rest];
+
+    return `
+      <div class="kv">
+        ${order.map(k => {
+          const v = ans[k];
+          const val = typeof v === 'string' ? v : JSON.stringify(v, null, 0);
+          return `<div>${esc(k.toUpperCase())}</div><div>${esc(val)}</div>`;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function iconFor(p){
+    const map = { google:'fa-google', meta:'fa-facebook', tiktok:'fa-tiktok', linkedin:'fa-linkedin' };
+    const i = map[p] || 'fa-bullhorn';
+    return `<i class="fa-brands ${i}"></i>`;
+  }
 
   // === ADS (briefs) ===
   async function loadAds(){
@@ -159,13 +207,13 @@
     elList.innerHTML = '<p class="meta">Hämtar…</p>';
 
     try{
-      const res = await fetch('/api/admin/ads?'+params.toString(), { credentials: 'include' });
-      if (!res.ok) throw new Error('GET /api/admin/ads: '+res.status);
+      const res = await fetch('/admin/api/ads?'+params.toString(), { credentials: 'include' });
+      if (!res.ok) throw new Error('GET /admin/api/ads: '+res.status);
       const data = await res.json();
 
       lastTotal = data.total || 0;
       lastSource = data.source || 'primary';
-      elLbl.textContent = `Sida ${data.page} • ${data.total} poster`;
+      elLbl.textContent = `Sida ${data.page || page} • ${data.total || 0} poster`;
       elSt.textContent  = `Källa: ${lastSource}`;
 
       if (!data.items?.length){
@@ -175,53 +223,55 @@
         return;
       }
 
-      document.getElementById('sumBriefs').textContent = data.total;
+      document.getElementById('sumBriefs').textContent = data.total ?? data.items.length;
       document.getElementById('sumSource').textContent = lastSource;
 
       elList.innerHTML = data.items.map(renderAdItem).join('');
       bindAdDetailButtons();
     }catch(err){
       console.error(err);
-      elList.innerHTML = `<p class="error">⛔️ Kunde inte hämta briefs. Har du lagt till <code>/api/admin/ads</code> i servern?</p>`;
+      elList.innerHTML = `<p class="error">⛔️ Kunde inte hämta briefs. Är <code>/admin/api/ads</code> implementerad?</p>`;
       elLbl.textContent = '';
       elSt.textContent  = 'Fel';
     }
   }
 
   function renderAdItem(it){
+    const ans = extractAnswers(it);
+    const preview = esc(answersPreview(ans));
+    const platform = String(it.platform || '-').toLowerCase();
+    const idBtn = it._id
+      ? `<button class="btn btn-detail" data-id="${esc(it._id)}">Visa detalj</button>`
+      : `<span class="badge gray">Ingen detalj (legacy)</span>`;
+
+    // valfri källa-badge, fallback om ni vill markera migrerad data
     const isFallback = !!it._fallback;
     const sourceBadge = `<span class="badge ${isFallback?'orange':'green'}">${isFallback?'fallback':'primary'}</span>`;
-    const idBtn = it._id ? `<button class="btn btn-detail" data-id="${esc(it._id)}">Visa detalj</button>` : `<span class="badge gray">Ingen detalj (legacy)</span>`;
 
-    const lines = ['q1','q2','q3','q4','q5','q6','q7'].map(k => it[k]).filter(Boolean);
-    const preview = esc(short(lines.join(' | ')));
+    // försök plocka användarinfo
+    const userLabel = it.userEmail || it.userId || it.meta?.userId || it.tenantId || 'Okänd användare';
 
     return `
       <div class="card">
         <div class="row">
           <div>
-            <div class="badges">${sourceBadge} <span class="badge">${esc(it.platform||'-')}</span></div>
-            <h3 style="margin:.35rem 0 .15rem 0">${esc(it.userEmail || it.userId || 'Okänd användare')}</h3>
+            <div class="badges">${sourceBadge} <span class="badge">${esc(platform)}</span></div>
+            <h3 style="margin:.35rem 0 .15rem 0">${esc(userLabel)}</h3>
             <div class="meta">Skapad: ${dse(it.createdAt)}</div>
           </div>
-          <div class="platforms" title="Plattform">${iconFor(it.platform)}</div>
+          <div class="platforms" title="Plattform">${iconFor(platform)}</div>
         </div>
+
         <div class="meta" style="margin-top:.4rem">${preview || '<span class="meta">–</span>'}</div>
+
         <details>
           <summary>Visa fälten</summary>
-          <div class="kv">
-            ${['q1','q2','q3','q4','q5','q6','q7','extraInfo'].map(k=>`<div>${k.toUpperCase()}</div><div>${esc(it[k]||'')}</div>`).join('')}
-          </div>
+          ${renderAnswersTable(ans)}
         </details>
+
         <div style="margin-top:.5rem">${idBtn}</div>
       </div>
     `;
-  }
-
-  function iconFor(p){
-    const map = { google:'fa-google', meta:'fa-facebook', tiktok:'fa-tiktok', linkedin:'fa-linkedin' };
-    const i = map[p] || 'fa-bullhorn';
-    return `<i class="fa-brands ${i}"></i>`;
   }
 
   function bindAdDetailButtons(){
@@ -230,10 +280,10 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (!id) return;
         try{
-          const res = await fetch('/api/admin/ads/'+encodeURIComponent(id), { credentials:'include' });
-          if (!res.ok) throw new Error('GET /api/admin/ads/:id '+res.status);
+          const res = await fetch('/admin/api/ads/'+encodeURIComponent(id), { credentials:'include' });
+          if (!res.ok) throw new Error('GET /admin/api/ads/:id '+res.status);
           const d = await res.json();
-          alert(renderDoc(d)); // byt gärna mot modal
+          alert(renderDoc(d)); // TODO: byt gärna till modal
         }catch(err){
           alert('Kunde inte hämta detalj: '+err.message);
         }
@@ -242,11 +292,17 @@
   }
 
   function renderDoc(d){
-    const fields = ['platform','createdAt','q1','q2','q3','q4','q5','q6','q7','extraInfo'];
-    return fields.map(f => `${f}: ${f==='createdAt'? dse(d[f]) : (d[f]??'')}`).join('\n');
+    const ans = extractAnswers(d);
+    const hdr = [
+      `platform: ${d.platform ?? '-'}`,
+      `tenantId: ${d.tenantId ?? '-'}`,
+      `createdAt: ${dse(d.createdAt)}`
+    ].join('\n');
+    const kv = Object.entries(ans).map(([k,v]) => `${k}: ${typeof v==='string'? v : JSON.stringify(v)}`).join('\n');
+    return `${hdr}\n---\n${kv}`;
   }
 
-  // Pager
+  // Pager + filter
   document.getElementById('filterBtn').addEventListener('click', ()=>{page=1; loadAds();});
   document.getElementById('prevAds').addEventListener('click', ()=>{ if (page>1){ page--; loadAds(); }});
   document.getElementById('nextAds').addEventListener('click', ()=>{ if (page*limit < lastTotal){ page++; loadAds(); }});
@@ -269,8 +325,8 @@
     el.innerHTML = '<p class="meta">Hämtar…</p>';
 
     try{
-      const res = await fetch('/api/admin/support?'+params.toString(), { credentials:'include' });
-      if (!res.ok) throw new Error('GET /api/admin/support: '+res.status);
+      const res = await fetch('/admin/api/support?'+params.toString(), { credentials:'include' });
+      if (!res.ok) throw new Error('GET /admin/api/support: '+res.status);
       const data = await res.json();
 
       if (!data.items?.length){
@@ -281,7 +337,6 @@
         return;
       }
 
-      // summera statusar
       const open = data.items.filter(t=>String(t.status).toLowerCase()==='open').length;
       const closed = data.items.filter(t=>String(t.status).toLowerCase()==='closed').length;
       s_last = { open, closed };
@@ -291,7 +346,7 @@
       el.innerHTML = data.items.map(renderTicket).join('');
     }catch(err){
       console.error(err);
-      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta support. Har du lagt till <code>/api/admin/support</code> i servern?</p>`;
+      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta support. Är <code>/admin/api/support</code> implementerad?</p>`;
       st.textContent = 'Fel';
       s_last = { open:0, closed:0 };
       updateSummary();
@@ -336,5 +391,6 @@
   loadSupport();
   health();
 </script>
+
 </body>
 </html>
