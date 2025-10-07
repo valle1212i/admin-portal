@@ -73,16 +73,17 @@ router.post("/impersonate", requireAdminAuth, async (req, res) => {
         impersonatedAt: new Date(),
         type: 'impersonation'
       },
-      process.env.JWT_SECRET || 'fallback_secret_key',
+      process.env.SESSION_SECRET || process.env.JWT_SECRET || 'admin_secret_key',
       { expiresIn: '1h' } // Token giltig i 1 timme
     );
 
     // Logga impersonation för säkerhet
     console.log(`🔐 Admin ${req.session.admin.name} (${req.session.admin.email}) impersonerar kund ${customer.name} (${customer.email})`);
+    console.log(`🔑 Token skapad med secret: ${process.env.SESSION_SECRET ? 'SESSION_SECRET finns' : 'SESSION_SECRET saknas'}`);
 
     // Returnera redirect URL med token
     const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL || 'https://source-database.onrender.com';
-    const redirectUrl = `${customerPortalUrl}/impersonate?token=${impersonationToken}`;
+    const redirectUrl = `${customerPortalUrl}/?impersonate=${impersonationToken}`;
 
     res.json({
       success: true,
@@ -109,6 +110,8 @@ router.get("/verify-impersonation", async (req, res) => {
   try {
     const { token } = req.query;
     
+    console.log(`🔍 Verifierar impersonation token: ${token ? token.substring(0, 50) + '...' : 'INGEN TOKEN'}`);
+    
     if (!token) {
       return res.status(400).json({
         success: false,
@@ -117,7 +120,10 @@ router.get("/verify-impersonation", async (req, res) => {
     }
 
     // Verifiera token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
+    const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'admin_secret_key';
+    console.log(`🔑 Använder secret: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
+    
+    const decoded = jwt.verify(token, secret);
     
     if (decoded.type !== 'impersonation') {
       return res.status(400).json({

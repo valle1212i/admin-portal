@@ -90,18 +90,23 @@ To support impersonation in your customer portal, implement the following:
 ```javascript
 // Check for impersonation token in URL
 const urlParams = new URLSearchParams(window.location.search);
-const impersonationToken = urlParams.get('token');
+const impersonationToken = urlParams.get('impersonate');
 
 if (impersonationToken) {
   // Verify token with admin portal
-  fetch(`https://admin-portal.com/api/admin/verify-impersonation?token=${impersonationToken}`)
+  fetch(`https://admin-portal-rn5z.onrender.com/api/admin/verify-impersonation?token=${impersonationToken}`)
     .then(res => res.json())
     .then(data => {
       if (data.success) {
         // Set customer session with impersonated user
         setCustomerSession(data.customer);
         showImpersonationBanner(data.impersonation);
+      } else {
+        console.error('Impersonation verification failed:', data.message);
       }
+    })
+    .catch(err => {
+      console.error('Error verifying impersonation token:', err);
     });
 }
 ```
@@ -132,14 +137,17 @@ Ensure these environment variables are set:
 
 ```env
 # Customer portal URL for redirects
-CUSTOMER_PORTAL_URL=https://your-customer-portal.com
+CUSTOMER_PORTAL_URL=https://source-database.onrender.com
 
-# JWT secret for token signing
+# JWT secret for token signing (uses SESSION_SECRET if JWT_SECRET not set)
 JWT_SECRET=your-secure-jwt-secret
+SESSION_SECRET=your-session-secret
 
 # Customer database connection
 CUSTOMER_DB_URI=mongodb://your-customer-db-connection
 ```
+
+**Note**: The impersonation system will use `SESSION_SECRET` if `JWT_SECRET` is not available, ensuring compatibility with existing deployments.
 
 ## Security Considerations
 
