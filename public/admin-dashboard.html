@@ -266,7 +266,6 @@
   </style>
 </head>
 <body>
-  <div id="notificationBanner" role="alert" aria-live="polite">🔔 Ny chatt startad</div>
 
   <div class="container">
     <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
@@ -422,24 +421,13 @@
 
     socket.on("newMessage", (msg) => {
       if (msg.sender === "system" && msg.message.includes("🔔 Ny chatt startad")) {
-        showNotificationBanner(msg.message);
         loadActiveSessions(); // 🔄 Ladda om sessioner
       }
     });
 
     socket.on("activeSession", (session) => {
-      showNotificationBanner("🔔 Ny chatt startad");
       loadActiveSessions();
     });
-
-    function showNotificationBanner(text) {
-      const banner = document.getElementById("notificationBanner");
-      banner.textContent = text;
-      banner.style.display = "block";
-      setTimeout(() => {
-        banner.style.display = "none";
-      }, 5000);
-    }
 
     // Store current sessions to detect new ones
     let currentSessions = [];
