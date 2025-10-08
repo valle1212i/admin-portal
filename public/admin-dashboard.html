@@ -181,6 +181,88 @@
         min-width: auto;
       }
     }
+
+    /* Incoming Chats Section Styles */
+    .incoming-chats-section {
+      margin-bottom: 2rem;
+    }
+
+    .incoming-chats-section .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+
+    .incoming-chats-section h3 {
+      margin: 0 0 1rem 0;
+      color: #1f2937;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .no-chats {
+      color: #6b7280;
+      font-style: italic;
+      text-align: center;
+      padding: 1rem;
+      margin: 0;
+    }
+
+    .chat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+
+    .chat-item:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+
+    .chat-customer {
+      flex: 1;
+    }
+
+    .chat-customer strong {
+      display: block;
+      color: #1f2937;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-time {
+      color: #6b7280;
+      font-size: 0.8rem;
+    }
+
+    .chat-actions {
+      margin-left: 1rem;
+    }
+
+    .btn-small {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-small:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -269,6 +351,17 @@
             <label for="searchInput" class="sr-only">Sök efter kund</label>
             <input type="text" id="searchInput" placeholder="Sök kund..." aria-describedby="searchResults">
             <ul id="searchResults" role="list" aria-live="polite" aria-label="Sökresultat"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inkommande chattar section -->
+      <section class="incoming-chats-section" aria-labelledby="incoming-chats-heading">
+        <h2 id="incoming-chats-heading" class="sr-only">Inkommande chattar</h2>
+        <div class="card">
+          <h3>💬 Inkommande chattar</h3>
+          <div id="incomingChatsList" role="list" aria-live="polite" aria-label="Lista över inkommande chattar">
+            <p class="no-chats">Inga nya chattar för tillfället</p>
           </div>
         </div>
       </section>
@@ -369,7 +462,48 @@
           // Update current sessions
           currentSessions = data;
           currentSessionIds = new Set(data.map(s => s.sessionId));
+          
+          // Update incoming chats section
+          updateIncomingChatsSection(data);
+        })
+        .catch(err => {
+          console.error('❌ Kunde inte hämta aktiva sessioner:', err);
+          // Show empty state in incoming chats
+          updateIncomingChatsSection([]);
         });
+    }
+
+    function updateIncomingChatsSection(sessions) {
+      const incomingChatsList = document.getElementById('incomingChatsList');
+      if (!incomingChatsList) return;
+
+      if (sessions.length === 0) {
+        incomingChatsList.innerHTML = '<p class="no-chats">Inga nya chattar för tillfället</p>';
+        return;
+      }
+
+      // Show only recent sessions (last 10 minutes)
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const recentSessions = sessions.filter(session => 
+        new Date(session.timestamp || session.createdAt) > tenMinutesAgo
+      );
+
+      if (recentSessions.length === 0) {
+        incomingChatsList.innerHTML = '<p class="no-chats">Inga nya chattar för tillfället</p>';
+        return;
+      }
+
+      incomingChatsList.innerHTML = recentSessions.map(session => `
+        <div class="chat-item">
+          <div class="chat-customer">
+            <strong>${session.customerName || 'Okänd kund'}</strong>
+            <span class="chat-time">${new Date(session.timestamp || session.createdAt).toLocaleString('sv-SE')}</span>
+          </div>
+          <div class="chat-actions">
+            <button onclick="openChatSession('${session.sessionId}')" class="btn-small">Öppna</button>
+          </div>
+        </div>
+      `).join('');
     }
 
     function showChatNotification(session) {
@@ -401,26 +535,46 @@
     }
 
     function playNotificationSound() {
-      // Create audio context for notification sound
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Create a beep sound
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Configure sound (high-pitched beep)
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+      try {
+        // Create audio context for notification sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Resume audio context if suspended (fixes user gesture requirement)
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().then(() => {
+            createNotificationSound(audioContext);
+          });
+        } else {
+          createNotificationSound(audioContext);
+        }
+      } catch (error) {
+        console.log('🔇 Could not play notification sound:', error);
+        // Fallback: show visual notification only
+      }
+    }
+
+    function createNotificationSound(audioContext) {
+      try {
+        // Create a beep sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Configure sound (high-pitched beep)
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (error) {
+        console.log('🔇 Could not create notification sound:', error);
+      }
     }
 
     function closeChatNotification() {
@@ -429,8 +583,14 @@
       notification.classList.remove('notification-blink');
     }
 
-    function openChatSession() {
-      if (window.currentChatSession) {
+    function openChatSession(sessionId) {
+      if (sessionId) {
+        // Find the session by ID
+        const session = currentSessions.find(s => s.sessionId === sessionId);
+        if (session) {
+          window.open(`/admin-chat.html?customerId=${session.customerId}&sessionId=${session.sessionId}`, '_blank');
+        }
+      } else if (window.currentChatSession) {
         window.open(`/admin-chat.html?customerId=${window.currentChatSession.customerId}&sessionId=${window.currentChatSession.sessionId}`, '_blank');
         closeChatNotification();
       }
@@ -481,8 +641,18 @@
     async function loadAdminStatus() {
       try {
         const res = await fetch("/api/admin-status");
+        
+        // Check if response is HTML (404 page) instead of JSON
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.log("⚠️ Admin status endpoint not available, skipping...");
+          return;
+        }
+        
         const data = await res.json();
         const list = document.getElementById("adminStatusList");
+        if (!list) return;
+        
         list.innerHTML = "";
 
         data.forEach(admin => {
@@ -498,7 +668,7 @@
           `;
         });
       } catch (err) {
-        console.error("⚠️ Kunde inte hämta adminstatus:", err);
+        console.log("⚠️ Admin status endpoint not available:", err.message);
       }
     }
 
@@ -533,6 +703,9 @@
         fetch("/api/admin-status/ping", {
           method: "POST",
           credentials: "include"
+        }).catch(err => {
+          // Silently handle ping failures
+          console.log("⚠️ Admin ping endpoint not available");
         });
       }, 5000);
     });
