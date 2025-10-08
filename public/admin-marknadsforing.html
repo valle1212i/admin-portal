@@ -699,7 +699,7 @@
 
     // Display tenant name and Object ID
     const tenantName = it.tenantId || it.tenant || 'Okänt företag';
-    const objectId = it.userId || it.objectId || it.meta?.userId || 'Ingen Object ID';
+    const objectId = it.userId || it.objectId || it.meta?.userId || it._id || 'Ingen Object ID';
     const userLabel = `${esc(tenantName)} (${esc(objectId)})`;
 
     return `
@@ -829,23 +829,55 @@
 
     // Display tenant name and Object ID instead of email
     const tenantName = t.tenantId || t.tenant || 'Okänt företag';
-    const objectId = t.userId || t.objectId || 'Ingen Object ID';
+    const objectId = t.userId || t.objectId || t._id || 'Ingen Object ID';
     const displayName = `${esc(tenantName)} (${esc(objectId)})`;
 
+    // Create detailed rådgivning data display
+    let rådgivningDetails = '';
+    if (t.dataType === 'rådgivning' || t.source === 'rådgivning') {
+      const rådgivningFields = [
+        { key: 'message', label: 'Meddelande' },
+        { key: 'primaryGoal', label: 'Primärt mål' },
+        { key: 'designStrategy', label: 'Designstrategi' },
+        { key: 'ongoingSupport', label: 'Pågående support' },
+        { key: 'aiMediaHelp', label: 'AI Media hjälp' },
+        { key: 'extra', label: 'Extra information' },
+        { key: 'category', label: 'Kategori' },
+        { key: 'topic', label: 'Ämne' },
+        { key: 'description', label: 'Beskrivning' }
+      ];
+      
+      rådgivningDetails = rådgivningFields
+        .filter(field => t[field.key] && t[field.key].trim())
+        .map(field => `<div class="meta" style="margin-top:.25rem"><strong>${field.label}:</strong> ${esc(short(t[field.key], 100))}</div>`)
+        .join('');
+    }
+
+    // Make the card clickable for full details
+    const cardId = t._id || t.id || Math.random().toString(36).substr(2, 9);
+    const clickableCard = rådgivningDetails ? `onclick="showRådgivningDetails('${cardId}')" style="cursor: pointer;"` : '';
+
     return `
-      <div class="card">
+      <div class="card" ${clickableCard}>
         <div class="row">
           <div>
             <div class="badges">${b} ${dataTypeBadge}</div>
             <strong>${displayName}</strong>
             <div class="meta">${dse(t.createdAt)}</div>
           </div>
+          ${rådgivningDetails ? '<div class="meta" style="color: var(--accent-blue); font-size: 12px;">Klicka för detaljer →</div>' : ''}
         </div>
         <div class="meta" style="margin-top:.25rem">${esc(short(preview,180))}</div>
+        ${rådgivningDetails}
         ${t.tags?.length ? `<div class="meta" style="margin-top:.25rem">Taggar: ${t.tags.map(esc).join(', ')}</div>` : ''}
         ${t.platform ? `<div class="meta" style="margin-top:.25rem">Plattform: ${esc(t.platform)}</div>` : ''}
         ${t.sessionId ? `<div class="meta" style="margin-top:.25rem">Session: ${esc(t.sessionId)}</div>` : ''}
         ${t.customerEmail ? `<div class="meta" style="margin-top:.25rem">E-post: ${esc(t.customerEmail)}</div>` : ''}
+        
+        <!-- Hidden detailed data for modal -->
+        <div id="rådgivning-${cardId}" style="display: none;">
+          ${JSON.stringify(t, null, 2)}
+        </div>
       </div>
     `;
   }
@@ -858,6 +890,58 @@
       document.getElementById('dbHealth').textContent = JSON.stringify(j);
     }catch(e){
       document.getElementById('dbHealth').textContent = 'N/A';
+    }
+  }
+  
+  // === RÅDGIVNING DETAILS MODAL ===
+  function showRådgivningDetails(cardId) {
+    const dataElement = document.getElementById(`rådgivning-${cardId}`);
+    if (!dataElement) return;
+    
+    try {
+      const data = JSON.parse(dataElement.textContent);
+      
+      // Create modal content
+      const modalContent = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; max-width: 80%; max-height: 80%; overflow-y: auto; box-shadow: var(--shadow-hover);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h2 style="margin: 0; color: var(--text-primary);">📋 Rådgivning Detaljer</h2>
+              <button onclick="closeRådgivningModal()" style="background: var(--accent-blue); color: white; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 14px;">Stäng</button>
+            </div>
+            <div style="display: grid; gap: 16px;">
+              ${Object.entries(data).map(([key, value]) => {
+                if (!value || (typeof value === 'string' && !value.trim())) return '';
+                const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+                const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+                return `
+                  <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <div style="font-weight: 600; color: var(--accent-blue); margin-bottom: 4px;">${esc(label)}</div>
+                    <div style="color: var(--text-primary); white-space: pre-wrap; font-family: monospace; font-size: 13px;">${esc(displayValue)}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add modal to page
+      const modal = document.createElement('div');
+      modal.innerHTML = modalContent;
+      modal.id = 'rådgivning-modal';
+      document.body.appendChild(modal);
+      
+    } catch (error) {
+      console.error('Error showing rådgivning details:', error);
+      alert('Fel vid visning av detaljer: ' + error.message);
+    }
+  }
+  
+  function closeRådgivningModal() {
+    const modal = document.getElementById('rådgivning-modal');
+    if (modal) {
+      modal.remove();
     }
   }
   function updateSummary(){
