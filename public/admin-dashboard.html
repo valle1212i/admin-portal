@@ -9,6 +9,179 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Chat Notification Popup Styles */
+    .chat-notification-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      max-width: 400px;
+      min-width: 320px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      border: 2px solid #10b981;
+      transform: translateX(100%);
+      transition: transform 0.3s ease-in-out;
+      animation: slideInRight 0.3s ease-out forwards;
+    }
+
+    .chat-notification-popup.show {
+      transform: translateX(0);
+    }
+
+    .notification-content {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .notification-header {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .notification-icon {
+      font-size: 24px;
+      animation: bounce 1s infinite;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      font-size: 16px;
+      flex: 1;
+    }
+
+    .close-notification {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .close-notification:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .notification-body {
+      padding: 20px;
+      background: white;
+    }
+
+    .customer-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+    }
+
+    .chat-time {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0 0 20px 0;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      background: #059669;
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    /* Blinking animation */
+    .notification-blink {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { 
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-color: #10b981;
+      }
+      25%, 75% { 
+        background: linear-gradient(135deg, #ffffff, #f0f9ff);
+        border-color: #10b981;
+        color: #10b981;
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .chat-notification-popup {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        min-width: auto;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="notificationBanner" role="alert" aria-live="polite">🔔 Ny chatt startad</div>
@@ -100,13 +273,24 @@
         </div>
       </section>
 
-      <section class="chat-section" aria-labelledby="chat-heading">
-        <h2 id="chat-heading" class="sr-only">Aktiva chatsessioner</h2>
-        <div class="card">
-          <h3>💬 Aktiva chatsessioner</h3>
-          <ul id="chatSessions" role="list" aria-live="polite" aria-label="Lista över aktiva chatsessioner"></ul>
+      <!-- Chat notification popup (hidden by default) -->
+      <div id="chatNotification" class="chat-notification-popup" style="display: none;">
+        <div class="notification-content">
+          <div class="notification-header">
+            <span class="notification-icon">💬</span>
+            <span class="notification-title">Ny chatt startad!</span>
+            <button class="close-notification" onclick="closeChatNotification()">×</button>
+          </div>
+          <div class="notification-body">
+            <p class="customer-name" id="notificationCustomerName"></p>
+            <p class="chat-time" id="notificationChatTime"></p>
+            <div class="notification-actions">
+              <button class="btn-primary" onclick="openChatSession()">Öppna chatt</button>
+              <button class="btn-secondary" onclick="closeChatNotification()">Stäng</button>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
 
       <section class="admin-status-section" aria-labelledby="admin-status-heading">
         <h2 id="admin-status-heading" class="sr-only">Admin status</h2>
@@ -164,28 +348,99 @@
       }, 5000);
     }
 
+    // Store current sessions to detect new ones
+    let currentSessions = [];
+    let currentSessionIds = new Set();
+
     function loadActiveSessions() {
       fetch("/api/chat/active-sessions")
         .then(res => res.json())
         .then(data => {
-          const list = document.getElementById("chatSessions");
-          if (!list) return;
+          // Check for new sessions
+          const newSessions = data.filter(session => !currentSessionIds.has(session.sessionId));
+          
+          if (newSessions.length > 0) {
+            // Show notification for new sessions
+            newSessions.forEach(session => {
+              showChatNotification(session);
+            });
+          }
 
-          list.innerHTML = data.length
-            ? data.map(session => `
-                <li>
-                  <a class="chat-session-link" href="/admin-chat.html?customerId=${session.customerId}&sessionId=${session.sessionId}">
-                    💬 Chatt från ${session.customerName || 'okänd'} – 
-                    ${new Date(session.timestamp).toLocaleTimeString("sv-SE")}
-                  </a>
-                </li>
-              `).join("")
-            : "<li>Inga aktiva chatsessioner.</li>";
+          // Update current sessions
+          currentSessions = data;
+          currentSessionIds = new Set(data.map(s => s.sessionId));
         });
+    }
+
+    function showChatNotification(session) {
+      // Play notification sound
+      playNotificationSound();
+      
+      // Update notification content
+      document.getElementById('notificationCustomerName').textContent = 
+        `Chatt från ${session.customerName || 'okänd'}`;
+      document.getElementById('notificationChatTime').textContent = 
+        new Date(session.timestamp).toLocaleString("sv-SE");
+      
+      // Store session data for opening chat
+      window.currentChatSession = session;
+      
+      // Show notification with animation
+      const notification = document.getElementById('chatNotification');
+      notification.style.display = 'block';
+      
+      // Add blinking effect
+      notification.classList.add('notification-blink');
+      
+      // Auto-hide after 10 seconds if not interacted with
+      setTimeout(() => {
+        if (notification.style.display !== 'none') {
+          closeChatNotification();
+        }
+      }, 10000);
+    }
+
+    function playNotificationSound() {
+      // Create audio context for notification sound
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Create a beep sound
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Configure sound (high-pitched beep)
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }
+
+    function closeChatNotification() {
+      const notification = document.getElementById('chatNotification');
+      notification.style.display = 'none';
+      notification.classList.remove('notification-blink');
+    }
+
+    function openChatSession() {
+      if (window.currentChatSession) {
+        window.open(`/admin-chat.html?customerId=${window.currentChatSession.customerId}&sessionId=${window.currentChatSession.sessionId}`, '_blank');
+        closeChatNotification();
+      }
     }
 
     // 🚀 Kör vid laddning
     loadActiveSessions();
+    
+    // Check for new chats every 3 seconds
+    setInterval(loadActiveSessions, 3000);
 
     // 🔐 Admininfo
     fetch("/api/admin/me", { credentials: "include" })
