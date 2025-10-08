@@ -160,8 +160,17 @@ router.get("/verify-impersonation", async (req, res) => {
     const secret = process.env.SESSION_SECRET || 'admin_secret_key';
     console.log(`🔑 Använder secret för verifiering: ${secret ? 'SECRET FINNS' : 'INGEN SECRET'}`);
     
-    const decoded = jwt.verify(token, secret);
-    console.log(`✅ Token verifierad för kund: ${decoded.customerName} (${decoded.customerEmail})`);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secret);
+      console.log(`✅ Token verifierad för kund: ${decoded.customerName} (${decoded.customerEmail})`);
+    } catch (jwtError) {
+      console.log(`❌ JWT verifiering misslyckades: ${jwtError.message}`);
+      return res.status(401).json({
+        success: false,
+        message: `Token verifiering misslyckades: ${jwtError.message}`
+      });
+    }
     
     if (decoded.type !== 'impersonation') {
       return res.status(400).json({
