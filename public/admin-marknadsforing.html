@@ -488,6 +488,10 @@
         <select id="adsSort">
           <option value="createdAt-desc">Senast skapade (nyast först)</option>
           <option value="createdAt-asc">Äldst skapade (äldst först)</option>
+          <option value="objectId-asc">Object ID (A-Ö)</option>
+          <option value="objectId-desc">Object ID (Ö-A)</option>
+          <option value="tenantId-asc">Företag (A-Ö)</option>
+          <option value="tenantId-desc">Företag (Ö-A)</option>
           <option value="platform-asc">Plattform (A-Ö)</option>
           <option value="platform-desc">Plattform (Ö-A)</option>
           <option value="userEmail-asc">Användare (A-Ö)</option>
@@ -529,16 +533,18 @@
           <select id="supportSort">
             <option value="createdAt-desc">Senast skapade (nyast först)</option>
             <option value="createdAt-asc">Äldst skapade (äldst först)</option>
+            <option value="objectId-asc">Object ID (A-Ö)</option>
+            <option value="objectId-desc">Object ID (Ö-A)</option>
+            <option value="tenantId-asc">Företag (A-Ö)</option>
+            <option value="tenantId-desc">Företag (Ö-A)</option>
             <option value="status-asc">Status (A-Ö)</option>
             <option value="status-desc">Status (Ö-A)</option>
-            <option value="customerEmail-asc">Kund e-post (A-Ö)</option>
-            <option value="customerEmail-desc">Kund e-post (Ö-A)</option>
             <option value="dataType-asc">Datatyp (A-Ö)</option>
             <option value="dataType-desc">Datatyp (Ö-A)</option>
           </select>
         </div>
         <div class="toolbar">
-          <input id="sq" type="search" placeholder="Sök i AI Studio svar/rådgivning/e-post…"/>
+          <input id="sq" type="search" placeholder="Sök i företag/Object ID/AI Studio svar/rådgivning…"/>
           <select id="sstatus">
             <option value="">Alla statusar</option>
             <option value="open">Öppna</option>
@@ -691,8 +697,10 @@
     const isFallback = !!it._fallback;
     const sourceBadge = `<span class="badge ${isFallback?'orange':'green'}">${isFallback?'fallback':'primary'}</span>`;
 
-    // försök plocka användarinfo
-    const userLabel = it.userEmail || it.userId || it.meta?.userId || it.tenantId || 'Okänd användare';
+    // Display tenant name and Object ID
+    const tenantName = it.tenantId || it.tenant || 'Okänt företag';
+    const objectId = it.userId || it.objectId || it.meta?.userId || 'Ingen Object ID';
+    const userLabel = `${esc(tenantName)} (${esc(objectId)})`;
 
     return `
       <div class="card">
@@ -706,6 +714,7 @@
         </div>
 
         <div class="meta" style="margin-top:.4rem">${preview || '<span class="meta">–</span>'}</div>
+        ${it.userEmail ? `<div class="meta" style="margin-top:.25rem">E-post: ${esc(it.userEmail)}</div>` : ''}
 
         <details>
           <summary>Visa fälten</summary>
@@ -818,12 +827,17 @@
       preview = t.message || t.description || t.topic || '';
     }
 
+    // Display tenant name and Object ID instead of email
+    const tenantName = t.tenantId || t.tenant || 'Okänt företag';
+    const objectId = t.userId || t.objectId || 'Ingen Object ID';
+    const displayName = `${esc(tenantName)} (${esc(objectId)})`;
+
     return `
       <div class="card">
         <div class="row">
           <div>
             <div class="badges">${b} ${dataTypeBadge}</div>
-            <strong>${esc(t.customerEmail || t.customerName || 'okänd kund')}</strong>
+            <strong>${displayName}</strong>
             <div class="meta">${dse(t.createdAt)}</div>
           </div>
         </div>
@@ -831,6 +845,7 @@
         ${t.tags?.length ? `<div class="meta" style="margin-top:.25rem">Taggar: ${t.tags.map(esc).join(', ')}</div>` : ''}
         ${t.platform ? `<div class="meta" style="margin-top:.25rem">Plattform: ${esc(t.platform)}</div>` : ''}
         ${t.sessionId ? `<div class="meta" style="margin-top:.25rem">Session: ${esc(t.sessionId)}</div>` : ''}
+        ${t.customerEmail ? `<div class="meta" style="margin-top:.25rem">E-post: ${esc(t.customerEmail)}</div>` : ''}
       </div>
     `;
   }
