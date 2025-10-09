@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fakturering - Source Admin Portal</title>
+  <meta name="description" content="Hantera och skapa fakturor för dina kunder" />
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/invoicing.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+      <div class="logo">
+        <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
+      </div>
+      <nav class="menu">
+        <a href="/admin-dashboard.html" class="menu-item">
+          <span aria-hidden="true">🏠</span> Hem och data
+        </a>
+        <a href="/search.html" class="menu-item">
+          <span aria-hidden="true">🔍</span> Sök Kund
+        </a>
+        <a href="/cases.html" class="menu-item">
+          <span aria-hidden="true">📋</span> Cases & kundkontakt
+        </a>
+        <a href="/avtal.html" class="menu-item">
+          <span aria-hidden="true">📑</span> Avtal
+        </a>
+        <a href="/invoicing" class="menu-item active">
+          <span aria-hidden="true">💰</span> Faktuering
+        </a>
+        <a href="/admin-marknadsforing.html" class="menu-item">
+          <span aria-hidden="true">📣</span> Marknadsföring
+        </a>
+        <a href="/massmail.html" class="menu-item">
+          <span aria-hidden="true">📧</span> Massutskick av Mejl
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Header -->
+      <header class="page-header">
+        <div>
+          <h1>💰 Fakturering</h1>
+          <p class="page-subtitle">Hantera och skapa fakturor för dina kunder</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-primary" onclick="createNewInvoice()">
+            <span class="btn-icon">➕</span>
+            <span>Skapa Faktura</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Statistics Overview -->
+      <section class="stats-overview" aria-label="Faktureringsstatistik">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <p class="stat-label">Totalt Fakturor</p>
+            <p class="stat-value" id="total-invoices">
+              <span class="loading-skeleton">0</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-content">
+            <p class="stat-label">Väntande Betalning</p>
+            <p class="stat-value" id="pending-amount">
+              <span class="loading-skeleton">0 SEK</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-danger">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-content">
+            <p class="stat-label">Försenade</p>
+            <p class="stat-value" id="overdue-count">
+              <span class="loading-skeleton">0</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-success">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <p class="stat-label">Betalt Denna Månad</p>
+            <p class="stat-value" id="paid-this-month">
+              <span class="loading-skeleton">0 SEK</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search and Filter Section -->
+      <section class="search-section" aria-label="Sök och filtrera">
+        <div class="search-bar-container">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="customer-search" 
+              class="search-input"
+              placeholder="Sök kund efter namn eller e-post..."
+              aria-label="Sök kund"
+            />
+            <button class="clear-search" id="clear-search" onclick="clearSearch()" style="display: none;">
+              ✕
+            </button>
+          </div>
+        </div>
+        
+        <div class="filters">
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">
+            Alla
+          </button>
+          <button class="filter-btn" data-filter="pending" onclick="setFilter('pending')">
+            <span class="filter-dot pending"></span> Väntande
+          </button>
+          <button class="filter-btn" data-filter="paid" onclick="setFilter('paid')">
+            <span class="filter-dot paid"></span> Betalda
+          </button>
+          <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">
+            <span class="filter-dot overdue"></span> Försenade
+          </button>
+        </div>
+      </section>
+
+      <!-- Customers Table -->
+      <section class="customers-section" aria-label="Kundlista">
+        <div class="section-header">
+          <h2>Kunder med Fakturor</h2>
+          <p class="results-count" id="results-count">Laddar...</p>
+        </div>
+        
+        <div class="table-container">
+          <table class="customers-table" id="customers-table">
+            <thead>
+              <tr>
+                <th>Kund</th>
+                <th>E-post</th>
+                <th class="text-center">Antal Fakturor</th>
+                <th class="text-right">Totalt Belopp</th>
+                <th class="text-center">Försenade</th>
+                <th class="text-center">Åtgärder</th>
+              </tr>
+            </thead>
+            <tbody id="customer-results">
+              <!-- Loading state -->
+              <tr class="loading-row">
+                <td colspan="6">
+                  <div class="loading-spinner"></div>
+                  <p>Laddar kunder...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Empty State -->
+          <div class="empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">📭</div>
+            <h3>Inga kunder hittades</h3>
+            <p>Prova att söka efter ett annat namn eller e-postadress</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create Invoice Modal -->
+  <div id="create-invoice-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Skapa Ny Faktura</h2>
+        <button class="modal-close" onclick="closeCreateModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="create-invoice-form">
+          <div class="form-group">
+            <label for="invoice-customer-select">Välj Kund *</label>
+            <select id="invoice-customer-select" required>
+              <option value="">-- Välj en kund --</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Fakturarader *</label>
+            <div id="invoice-items">
+              <div class="invoice-item">
+                <input type="text" placeholder="Beskrivning" class="item-description" required>
+                <input type="number" placeholder="Antal" class="item-quantity" value="1" min="1" required>
+                <input type="number" placeholder="Pris (SEK)" class="item-price" min="0" step="0.01" required>
+                <button type="button" class="btn-remove-item" onclick="removeInvoiceItem(this)">✕</button>
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" onclick="addInvoiceItem()">
+              + Lägg till rad
+            </button>
+          </div>
+          
+          <div class="form-group">
+            <label for="invoice-due-date">Förfallodag *</label>
+            <input type="date" id="invoice-due-date" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="invoice-payment-method">Betalningsmetod *</label>
+            <select id="invoice-payment-method" required>
+              <option value="manual">Manuell</option>
+              <option value="stripe">Stripe</option>
+              <option value="direct_debit">Autogiro</option>
+              <option value="bank_transfer">Bankgiro</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="invoice-notes">Anteckningar</label>
+            <textarea id="invoice-notes" rows="3" placeholder="Valfria anteckningar för fakturan..."></textarea>
+          </div>
+          
+          <div class="invoice-preview">
+            <h3>Förhandsvisning</h3>
+            <div class="preview-row">
+              <span>Delsumma:</span>
+              <span id="preview-subtotal">0 SEK</span>
+            </div>
+            <div class="preview-row">
+              <span>Moms (25%):</span>
+              <span id="preview-tax">0 SEK</span>
+            </div>
+            <div class="preview-row preview-total">
+              <span>Total:</span>
+              <span id="preview-total">0 SEK</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeCreateModal()">
+          Avbryt
+        </button>
+        <button type="button" class="btn-primary" onclick="submitCreateInvoice()">
+          <span class="btn-icon">✓</span>
+          Skapa Faktura
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let allCustomers = [];
+    let allCustomersForSelect = [];
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboardStats();
+      loadCustomers();
+      loadCustomersForSelect();
+      setupSearchListener();
+      setDefaultDueDate();
+      
+      // Refresh data every 30 seconds
+      setInterval(loadDashboardStats, 30000);
+      setInterval(loadCustomers, 60000);
+    });
+
+    // 📊 Load dashboard statistics
+    async function loadDashboardStats() {
+      try {
+        const res = await fetch('/api/invoices/stats');
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('total-invoices').textContent = data.stats.totalInvoices.toLocaleString('sv-SE');
+          document.getElementById('pending-amount').textContent = formatCurrency(data.stats.pendingAmount);
+          document.getElementById('overdue-count').textContent = data.stats.overdueCount.toLocaleString('sv-SE');
+          document.getElementById('paid-this-month').textContent = formatCurrency(data.stats.paidThisMonth);
+        }
+      } catch (err) {
+        console.error('❌ Error loading stats:', err);
+        showToast('Kunde inte ladda statistik', 'error');
+      }
+    }
+
+    // 👥 Load customers with invoice summary
+    async function loadCustomers() {
+      try {
+        const params = new URLSearchParams({
+          filter: currentFilter,
+          search: currentSearch
+        });
+        
+        const res = await fetch(`/api/invoices/customers?${params}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allCustomers = data.customers;
+          renderCustomers(data.customers);
+        }
+      } catch (err) {
+        console.error('❌ Error loading customers:', err);
+        showToast('Kunde inte ladda kunder', 'error');
+        document.getElementById('customer-results').innerHTML = `
+          <tr>
+            <td colspan="6" class="error-message">
+              <p>⚠️ Kunde inte ladda kunder. Försök igen senare.</p>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // 🎨 Render customers table
+    function renderCustomers(customers) {
+      const tbody = document.getElementById('customer-results');
+      const emptyState = document.getElementById('empty-state');
+      const resultsCount = document.getElementById('results-count');
+      
+      if (customers.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'flex';
+        resultsCount.textContent = '0 kunder';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      resultsCount.textContent = `${customers.length} ${customers.length === 1 ? 'kund' : 'kunder'}`;
+      
+      tbody.innerHTML = customers.map(customer => `
+        <tr class="customer-row" onclick="viewCustomerInvoices('${customer._id}')">
+          <td>
+            <div class="customer-name">${escapeHtml(customer.customerName)}</div>
+          </td>
+          <td>${escapeHtml(customer.customerEmail)}</td>
+          <td class="text-center">
+            <span class="badge badge-info">${customer.totalInvoices}</span>
+          </td>
+          <td class="text-right">
+            <strong>${formatCurrency(customer.totalAmount)}</strong>
+          </td>
+          <td class="text-center">
+            ${customer.overdueCount > 0 
+              ? `<span class="badge badge-danger">${customer.overdueCount}</span>` 
+              : '<span class="badge badge-success">0</span>'}
+          </td>
+          <td class="text-center">
+            <button class="btn-small btn-primary" onclick="event.stopPropagation(); viewCustomerInvoices('${customer._id}')">
+              Visa Fakturor
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 🔍 Setup search listener with debouncing
+    function setupSearchListener() {
+      const searchInput = document.getElementById('customer-search');
+      const clearBtn = document.getElementById('clear-search');
+      let debounceTimer;
+      
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const value = e.target.value.trim();
+        
+        // Show/hide clear button
+        clearBtn.style.display = value ? 'flex' : 'none';
+        
+        debounceTimer = setTimeout(() => {
+          currentSearch = value;
+          loadCustomers();
+        }, 300);
+      });
+    }
+
+    // 🧹 Clear search
+    function clearSearch() {
+      document.getElementById('customer-search').value = '';
+      document.getElementById('clear-search').style.display = 'none';
+      currentSearch = '';
+      loadCustomers();
+    }
+
+    // 🎯 Set filter
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      
+      loadCustomers();
+    }
+
+    // 🔗 View customer invoices
+    function viewCustomerInvoices(customerId) {
+      window.location.href = `/customer-invoices.html?customerId=${customerId}`;
+    }
+
+    // ➕ Create new invoice
+    async function createNewInvoice() {
+      await loadCustomersForSelect();
+      document.getElementById('create-invoice-modal').style.display = 'flex';
+      updateInvoicePreview();
+    }
+
+    // 📋 Load customers for select dropdown
+    async function loadCustomersForSelect() {
+      try {
+        const res = await fetch('/api/customers/all');
+        const data = await res.json();
+        
+        const select = document.getElementById('invoice-customer-select');
+        select.innerHTML = '<option value="">-- Välj en kund --</option>' +
+          data.map(customer => `
+            <option value="${customer._id}">${escapeHtml(customer.name)} (${escapeHtml(customer.email)})</option>
+          `).join('');
+      } catch (err) {
+        console.error('❌ Error loading customers for select:', err);
+      }
+    }
+
+    // ➕ Add invoice item
+    function addInvoiceItem() {
+      const container = document.getElementById('invoice-items');
+      const newItem = document.createElement('div');
+      newItem.className = 'invoice-item';
+      newItem.innerHTML = `
+        <input type="text" placeholder="Beskrivning" class="item-description" required>
+        <input type="number" placeholder="Antal" class="item-quantity" value="1" min="1" required>
+        <input type="number" placeholder="Pris (SEK)" class="item-price" min="0" step="0.01" required>
+        <button type="button" class="btn-remove-item" onclick="removeInvoiceItem(this)">✕</button>
+      `;
+      container.appendChild(newItem);
+      
+      // Add event listeners for preview update
+      newItem.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', updateInvoicePreview);
+      });
+    }
+
+    // ➖ Remove invoice item
+    function removeInvoiceItem(btn) {
+      const items = document.querySelectorAll('.invoice-item');
+      if (items.length > 1) {
+        btn.parentElement.remove();
+        updateInvoicePreview();
+      } else {
+        showToast('Minst en rad krävs', 'warning');
+      }
+    }
+
+    // 📊 Update invoice preview
+    function updateInvoicePreview() {
+      const items = document.querySelectorAll('.invoice-item');
+      let subtotal = 0;
+      
+      items.forEach(item => {
+        const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+        const price = parseFloat(item.querySelector('.item-price').value) || 0;
+        subtotal += quantity * price;
+      });
+      
+      const tax = Math.round(subtotal * 0.25);
+      const total = subtotal + tax;
+      
+      document.getElementById('preview-subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('preview-tax').textContent = formatCurrency(tax);
+      document.getElementById('preview-total').textContent = formatCurrency(total);
+    }
+
+    // Add event listeners to initial invoice item
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.invoice-item input').forEach(input => {
+        input.addEventListener('input', updateInvoicePreview);
+      });
+    });
+
+    // 📅 Set default due date (30 days from now)
+    function setDefaultDueDate() {
+      const dueDateInput = document.getElementById('invoice-due-date');
+      const defaultDays = 30;
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + defaultDays);
+      dueDateInput.value = futureDate.toISOString().split('T')[0];
+    }
+
+    // ✓ Submit create invoice
+    async function submitCreateInvoice() {
+      try {
+        const customerId = document.getElementById('invoice-customer-select').value;
+        const dueDate = document.getElementById('invoice-due-date').value;
+        const paymentMethod = document.getElementById('invoice-payment-method').value;
+        const notes = document.getElementById('invoice-notes').value;
+        
+        if (!customerId) {
+          showToast('Välj en kund', 'warning');
+          return;
+        }
+        
+        // Collect invoice items
+        const items = [];
+        document.querySelectorAll('.invoice-item').forEach(item => {
+          const description = item.querySelector('.item-description').value;
+          const quantity = parseFloat(item.querySelector('.item-quantity').value);
+          const unitPrice = parseFloat(item.querySelector('.item-price').value);
+          
+          if (description && quantity && unitPrice) {
+            items.push({ description, quantity, unitPrice });
+          }
+        });
+        
+        if (items.length === 0) {
+          showToast('Lägg till minst en fakturarad', 'warning');
+          return;
+        }
+        
+        // Create invoice
+        const res = await fetch('/api/invoices/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            customerId,
+            items,
+            dueDate,
+            paymentMethod,
+            notes
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast(`Faktura ${data.invoice.invoiceNumber} skapad!`, 'success');
+          closeCreateModal();
+          loadDashboardStats();
+          loadCustomers();
+          
+          // Navigate to customer invoices page
+          setTimeout(() => {
+            window.location.href = `/customer-invoices.html?customerId=${customerId}`;
+          }, 1500);
+        } else {
+          showToast(data.message || 'Kunde inte skapa faktura', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error creating invoice:', err);
+        showToast('Ett fel uppstod vid skapande av faktura', 'error');
+      }
+    }
+
+    // ✕ Close create modal
+    function closeCreateModal() {
+      document.getElementById('create-invoice-modal').style.display = 'none';
+      document.getElementById('create-invoice-form').reset();
+      
+      // Reset to single item
+      const container = document.getElementById('invoice-items');
+      container.innerHTML = `
+        <div class="invoice-item">
+          <input type="text" placeholder="Beskrivning" class="item-description" required>
+          <input type="number" placeholder="Antal" class="item-quantity" value="1" min="1" required>
+          <input type="number" placeholder="Pris (SEK)" class="item-price" min="0" step="0.01" required>
+          <button type="button" class="btn-remove-item" onclick="removeInvoiceItem(this)">✕</button>
+        </div>
+      `;
+      
+      // Re-add event listeners
+      container.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', updateInvoicePreview);
+      });
+      
+      setDefaultDueDate();
+      updateInvoicePreview();
+    }
+
+    // 🍞 Show toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast toast-${type} show`;
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // 💱 Format currency
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('sv-SE', {
+        style: 'currency',
+        currency: 'SEK',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+
+    // 🔒 Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('create-invoice-modal');
+      if (event.target === modal) {
+        closeCreateModal();
+      }
+    }
+  </script>
+</body>
+</html>
+
