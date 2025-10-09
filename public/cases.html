@@ -13,30 +13,30 @@
 <body>
   <div class="container">
     <header>
-      <h1>📂 Alla supportärenden</h1>
+      <h1>Alla supportärenden</h1>
     </header>
 
     <section class="controls-section" aria-labelledby="controls-heading">
       <h2 id="controls-heading" class="sr-only">Filter och sökning</h2>
       <div class="controls">
         <label for="searchInput" class="sr-only">Sök i ärenden</label>
-        <input type="text" id="searchInput" placeholder="🔍 Sök på ID, namn, email eller ämne..." oninput="filterAndRender()" aria-describedby="search-help">
+        <input type="text" id="searchInput" placeholder="Sök på ID, namn, email eller ämne..." oninput="filterAndRender()" aria-describedby="search-help">
         <div id="search-help" class="sr-only">Sök efter ärende-ID, kundnamn, e-postadress eller ämne</div>
 
         <label for="statusFilter" class="sr-only">Filtrera efter status</label>
         <select id="statusFilter" onchange="filterAndRender()" aria-label="Välj status att filtrera på">
-          <option value="">📁 Alla statusar</option>
-          <option value="nytt">🗂️ Nytt</option>
-          <option value="arbetande">🛠️ Arbetande</option>
-          <option value="väntar svar">⏳ Väntar svar</option>
-          <option value="on hold">🛑 On Hold</option>
-          <option value="stängt">✅ Stängt</option>
+          <option value="">Alla statusar</option>
+          <option value="nytt">Nytt</option>
+          <option value="arbetande">Arbetande</option>
+          <option value="väntar svar">Väntar svar</option>
+          <option value="on hold">On Hold</option>
+          <option value="stängt">Stängt</option>
         </select>
 
         <label for="sortOrder" class="sr-only">Sorteringsordning</label>
         <select id="sortOrder" onchange="filterAndRender()" aria-label="Välj sorteringsordning">
-          <option value="desc">🔽 Nyast först</option>
-          <option value="asc">🔼 Äldst först</option>
+          <option value="desc">Nyast först</option>
+          <option value="asc">Äldst först</option>
         </select>
       </div>
     </section>
@@ -56,7 +56,7 @@
         allCases = await res.json();
         filterAndRender();
       } catch (err) {
-        console.error("❌ Fel vid hämtning av ärenden:", err);
+        console.error("Fel vid hämtning av ärenden:", err);
         document.getElementById("caseList").innerHTML = "<p style='color:red;'>Fel vid hämtning av data.</p>";
       }
     }
@@ -101,7 +101,7 @@
       container.innerHTML = "";
 
       if (!list.length) {
-        container.innerHTML = "<p>❌ Inga matchande ärenden hittades.</p>";
+        container.innerHTML = "<p>Inga matchande ärenden hittades.</p>";
         return;
       }
 
