@@ -3,6 +3,14 @@
    Modern, responsive invoice management UI
    =================================== */
 
+/* Layout Fix - Make content take full width */
+.content {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 :root {
   /* Status Colors */
   --status-paid: #10b981;
