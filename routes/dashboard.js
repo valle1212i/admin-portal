@@ -14,7 +14,19 @@ const Customer = customerConnection.model(
   "customers"
 );
 
-// 🧱 Definiera User-modellen för att spåra online-användare
+// 🧱 Definiera LoginEvent-modellen för att spåra online-användare
+const LoginEvent = customerConnection.model(
+  "LoginEvent",
+  new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
+    ip: { type: String, default: '' },
+    device: { type: String, default: '' },
+    timestamp: { type: Date, default: Date.now }
+  }, { strict: false }),
+  "loginevents"
+);
+
+// 🧱 Definiera User-modellen för att spåra online-användare (fallback)
 const User = customerConnection.model(
   "User",
   new mongoose.Schema({
@@ -31,11 +43,49 @@ router.get("/stats", async (req, res) => {
     // Hämta totalt antal kunder
     const totalCustomers = await Customer.countDocuments();
     
-    // Hämta antal online-användare (senaste 5 minuter)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const onlineUsers = await User.countDocuments({
-      lastSeen: { $gte: fiveMinutesAgo }
-    });
+    // Hämta antal online-användare baserat på LoginEvent (senaste 15 minuter)
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    
+    // Försök först att använda LoginEvent
+    let onlineUsers = 0;
+    try {
+      // Hitta unika användare som har loggat in senaste 15 minuter
+      const recentLoginEvents = await LoginEvent.aggregate([
+        {
+          $match: {
+            timestamp: { $gte: fifteenMinutesAgo }
+          }
+        },
+        {
+          $group: {
+            _id: "$userId",
+            lastLogin: { $max: "$timestamp" }
+          }
+        },
+        {
+          $count: "uniqueUsers"
+        }
+      ]);
+      
+      onlineUsers = recentLoginEvents.length > 0 ? recentLoginEvents[0].uniqueUsers : 0;
+      console.log(`📊 Online users from LoginEvent: ${onlineUsers}`);
+      
+    } catch (loginEventError) {
+      console.log("⚠️ LoginEvent collection not found, trying User collection...");
+      
+      // Fallback till User collection om LoginEvent inte finns
+      try {
+        onlineUsers = await User.countDocuments({
+          lastSeen: { $gte: fifteenMinutesAgo }
+        });
+        console.log(`📊 Online users from User collection: ${onlineUsers}`);
+      } catch (userError) {
+        console.log("⚠️ User collection not found either, defaulting to 0");
+        onlineUsers = 0;
+      }
+    }
+
+    console.log(`📊 Dashboard stats - Total: ${totalCustomers}, Online: ${onlineUsers}`);
 
     res.json({
       totalCustomers,
@@ -62,11 +112,31 @@ router.post("/user-online", async (req, res) => {
       return res.status(400).json({ error: "userId krävs" });
     }
 
-    // Uppdatera användarens lastSeen och isOnline status
-    await User.findByIdAndUpdate(userId, {
-      lastSeen: new Date(),
-      isOnline: isOnline !== false // Default till true om inte explicit false
-    }, { upsert: true }); // Skapa användaren om den inte finns
+    const now = new Date();
+    
+    // Skapa en LoginEvent för att spåra aktivitet
+    try {
+      await LoginEvent.create({
+        userId: userId,
+        timestamp: now,
+        ip: req.ip || '',
+        device: req.headers['user-agent'] || ''
+      });
+      console.log(`📊 LoginEvent created for user ${userId}`);
+    } catch (loginEventError) {
+      console.log("⚠️ Could not create LoginEvent:", loginEventError.message);
+    }
+
+    // Uppdatera även User collection som fallback
+    try {
+      await User.findByIdAndUpdate(userId, {
+        lastSeen: now,
+        isOnline: isOnline !== false // Default till true om inte explicit false
+      }, { upsert: true }); // Skapa användaren om den inte finns
+      console.log(`📊 User status updated for user ${userId}`);
+    } catch (userError) {
+      console.log("⚠️ Could not update User collection:", userError.message);
+    }
 
     res.json({ success: true, message: "Online-status uppdaterad" });
   } catch (err) {
