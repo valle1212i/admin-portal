@@ -95,7 +95,6 @@
   padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
 }
@@ -103,17 +102,6 @@
 .stat-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
-}
-
-.stat-icon {
-  font-size: 2rem;
-  width: 3.5rem;
-  height: 3.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-gray-50);
-  border-radius: var(--border-radius);
 }
 
 .stat-content {
@@ -136,19 +124,16 @@
 }
 
 /* Stat card variants */
-.stat-card.stat-success .stat-icon {
-  background: #d1fae5;
-  color: var(--status-paid);
+.stat-card.stat-success {
+  border-left: 4px solid var(--status-paid);
 }
 
-.stat-card.stat-warning .stat-icon {
-  background: #fef3c7;
-  color: var(--status-pending);
+.stat-card.stat-warning {
+  border-left: 4px solid var(--status-pending);
 }
 
-.stat-card.stat-danger .stat-icon {
-  background: #fee2e2;
-  color: var(--status-overdue);
+.stat-card.stat-danger {
+  border-left: 4px solid var(--status-overdue);
 }
 
 /* ===================================
@@ -172,19 +157,9 @@
   width: 100%;
 }
 
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  font-size: 1.125rem;
-  pointer-events: none;
-}
-
 .search-input {
   width: 100%;
-  padding: 0.875rem 3rem 0.875rem 3rem;
+  padding: 0.875rem 3rem 0.875rem 1rem;
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 1rem;
@@ -394,12 +369,6 @@
   justify-content: center;
   padding: 3rem 1rem;
   text-align: center;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
 }
 
 .empty-state h3 {

@@ -436,8 +436,7 @@
     <main class="content">
       <!-- Back Button -->
       <a href="/invoicing.html" class="back-button">
-        <span>←</span>
-        <span>Tillbaka till Fakturor</span>
+        ← Tillbaka till Fakturor
       </a>
 
       <!-- Customer Header -->
@@ -470,8 +469,7 @@
       <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
         <h2>Fakturor</h2>
         <button class="btn-primary" onclick="createInvoiceForCustomer()">
-          <span>➕</span>
-          <span>Skapa Faktura</span>
+          Skapa Faktura
         </button>
       </div>
 
@@ -489,7 +487,7 @@
   <div id="postpone-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>📅 Skjut upp förfallodag</h2>
+        <h2>Skjut upp förfallodag</h2>
         <button class="modal-close" onclick="closePostponeModal()">✕</button>
       </div>
       <div class="modal-body">
@@ -513,7 +511,7 @@
   <div id="price-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>💰 Ändra fakturabelopp</h2>
+        <h2>Ändra fakturabelopp</h2>
         <button class="modal-close" onclick="closePriceModal()">✕</button>
       </div>
       <div class="modal-body">
@@ -554,7 +552,7 @@
   <div id="debit-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>🔄 Autogiro (Direct Debit)</h2>
+        <h2>Autogiro (Direct Debit)</h2>
         <button class="modal-close" onclick="closeDebitModal()">✕</button>
       </div>
       <div class="modal-body">
@@ -663,12 +661,10 @@
       if (invoices.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">📭</div>
             <h3>Inga fakturor ännu</h3>
             <p>Skapa din första faktura för denna kund</p>
             <button class="btn-primary" onclick="createInvoiceForCustomer()" style="margin-top: 1rem;">
-              <span>➕</span>
-              <span>Skapa Faktura</span>
+              Skapa Faktura
             </button>
           </div>
         `;
@@ -749,32 +745,26 @@
           <div class="invoice-actions">
             ${invoice.status !== 'paid' && invoice.status !== 'cancelled' ? `
               <button class="action-btn action-btn-postpone" onclick="openPostponeModal('${invoice._id}')">
-                <span>📅</span>
-                <span>Skjut upp</span>
+                Skjut upp
               </button>
               <button class="action-btn action-btn-price" onclick="openPriceModal('${invoice._id}')">
-                <span>💰</span>
-                <span>Ändra pris</span>
+                Ändra pris
               </button>
             ` : ''}
             <button class="action-btn action-btn-pdf" onclick="downloadPDF('${invoice._id}')">
-              <span>📄</span>
-              <span>Ladda ner PDF</span>
+              Ladda ner PDF
             </button>
             <button class="action-btn action-btn-debit" onclick="openDebitModal('${invoice._id}')">
-              <span>🔄</span>
-              <span>${invoice.directDebit.enabled ? 'Hantera' : 'Aktivera'} Autogiro</span>
+              ${invoice.directDebit.enabled ? 'Hantera' : 'Aktivera'} Autogiro
             </button>
             ${invoice.status === 'pending' || invoice.status === 'overdue' ? `
               <button class="action-btn action-btn-paid" onclick="markAsPaid('${invoice._id}')">
-                <span>✓</span>
-                <span>Markera betald</span>
+                Markera betald
               </button>
             ` : ''}
             ${invoice.status !== 'paid' && invoice.status !== 'cancelled' ? `
               <button class="action-btn action-btn-cancel" onclick="cancelInvoice('${invoice._id}')">
-                <span>✕</span>
-                <span>Avbryt faktura</span>
+                Avbryt faktura
               </button>
             ` : ''}
           </div>
@@ -783,19 +773,18 @@
           ${(invoice.postponementHistory.length > 0 || invoice.priceChangeHistory.length > 0) ? `
             <div class="history-section">
               <div class="history-title" onclick="toggleHistory('${invoice._id}')">
-                <span>📋</span>
                 <span>Visa historik (${invoice.postponementHistory.length + invoice.priceChangeHistory.length})</span>
               </div>
               <div class="history-list" id="history-${invoice._id}">
                 ${invoice.postponementHistory.map(h => `
                   <div class="history-item">
-                    📅 Uppskjuten från ${formatDate(h.oldDate)} till ${formatDate(h.newDate)}
+                    Uppskjuten från ${formatDate(h.oldDate)} till ${formatDate(h.newDate)}
                     <br><small>Anledning: ${escapeHtml(h.reason)}</small>
                   </div>
                 `).join('')}
                 ${invoice.priceChangeHistory.map(h => `
                   <div class="history-item">
-                    💰 Pris ändrat från ${formatCurrency(h.oldAmount)} till ${formatCurrency(h.newAmount)}
+                    Pris ändrat från ${formatCurrency(h.oldAmount)} till ${formatCurrency(h.newAmount)}
                     <br><small>Anledning: ${escapeHtml(h.reason)}</small>
                   </div>
                 `).join('')}

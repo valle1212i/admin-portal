@@ -51,13 +51,12 @@
       <!-- Header -->
       <header class="page-header">
         <div>
-          <h1>💰 Fakturering</h1>
+          <h1>Fakturering</h1>
           <p class="page-subtitle">Hantera och skapa fakturor för dina kunder</p>
         </div>
         <div class="header-actions">
           <button class="btn-primary" onclick="createNewInvoice()">
-            <span class="btn-icon">➕</span>
-            <span>Skapa Faktura</span>
+            Skapa Faktura
           </button>
         </div>
       </header>
@@ -65,7 +64,6 @@
       <!-- Statistics Overview -->
       <section class="stats-overview" aria-label="Faktureringsstatistik">
         <div class="stat-card">
-          <div class="stat-icon">📊</div>
           <div class="stat-content">
             <p class="stat-label">Totalt Fakturor</p>
             <p class="stat-value" id="total-invoices">
@@ -75,7 +73,6 @@
         </div>
         
         <div class="stat-card stat-warning">
-          <div class="stat-icon">⏳</div>
           <div class="stat-content">
             <p class="stat-label">Väntande Betalning</p>
             <p class="stat-value" id="pending-amount">
@@ -85,7 +82,6 @@
         </div>
         
         <div class="stat-card stat-danger">
-          <div class="stat-icon">⚠️</div>
           <div class="stat-content">
             <p class="stat-label">Försenade</p>
             <p class="stat-value" id="overdue-count">
@@ -95,7 +91,6 @@
         </div>
         
         <div class="stat-card stat-success">
-          <div class="stat-icon">✅</div>
           <div class="stat-content">
             <p class="stat-label">Betalt Denna Månad</p>
             <p class="stat-value" id="paid-this-month">
@@ -109,7 +104,6 @@
       <section class="search-section" aria-label="Sök och filtrera">
         <div class="search-bar-container">
           <div class="search-input-wrapper">
-            <span class="search-icon">🔍</span>
             <input 
               type="text" 
               id="customer-search" 
@@ -171,7 +165,6 @@
           
           <!-- Empty State -->
           <div class="empty-state" id="empty-state" style="display: none;">
-            <div class="empty-icon">📭</div>
             <h3>Inga kunder hittades</h3>
             <p>Prova att söka efter ett annat namn eller e-postadress</p>
           </div>
