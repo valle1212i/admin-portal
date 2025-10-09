@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kundfakturor - Source Admin Portal</title>
+  <meta name="description" content="Hantera fakturor för kund" />
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/invoicing.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Additional styles specific to customer invoices page */
+    .customer-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .customer-info h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.875rem;
+    }
+
+    .customer-info p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    .customer-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 8px;
+    }
+
+    .customer-stat {
+      text-align: center;
+    }
+
+    .customer-stat-label {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-bottom: 0.25rem;
+    }
+
+    .customer-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .invoice-card {
+      background: white;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .invoice-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue);
+    }
+
+    .invoice-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .invoice-number {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .invoice-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+    }
+
+    .status-badge-large {
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge-large.status-paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge-large.status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-badge-large.status-overdue {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-badge-large.status-cancelled {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .status-badge-large.status-draft {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .invoice-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-gray-50);
+      border-radius: 8px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .invoice-items {
+      margin-bottom: 1.5rem;
+    }
+
+    .invoice-items h4 {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin: 0 0 0.75rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 3fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.875rem;
+    }
+
+    .item-row:first-child {
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-gray-50);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .invoice-totals {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 1rem;
+      background: var(--bg-gray-50);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      width: 300px;
+      max-width: 100%;
+      padding: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .total-row.total-final {
+      border-top: 2px solid var(--border-color);
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .invoice-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .action-btn-postpone {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .action-btn-postpone:hover {
+      background: #fde68a;
+    }
+
+    .action-btn-price {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .action-btn-price:hover {
+      background: #bfdbfe;
+    }
+
+    .action-btn-pdf {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .action-btn-pdf:hover {
+      background: #e5e7eb;
+    }
+
+    .action-btn-debit {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .action-btn-debit:hover {
+      background: #ddd6fe;
+    }
+
+    .action-btn-paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .action-btn-paid:hover {
+      background: #a7f3d0;
+    }
+
+    .action-btn-cancel {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .action-btn-cancel:hover {
+      background: #fecaca;
+    }
+
+    .history-section {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .history-title {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .history-list {
+      display: none;
+      padding-left: 1rem;
+    }
+
+    .history-list.show {
+      display: block;
+    }
+
+    .history-item {
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-left: 2px solid var(--border-color);
+      margin-bottom: 0.5rem;
+      padding-left: 1rem;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      margin-bottom: 1rem;
+    }
+
+    .back-button:hover {
+      background: var(--bg-gray-100);
+      color: var(--text-primary);
+    }
+
+    .modal-input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-input-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .modal-input-group input,
+    .modal-input-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .modal-input-group input:focus,
+    .modal-input-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .customer-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .customer-stats {
+        width: 100%;
+      }
+
+      .invoice-card-header {
+        flex-direction: column;
+      }
+
+      .invoice-actions {
+        width: 100%;
+      }
+
+      .action-btn {
+        flex: 1;
+        justify-content: center;
+      }
+
+      .item-row {
+        grid-template-columns: 2fr 1fr 1fr;
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+      <div class="logo">
+        <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
+      </div>
+      <nav class="menu">
+        <a href="/admin-dashboard.html" class="menu-item">
+          <span aria-hidden="true">🏠</span> Hem och data
+        </a>
+        <a href="/search.html" class="menu-item">
+          <span aria-hidden="true">🔍</span> Sök Kund
+        </a>
+        <a href="/cases.html" class="menu-item">
+          <span aria-hidden="true">📋</span> Cases & kundkontakt
+        </a>
+        <a href="/avtal.html" class="menu-item">
+          <span aria-hidden="true">📑</span> Avtal
+        </a>
+        <a href="/invoicing.html" class="menu-item active">
+          <span aria-hidden="true">💰</span> Faktuering
+        </a>
+        <a href="/admin-marknadsforing.html" class="menu-item">
+          <span aria-hidden="true">📣</span> Marknadsföring
+        </a>
+        <a href="/massmail.html" class="menu-item">
+          <span aria-hidden="true">📧</span> Massutskick av Mejl
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Back Button -->
+      <a href="/invoicing.html" class="back-button">
+        <span>←</span>
+        <span>Tillbaka till Fakturor</span>
+      </a>
+
+      <!-- Customer Header -->
+      <section class="customer-header">
+        <div class="customer-info">
+          <h1 id="customer-name">Laddar...</h1>
+          <p id="customer-email"></p>
+        </div>
+        <div class="customer-stats">
+          <div class="customer-stat">
+            <div class="customer-stat-label">Totalt Fakturor</div>
+            <div class="customer-stat-value" id="stat-total">0</div>
+          </div>
+          <div class="customer-stat">
+            <div class="customer-stat-label">Totalt Belopp</div>
+            <div class="customer-stat-value" id="stat-amount">0 SEK</div>
+          </div>
+          <div class="customer-stat">
+            <div class="customer-stat-label">Betalt</div>
+            <div class="customer-stat-value" id="stat-paid">0 SEK</div>
+          </div>
+          <div class="customer-stat">
+            <div class="customer-stat-label">Väntande</div>
+            <div class="customer-stat-value" id="stat-pending">0 SEK</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Create Invoice Button -->
+      <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <h2>Fakturor</h2>
+        <button class="btn-primary" onclick="createInvoiceForCustomer()">
+          <span>➕</span>
+          <span>Skapa Faktura</span>
+        </button>
+      </div>
+
+      <!-- Invoices List -->
+      <div id="invoices-container">
+        <div style="text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p>Laddar fakturor...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Postpone Modal -->
+  <div id="postpone-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📅 Skjut upp förfallodag</h2>
+        <button class="modal-close" onclick="closePostponeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-input-group">
+          <label for="postpone-date">Ny förfallodag *</label>
+          <input type="date" id="postpone-date" required>
+        </div>
+        <div class="modal-input-group">
+          <label for="postpone-reason">Anledning *</label>
+          <textarea id="postpone-reason" rows="3" placeholder="Ange anledning till uppskjutande..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closePostponeModal()">Avbryt</button>
+        <button class="btn-primary" onclick="submitPostpone()">Skjut upp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Price Modal -->
+  <div id="price-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>💰 Ändra fakturabelopp</h2>
+        <button class="modal-close" onclick="closePriceModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-input-group">
+          <label for="new-subtotal">Nytt belopp (exkl. moms) *</label>
+          <input type="number" id="new-subtotal" step="0.01" min="0" placeholder="0.00" required>
+          <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">
+            Moms (25%) läggs till automatiskt
+          </small>
+        </div>
+        <div class="modal-input-group">
+          <label for="price-reason">Anledning *</label>
+          <textarea id="price-reason" rows="3" placeholder="Ange anledning till prisändring..." required></textarea>
+        </div>
+        <div style="background: var(--bg-gray-50); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Exkl. moms:</span>
+            <span id="preview-new-subtotal">0 SEK</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Moms (25%):</span>
+            <span id="preview-new-tax">0 SEK</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.125rem; padding-top: 0.5rem; border-top: 2px solid var(--border-color);">
+            <span>Totalt:</span>
+            <span id="preview-new-total">0 SEK</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closePriceModal()">Avbryt</button>
+        <button class="btn-primary" onclick="submitPriceChange()">Ändra pris</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direct Debit Modal -->
+  <div id="debit-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔄 Autogiro (Direct Debit)</h2>
+        <button class="modal-close" onclick="closeDebitModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+          Aktivera autogiro för automatisk betalning av fakturor.
+        </p>
+        <div class="modal-input-group">
+          <label>Status</label>
+          <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="debit-status" value="enable" id="debit-enable">
+              <span>Aktivera</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="debit-status" value="disable" id="debit-disable">
+              <span>Inaktivera</span>
+            </label>
+          </div>
+        </div>
+        <div id="debit-mandate-section" style="display: none;">
+          <div class="modal-input-group">
+            <label for="mandate-id">Mandat-ID (från Stripe)</label>
+            <input type="text" id="mandate-id" placeholder="mandate_xxx">
+            <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">
+              Detta skapas automatiskt via Stripe när kunden godkänner autogiro.
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeDebitModal()">Avbryt</button>
+        <button class="btn-primary" onclick="submitDirectDebit()">Spara</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let customerId = null;
+    let currentInvoiceId = null;
+    let invoices = [];
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Get customer ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      customerId = urlParams.get('customerId');
+      
+      if (!customerId) {
+        showToast('Kund-ID saknas', 'error');
+        setTimeout(() => {
+          window.location.href = '/invoicing.html';
+        }, 2000);
+        return;
+      }
+      
+      loadCustomerInvoices();
+      
+      // Add event listener for price preview
+      document.getElementById('new-subtotal').addEventListener('input', updatePricePreview);
+      
+      // Add event listener for debit radio buttons
+      document.querySelectorAll('input[name="debit-status"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const mandateSection = document.getElementById('debit-mandate-section');
+          mandateSection.style.display = e.target.value === 'enable' ? 'block' : 'none';
+        });
+      });
+    });
+
+    // 📊 Load customer invoices
+    async function loadCustomerInvoices() {
+      try {
+        const res = await fetch(`/api/invoices/customer/${customerId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // Update customer header
+          document.getElementById('customer-name').textContent = data.customer.name;
+          document.getElementById('customer-email').textContent = data.customer.email;
+          
+          // Update stats
+          document.getElementById('stat-total').textContent = data.stats.totalInvoices;
+          document.getElementById('stat-amount').textContent = formatCurrency(data.stats.totalAmount);
+          document.getElementById('stat-paid').textContent = formatCurrency(data.stats.paidAmount);
+          document.getElementById('stat-pending').textContent = formatCurrency(data.stats.pendingAmount);
+          
+          // Store invoices
+          invoices = data.invoices;
+          
+          // Render invoices
+          renderInvoices(data.invoices);
+        } else {
+          showToast(data.message || 'Kunde inte ladda fakturor', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error loading invoices:', err);
+        showToast('Kunde inte ladda fakturor', 'error');
+      }
+    }
+
+    // 🎨 Render invoices
+    function renderInvoices(invoices) {
+      const container = document.getElementById('invoices-container');
+      
+      if (invoices.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>Inga fakturor ännu</h3>
+            <p>Skapa din första faktura för denna kund</p>
+            <button class="btn-primary" onclick="createInvoiceForCustomer()" style="margin-top: 1rem;">
+              <span>➕</span>
+              <span>Skapa Faktura</span>
+            </button>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = invoices.map(invoice => `
+        <div class="invoice-card">
+          <!-- Header -->
+          <div class="invoice-card-header">
+            <div>
+              <div class="invoice-number">${escapeHtml(invoice.invoiceNumber)}</div>
+              <span class="status-badge-large status-${invoice.status}">
+                ${getStatusText(invoice.status)}
+              </span>
+            </div>
+            <div class="invoice-amount">${formatCurrency(invoice.totalAmount)}</div>
+          </div>
+          
+          <!-- Details -->
+          <div class="invoice-details">
+            <div class="detail-item">
+              <span class="detail-label">Fakturadatum</span>
+              <span class="detail-value">${formatDate(invoice.invoiceDate)}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Förfallodag</span>
+              <span class="detail-value">${formatDate(invoice.dueDate)}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Betalningsmetod</span>
+              <span class="detail-value">${getPaymentMethodText(invoice.paymentMethod)}</span>
+            </div>
+            ${invoice.paidDate ? `
+              <div class="detail-item">
+                <span class="detail-label">Betald</span>
+                <span class="detail-value">${formatDate(invoice.paidDate)}</span>
+              </div>
+            ` : ''}
+          </div>
+          
+          <!-- Items -->
+          <div class="invoice-items">
+            <h4>Fakturarader</h4>
+            <div class="item-row">
+              <div>Beskrivning</div>
+              <div style="text-align: right;">Antal</div>
+              <div style="text-align: right;">Pris</div>
+              <div style="text-align: right;">Belopp</div>
+            </div>
+            ${invoice.items.map(item => `
+              <div class="item-row">
+                <div>${escapeHtml(item.description)}</div>
+                <div style="text-align: right;">${item.quantity}</div>
+                <div style="text-align: right;">${formatCurrency(item.unitPrice)}</div>
+                <div style="text-align: right;">${formatCurrency(item.amount)}</div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <!-- Totals -->
+          <div class="invoice-totals">
+            <div class="total-row">
+              <span>Delsumma:</span>
+              <span>${formatCurrency(invoice.subtotal)}</span>
+            </div>
+            <div class="total-row">
+              <span>Moms (${invoice.taxRate}%):</span>
+              <span>${formatCurrency(invoice.taxAmount)}</span>
+            </div>
+            <div class="total-row total-final">
+              <span>Total:</span>
+              <span>${formatCurrency(invoice.totalAmount)}</span>
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div class="invoice-actions">
+            ${invoice.status !== 'paid' && invoice.status !== 'cancelled' ? `
+              <button class="action-btn action-btn-postpone" onclick="openPostponeModal('${invoice._id}')">
+                <span>📅</span>
+                <span>Skjut upp</span>
+              </button>
+              <button class="action-btn action-btn-price" onclick="openPriceModal('${invoice._id}')">
+                <span>💰</span>
+                <span>Ändra pris</span>
+              </button>
+            ` : ''}
+            <button class="action-btn action-btn-pdf" onclick="downloadPDF('${invoice._id}')">
+              <span>📄</span>
+              <span>Ladda ner PDF</span>
+            </button>
+            <button class="action-btn action-btn-debit" onclick="openDebitModal('${invoice._id}')">
+              <span>🔄</span>
+              <span>${invoice.directDebit.enabled ? 'Hantera' : 'Aktivera'} Autogiro</span>
+            </button>
+            ${invoice.status === 'pending' || invoice.status === 'overdue' ? `
+              <button class="action-btn action-btn-paid" onclick="markAsPaid('${invoice._id}')">
+                <span>✓</span>
+                <span>Markera betald</span>
+              </button>
+            ` : ''}
+            ${invoice.status !== 'paid' && invoice.status !== 'cancelled' ? `
+              <button class="action-btn action-btn-cancel" onclick="cancelInvoice('${invoice._id}')">
+                <span>✕</span>
+                <span>Avbryt faktura</span>
+              </button>
+            ` : ''}
+          </div>
+          
+          <!-- History -->
+          ${(invoice.postponementHistory.length > 0 || invoice.priceChangeHistory.length > 0) ? `
+            <div class="history-section">
+              <div class="history-title" onclick="toggleHistory('${invoice._id}')">
+                <span>📋</span>
+                <span>Visa historik (${invoice.postponementHistory.length + invoice.priceChangeHistory.length})</span>
+              </div>
+              <div class="history-list" id="history-${invoice._id}">
+                ${invoice.postponementHistory.map(h => `
+                  <div class="history-item">
+                    📅 Uppskjuten från ${formatDate(h.oldDate)} till ${formatDate(h.newDate)}
+                    <br><small>Anledning: ${escapeHtml(h.reason)}</small>
+                  </div>
+                `).join('')}
+                ${invoice.priceChangeHistory.map(h => `
+                  <div class="history-item">
+                    💰 Pris ändrat från ${formatCurrency(h.oldAmount)} till ${formatCurrency(h.newAmount)}
+                    <br><small>Anledning: ${escapeHtml(h.reason)}</small>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // 📅 Postpone due date
+    function openPostponeModal(invoiceId) {
+      currentInvoiceId = invoiceId;
+      const invoice = invoices.find(inv => inv._id === invoiceId);
+      
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('postpone-date').setAttribute('min', today);
+      
+      // Set default date to current due date + 7 days
+      const currentDue = new Date(invoice.dueDate);
+      currentDue.setDate(currentDue.getDate() + 7);
+      document.getElementById('postpone-date').value = currentDue.toISOString().split('T')[0];
+      
+      document.getElementById('postpone-modal').style.display = 'flex';
+    }
+
+    function closePostponeModal() {
+      document.getElementById('postpone-modal').style.display = 'none';
+      document.getElementById('postpone-reason').value = '';
+    }
+
+    async function submitPostpone() {
+      const newDate = document.getElementById('postpone-date').value;
+      const reason = document.getElementById('postpone-reason').value;
+      
+      if (!newDate || !reason) {
+        showToast('Fyll i alla fält', 'warning');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/invoices/${currentInvoiceId}/postpone`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ newDueDate: newDate, reason })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast('Förfallodag uppdaterad!', 'success');
+          closePostponeModal();
+          loadCustomerInvoices();
+        } else {
+          showToast(data.message || 'Kunde inte uppdatera datum', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error postponing invoice:', err);
+        showToast('Ett fel uppstod', 'error');
+      }
+    }
+
+    // 💰 Change price
+    function openPriceModal(invoiceId) {
+      currentInvoiceId = invoiceId;
+      const invoice = invoices.find(inv => inv._id === invoiceId);
+      
+      document.getElementById('new-subtotal').value = invoice.subtotal;
+      updatePricePreview();
+      document.getElementById('price-modal').style.display = 'flex';
+    }
+
+    function closePriceModal() {
+      document.getElementById('price-modal').style.display = 'none';
+      document.getElementById('price-reason').value = '';
+      document.getElementById('new-subtotal').value = '';
+    }
+
+    function updatePricePreview() {
+      const subtotal = parseFloat(document.getElementById('new-subtotal').value) || 0;
+      const tax = Math.round(subtotal * 0.25);
+      const total = subtotal + tax;
+      
+      document.getElementById('preview-new-subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('preview-new-tax').textContent = formatCurrency(tax);
+      document.getElementById('preview-new-total').textContent = formatCurrency(total);
+    }
+
+    async function submitPriceChange() {
+      const newSubtotal = document.getElementById('new-subtotal').value;
+      const reason = document.getElementById('price-reason').value;
+      
+      if (!newSubtotal || !reason) {
+        showToast('Fyll i alla fält', 'warning');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/invoices/${currentInvoiceId}/change-price`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ newSubtotal: parseFloat(newSubtotal), reason })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast('Pris uppdaterat!', 'success');
+          closePriceModal();
+          loadCustomerInvoices();
+        } else {
+          showToast(data.message || 'Kunde inte uppdatera pris', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error changing price:', err);
+        showToast('Ett fel uppstod', 'error');
+      }
+    }
+
+    // 📄 Download PDF
+    async function downloadPDF(invoiceId) {
+      try {
+        showToast('Genererar PDF...', 'info');
+        
+        // Open PDF in new tab
+        window.open(`/api/invoices/${invoiceId}/pdf`, '_blank');
+        
+        setTimeout(() => {
+          showToast('PDF öppnad i ny flik', 'success');
+        }, 1000);
+      } catch (err) {
+        console.error('❌ Error downloading PDF:', err);
+        showToast('Kunde inte ladda ner PDF', 'error');
+      }
+    }
+
+    // 🔄 Direct debit
+    function openDebitModal(invoiceId) {
+      currentInvoiceId = invoiceId;
+      const invoice = invoices.find(inv => inv._id === invoiceId);
+      
+      // Set current status
+      if (invoice.directDebit.enabled) {
+        document.getElementById('debit-disable').checked = true;
+        document.getElementById('mandate-id').value = invoice.directDebit.mandateId || '';
+      } else {
+        document.getElementById('debit-enable').checked = false;
+        document.getElementById('debit-disable').checked = false;
+      }
+      
+      document.getElementById('debit-modal').style.display = 'flex';
+    }
+
+    function closeDebitModal() {
+      document.getElementById('debit-modal').style.display = 'none';
+      document.getElementById('mandate-id').value = '';
+      document.querySelectorAll('input[name="debit-status"]').forEach(radio => {
+        radio.checked = false;
+      });
+      document.getElementById('debit-mandate-section').style.display = 'none';
+    }
+
+    async function submitDirectDebit() {
+      const enabled = document.getElementById('debit-enable').checked;
+      const mandateId = document.getElementById('mandate-id').value;
+      
+      if (enabled && !mandateId) {
+        showToast('Ange mandat-ID för autogiro', 'warning');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/invoices/${currentInvoiceId}/direct-debit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ enable: enabled, mandateId })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast(enabled ? 'Autogiro aktiverat!' : 'Autogiro inaktiverat!', 'success');
+          closeDebitModal();
+          loadCustomerInvoices();
+        } else {
+          showToast(data.message || 'Kunde inte uppdatera autogiro', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error updating direct debit:', err);
+        showToast('Ett fel uppstod', 'error');
+      }
+    }
+
+    // ✓ Mark as paid
+    async function markAsPaid(invoiceId) {
+      if (!confirm('Är du säker på att du vill markera denna faktura som betald?')) {
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/invoices/${invoiceId}/mark-paid`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ paidDate: new Date().toISOString() })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast('Faktura markerad som betald!', 'success');
+          loadCustomerInvoices();
+        } else {
+          showToast(data.message || 'Kunde inte markera som betald', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error marking as paid:', err);
+        showToast('Ett fel uppstod', 'error');
+      }
+    }
+
+    // ✕ Cancel invoice
+    async function cancelInvoice(invoiceId) {
+      if (!confirm('Är du säker på att du vill avbryta denna faktura? Detta kan inte ångras.')) {
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/invoices/${invoiceId}/cancel`, {
+          method: 'PUT',
+          credentials: 'include'
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast('Faktura avbruten', 'success');
+          loadCustomerInvoices();
+        } else {
+          showToast(data.message || 'Kunde inte avbryta faktura', 'error');
+        }
+      } catch (err) {
+        console.error('❌ Error cancelling invoice:', err);
+        showToast('Ett fel uppstod', 'error');
+      }
+    }
+
+    // 📋 Toggle history
+    function toggleHistory(invoiceId) {
+      const historyList = document.getElementById(`history-${invoiceId}`);
+      historyList.classList.toggle('show');
+    }
+
+    // ➕ Create invoice for customer
+    function createInvoiceForCustomer() {
+      window.location.href = `/invoicing.html?createFor=${customerId}`;
+    }
+
+    // 🍞 Show toast
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast toast-${type} show`;
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // 💱 Format currency
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('sv-SE', {
+        style: 'currency',
+        currency: 'SEK',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+
+    // 📅 Format date
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString('sv-SE');
+    }
+
+    // 🏷️ Get status text
+    function getStatusText(status) {
+      const statusMap = {
+        draft: 'Utkast',
+        pending: 'Väntande',
+        paid: 'Betald',
+        overdue: 'Försenad',
+        cancelled: 'Avbruten',
+        refunded: 'Återbetald'
+      };
+      return statusMap[status] || status;
+    }
+
+    // 💳 Get payment method text
+    function getPaymentMethodText(method) {
+      const methodMap = {
+        manual: 'Manuell',
+        stripe: 'Stripe',
+        direct_debit: 'Autogiro',
+        bank_transfer: 'Bankgiro'
+      };
+      return methodMap[method] || method;
+    }
+
+    // 🔒 Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
+
