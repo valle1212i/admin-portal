@@ -1,120 +1,1223 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="utf-8" />
-  <title>Massutskick – Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-postkampanjer - Source Admin Portal</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0b0f19; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#3b82f6; --ok:#10b981; --err:#ef4444; --border:#1f2937; --mono:#0a1222; }
-    body { margin:0; padding:24px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
-    h1 { margin:0 0 16px; font-size:22px; }
-    .row { display:grid; gap:16px; grid-template-columns: 1fr; }
-    @media (min-width: 980px) { .row { grid-template-columns: 1.2fr 1fr; } }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; }
-    label { display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; }
-    input[type="text"], input[type="number"], textarea {
-      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #243041; background:#0f172a; color:var(--text);
+    .mass-email-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
-    textarea { min-height:180px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .row-2 { display:grid; gap:12px; grid-template-columns:1fr 1fr; }
-    .row-3 { display:grid; gap:12px; grid-template-columns:1fr 1fr 1fr; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
-    button {
-      background:var(--accent); border:none; padding:10px 14px; border-radius:10px; color:white; cursor:pointer; font-weight:600;
+
+    @media (max-width: 968px) {
+      .mass-email-container {
+        grid-template-columns: 1fr;
+      }
     }
-    button.secondary { background:#334155; }
-    button.ok { background:var(--ok); }
-    button.danger { background:var(--err); }
-    button:disabled { opacity:.6; cursor:not-allowed; }
-    .muted { color:var(--muted); font-size:13px; }
-    .log { font-size:12px; white-space:pre-wrap; background:var(--mono); border:1px solid var(--border); padding:10px; border-radius:10px; max-height:260px; overflow:auto; }
-    .inline { display:flex; align-items:center; gap:8px; }
-    .hint { font-size:12px; color:#9ca3af; }
-    .divider { height:1px; background:var(--border); margin:14px 0; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+
+    .card h3 {
+      margin: 0 0 1rem 0;
+      color: #1f2937;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .card h4 {
+      margin: 1.5rem 0 0.75rem 0;
+      color: #374151;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #1f2937;
+      font-family: inherit;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-select {
+      cursor: pointer;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 180px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 1.125rem;
+      height: 1.125rem;
+      cursor: pointer;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      border: none;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+    }
+
+    .btn-success {
+      background: #10b981;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #4b5563;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    .btn-purple {
+      background: #8b5cf6;
+    }
+
+    .btn-purple:hover:not(:disabled) {
+      background: #7c3aed;
+    }
+
+    .log-container {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      margin-top: 1rem;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 1.5rem 0;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .alert-info {
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      color: #1e40af;
+    }
+
+    .alert-warning {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      border: 1px solid #6ee7b7;
+      color: #065f46;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-card {
+      background: #f9fafb;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .template-btn {
+      padding: 0.75rem 1rem;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    .template-btn:hover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    .template-btn strong {
+      display: block;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .template-btn span {
+      display: block;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .campaign-type-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .campaign-type-btn {
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .campaign-type-btn.active {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #3b82f6;
+    }
+
+    .campaign-type-btn:hover {
+      border-color: #3b82f6;
+    }
+
+    @media (max-width: 768px) {
+      .campaign-type-selector {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Massutskick</h1>
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+      <div class="logo">
+        <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
+      </div>
+      <nav class="menu">
+        <a href="/admin-dashboard.html" class="menu-item">
+          Hem och data
+        </a>
+        <a href="/search.html" class="menu-item">
+          Sök Kund
+        </a>
+        <a href="/cases.html" class="menu-item">
+          Cases & kundkontakt
+        </a>
+        <a href="/avtal.html" class="menu-item">
+          Avtal
+        </a>
+        <a href="/invoicing.html" class="menu-item">
+          Faktuering
+        </a>
+        <a href="/admin-marknadsforing.html" class="menu-item">
+          Marknadsföring
+        </a>
+        <a href="/massmail.html" class="menu-item active">
+          Massutskick av Mejl
+        </a>
+        <a href="/onboarding.html" class="menu-item">
+          Onboarding
+        </a>
+      </nav>
+    </aside>
 
-  <div class="row">
-    <!-- Vänster: Innehåll -->
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Header -->
+      <header class="page-header">
+        <h1>E-postkampanjer & Massutskick</h1>
+        <p class="page-subtitle">Skicka nyhetsbrev, meddelanden, kampanjer och systemuppdateringar till dina kunder</p>
+      </header>
+
+      <!-- Campaign Type Selector -->
     <div class="card">
-      <div class="row-2">
-        <div>
-          <label for="subject">Ämnesrad</label>
-          <input id="subject" type="text" placeholder="Ex: Ny funktion i Source – se vad som är nytt!" />
+        <h3>Välj kampanjtyp</h3>
+        <div class="campaign-type-selector">
+          <button class="campaign-type-btn active" onclick="setCampaignType('emergency')" id="type-emergency">
+            🚨 Akut
+          </button>
+          <button class="campaign-type-btn" onclick="setCampaignType('announcement')" id="type-announcement">
+            📢 Meddelande
+          </button>
+          <button class="campaign-type-btn" onclick="setCampaignType('news')" id="type-news">
+            📰 Nyheter
+          </button>
+          <button class="campaign-type-btn" onclick="setCampaignType('marketing')" id="type-marketing">
+            🎯 Marknadsföring
+          </button>
         </div>
-        <div>
-          <label for="limit">Limit (max antal som skickas)</label>
-          <input id="limit" type="number" min="1" placeholder="t.ex. 300" />
-          <div class="hint">Sätt vid behov för att matcha Brevo-kvoten.</div>
+        <div id="campaign-description" class="alert alert-info">
+          <strong>🚨 Akut kommunikation:</strong> För systemavbrott, kritiska buggar och brådskande meddelanden.
         </div>
       </div>
 
-      <label for="html">HTML-innehåll</label>
-      <textarea id="html" placeholder="<h1>Hej!</h1><p>Vi har lanserat ..."></textarea>
-
-      <label for="text">Text-fallback (valfritt)</label>
-      <textarea id="text" placeholder="Lämna tomt för auto-konvertering från HTML"></textarea>
-
-      <div class="actions">
-        <button id="sendTest" class="secondary">Skicka enskilt test → /api/email/send</button>
-        <button id="verifySmtp" class="secondary">Verify SMTP</button>
+      <!-- Statistics -->
+      <div class="card">
+        <h3>Systemöversikt & Räckvidd</h3>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="label">Totalt antal kunder</div>
+            <div class="value" id="total-customers">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Aktiva kunder</div>
+            <div class="value" id="active-customers">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">SMTP Status</div>
+            <div class="value" id="smtp-status" style="font-size: 1rem;">Ej testad</div>
+          </div>
+        </div>
       </div>
 
-      <div class="divider"></div>
-      <div class="muted">Tips: kör först <strong>Dry run</strong> för att se urval & sample.</div>
+      <!-- Email Composition -->
+      <div class="mass-email-container">
+        <!-- Left Column: Email Content -->
+        <div class="card">
+          <h3>E-postinnehåll</h3>
+          
+          <div class="form-group">
+            <label for="campaignName">Kampanjnamn (internt)</label>
+            <input 
+              id="campaignName" 
+              type="text" 
+              class="form-input" 
+              placeholder="T.ex. Vår-kampanj 2025, Systemunderhåll mars"
+            />
+            <div class="hint">Används för intern spårning och loggning</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="subject">Ämnesrad *</label>
+              <input 
+                id="subject" 
+                type="text" 
+                class="form-input" 
+                placeholder="Ex: Spännande nyheter från Source!"
+              />
+            </div>
+            <div class="form-group">
+              <label for="preheader">Preheader (förhandstext)</label>
+              <input 
+                id="preheader" 
+                type="text" 
+                class="form-input" 
+                placeholder="Visas i e-postklienten under ämnesraden"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="html">HTML-innehåll *</label>
+            <textarea 
+              id="html" 
+              class="form-textarea" 
+              placeholder="<h1>Rubrik</h1><p>Ditt budskap här...</p>"
+            ></textarea>
+            <div class="hint">Stöd för HTML-formatering. Använd mallarna nedan för att komma igång snabbt.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="text">Textversion (valfritt)</label>
+            <textarea 
+              id="text" 
+              class="form-textarea" 
+              style="min-height: 100px;"
+              placeholder="Lämna tomt för auto-konvertering från HTML"
+            ></textarea>
+            <div class="hint">Automatisk konvertering om tom. Rekommenderas för bästa kompatibilitet.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fromName">Avsändarnamn</label>
+              <input 
+                id="fromName" 
+                type="text" 
+                class="form-input" 
+                placeholder="Source Team"
+                value="Source Team"
+              />
+            </div>
+            <div class="form-group">
+              <label for="replyTo">Svarsmottagare (reply-to)</label>
+              <input 
+                id="replyTo" 
+                type="email" 
+                class="form-input" 
+                placeholder="support@yoursource.se"
+              />
+            </div>
     </div>
 
-    <!-- Höger: Segment, test-läge & kontroll -->
-    <div class="card">
-      <div class="row-2">
-        <div>
-          <label for="segPlan">Segment – plan</label>
-          <input id="segPlan" type="text" placeholder="Ex: Pro, Gratis, Enterprise" />
+          <div class="button-group">
+            <button id="verifySmtp" class="btn btn-secondary">Testa SMTP</button>
+            <button id="sendTest" class="btn btn-secondary">Skicka testmail</button>
+            <button id="previewEmail" class="btn btn-purple">Förhandsgranska</button>
+          </div>
         </div>
-        <div>
-          <label for="segIndustry">Segment – bransch (industry)</label>
-          <input id="segIndustry" type="text" placeholder="Ex: E-handel, SaaS, Konsult" />
+
+        <!-- Right Column: Recipients & Actions -->
+        <div class="card">
+          <h3>Mottagare & Segmentering</h3>
+
+          <div class="form-group">
+            <label for="audienceType">Målgrupp</label>
+            <select id="audienceType" class="form-select" onchange="updateAudienceInfo()">
+              <option value="all">Alla kunder</option>
+              <option value="package">Filtrera på paket</option>
+              <option value="industry">Filtrera på bransch</option>
+              <option value="custom">Anpassad segment</option>
+              <option value="test">Endast testmottagare</option>
+            </select>
+          </div>
+
+          <div id="segmentFilters" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="segPlan">Paket</label>
+                <select id="segPlan" class="form-select">
+                  <option value="">Alla paket</option>
+                  <option value="Bas">Bas</option>
+                  <option value="Grower">Grower</option>
+                  <option value="Enterprise">Enterprise</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="segIndustry">Bransch</label>
+                <input 
+                  id="segIndustry" 
+                  type="text" 
+                  class="form-input" 
+                  placeholder="Ex: E-handel, SaaS, Konsult"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div id="testRecipientGroup" style="display: none;">
+            <div class="form-group">
+              <label for="testRecipients">Testmottagare (kommaseparerade)</label>
+              <input 
+                id="testRecipients" 
+                type="text" 
+                class="form-input" 
+                placeholder="anna@example.com, kalle@example.com"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="limit">Begränsa antal (valfritt)</label>
+            <input 
+              id="limit" 
+              type="number" 
+              class="form-input" 
+              min="1" 
+              placeholder="Lämna tomt för obegränsat"
+            />
+            <div class="hint">Användbart för gradvis utrullning eller A/B-testning</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <h4>Schemaläggning</h4>
+          <div class="checkbox-group">
+            <input id="scheduleEmail" type="checkbox" onchange="toggleSchedule()"/>
+            <label for="scheduleEmail">Schemalägg utskick till senare</label>
+          </div>
+
+          <div id="scheduleOptions" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="scheduleDate">Datum</label>
+                <input id="scheduleDate" type="date" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="scheduleTime">Tid</label>
+                <input id="scheduleTime" type="time" class="form-input" />
+              </div>
         </div>
       </div>
 
       <div class="divider"></div>
 
-      <div class="inline">
-        <input id="testMode" type="checkbox" />
-        <label for="testMode" class="inline">Test-läge (skicka bara till listan nedan)</label>
-      </div>
-      <label for="testRecipients">Testmottagare (komma-separerade e-post)</label>
-      <input id="testRecipients" type="text" placeholder="anna@ex.se, kalle@ex.se" />
+          <div class="button-group">
+            <button id="dryRun" class="btn btn-primary">Testköring (Dry Run)</button>
+            <button id="massSend" class="btn btn-success">Skicka nu</button>
+            <button id="resetForm" class="btn btn-danger">Rensa formulär</button>
+          </div>
 
-      <div class="divider"></div>
-
-      <div class="row-3">
-        <button id="dryRun" class="secondary">Dry run</button>
-        <button id="massSend" class="ok">Massutskick</button>
-        <button id="resetForm" class="danger">Rensa formulär</button>
+          <div>
+            <h4 style="margin: 1rem 0 0.5rem; font-size: 0.875rem; color: #374151;">Aktivitetslogg</h4>
+            <div id="log" class="log-container">Redo för kampanj...</div>
+          </div>
+        </div>
       </div>
 
-      <div style="margin-top:14px">
-        <div class="muted">Resultat & logg</div>
-        <div id="log" class="log">Redo.</div>
+      <!-- Email Templates Section -->
+      <div class="card">
+        <h3>Snabbmallar</h3>
+        <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
+          Klicka på en mall för att ladda den i redigeraren. Anpassa sedan efter dina behov.
+        </p>
+        
+        <h4>🚨 Akuta meddelanden</h4>
+        <div class="template-grid">
+          <button onclick="useTemplate('downtime')" class="template-btn">
+            <strong>Systemavbrott</strong>
+            <span>Kritisk driftstörning</span>
+          </button>
+          <button onclick="useTemplate('maintenance')" class="template-btn">
+            <strong>Planerat underhåll</strong>
+            <span>Schemalagt avbrott</span>
+          </button>
+          <button onclick="useTemplate('resolved')" class="template-btn">
+            <strong>Problem åtgärdat</strong>
+            <span>Återgång till normal drift</span>
+          </button>
+          <button onclick="useTemplate('security')" class="template-btn">
+            <strong>Säkerhetsuppdatering</strong>
+            <span>Viktig säkerhetsinfo</span>
+          </button>
+        </div>
+
+        <h4>📢 Meddelanden & uppdateringar</h4>
+        <div class="template-grid">
+          <button onclick="useTemplate('update')" class="template-btn">
+            <strong>Systemuppdatering</strong>
+            <span>Nya funktioner</span>
+          </button>
+          <button onclick="useTemplate('feature')" class="template-btn">
+            <strong>Ny funktion</strong>
+            <span>Produktlansering</span>
+          </button>
+          <button onclick="useTemplate('policy')" class="template-btn">
+            <strong>Policyändring</strong>
+            <span>Uppdaterade villkor</span>
+          </button>
+          <button onclick="useTemplate('survey')" class="template-btn">
+            <strong>Kundundersökning</strong>
+            <span>Få feedback</span>
+          </button>
+        </div>
+
+        <h4>📰 Nyhetsbrev & innehåll</h4>
+        <div class="template-grid">
+          <button onclick="useTemplate('newsletter')" class="template-btn">
+            <strong>Månatligt nyhetsbrev</strong>
+            <span>Regelbunden uppdatering</span>
+          </button>
+          <button onclick="useTemplate('casestudy')" class="template-btn">
+            <strong>Case study</strong>
+            <span>Kundberättelse</span>
+          </button>
+          <button onclick="useTemplate('tips')" class="template-btn">
+            <strong>Tips & råd</strong>
+            <span>Utbildningsinnehåll</span>
+          </button>
+          <button onclick="useTemplate('roundup')" class="template-btn">
+            <strong>Månadens sammanfattning</strong>
+            <span>Highlights & stats</span>
+          </button>
       </div>
-    </div>
+
+        <h4>🎯 Marknadsföring & kampanjer</h4>
+        <div class="template-grid">
+          <button onclick="useTemplate('promotion')" class="template-btn">
+            <strong>Specialerbjudande</strong>
+            <span>Tidsbegränsad kampanj</span>
+          </button>
+          <button onclick="useTemplate('upgrade')" class="template-btn">
+            <strong>Uppgradera paket</strong>
+            <span>Upselling</span>
+          </button>
+          <button onclick="useTemplate('referral')" class="template-btn">
+            <strong>Rekommendera vän</strong>
+            <span>Referral program</span>
+          </button>
+          <button onclick="useTemplate('webinar')" class="template-btn">
+            <strong>Webbinarium</strong>
+            <span>Event-inbjudan</span>
+          </button>
+        </div>
+      </div>
+    </main>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
     const logEl = $("log");
-    const buttons = ["sendTest","verifySmtp","dryRun","massSend","resetForm"].map($);
+    const buttons = ["sendTest", "verifySmtp", "dryRun", "massSend", "resetForm", "previewEmail"].map($);
+    let currentCampaignType = 'emergency';
+
+    // Campaign type descriptions
+    const campaignDescriptions = {
+      emergency: {
+        text: '<strong>🚨 Akut kommunikation:</strong> För systemavbrott, kritiska buggar och brådskande meddelanden.',
+        class: 'alert-warning'
+      },
+      announcement: {
+        text: '<strong>📢 Meddelanden:</strong> Systemuppdateringar, nya funktioner och viktiga tillkännagivanden.',
+        class: 'alert-info'
+      },
+      news: {
+        text: '<strong>📰 Nyheter:</strong> Nyhetsbrev, case studies, tips och regelbunden kundkommunikation.',
+        class: 'alert-info'
+      },
+      marketing: {
+        text: '<strong>🎯 Marknadsföring:</strong> Kampanjer, erbjudanden, upselling och kundengagemang.',
+        class: 'alert-success'
+      }
+    };
+
+    function setCampaignType(type) {
+      currentCampaignType = type;
+      
+      // Update button states
+      document.querySelectorAll('.campaign-type-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      $(`type-${type}`).classList.add('active');
+      
+      // Update description
+      const desc = campaignDescriptions[type];
+      const descEl = $('campaign-description');
+      descEl.innerHTML = desc.text;
+      descEl.className = `alert ${desc.class}`;
+      
+      log(`Kampanjtyp ändrad till: ${type}`);
+    }
+
+    function updateAudienceInfo() {
+      const audienceType = $('audienceType').value;
+      const segmentFilters = $('segmentFilters');
+      const testRecipientGroup = $('testRecipientGroup');
+      
+      if (audienceType === 'package' || audienceType === 'industry' || audienceType === 'custom') {
+        segmentFilters.style.display = 'block';
+        testRecipientGroup.style.display = 'none';
+      } else if (audienceType === 'test') {
+        segmentFilters.style.display = 'none';
+        testRecipientGroup.style.display = 'block';
+      } else {
+        segmentFilters.style.display = 'none';
+        testRecipientGroup.style.display = 'none';
+      }
+    }
+
+    function toggleSchedule() {
+      const scheduleOptions = $('scheduleOptions');
+      scheduleOptions.style.display = $('scheduleEmail').checked ? 'block' : 'none';
+    }
+
+    // Comprehensive email templates
+    const templates = {
+      // EMERGENCY TEMPLATES
+      downtime: {
+        name: "Systemavbrott",
+        subject: "Viktigt: Driftstörning i Source",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #ef4444; border-bottom: 3px solid #ef4444; padding-bottom: 10px;">⚠️ Systemavbrott - Source</h1>
+  <p>Hej,</p>
+  <p>Vi upplever för närvarande tekniska problem som påverkar tillgängligheten till Source kundportal.</p>
+  <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Status:</strong> Våra tekniker arbetar aktivt med att lösa problemet.</p>
+    <p style="margin: 10px 0 0 0;"><strong>Påverkan:</strong> Du kan för tillfället inte logga in på kundportalen.</p>
+    <p style="margin: 10px 0 0 0;"><strong>Förväntad lösning:</strong> Vi förväntar oss att problemet är löst inom [TIDSRAM].</p>
+  </div>
+  <p>Vi ber om ursäkt för besväret och återkommer med uppdateringar.</p>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      maintenance: {
+        name: "Planerat underhåll",
+        subject: "Planerat underhåll - Source",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #3b82f6; border-bottom: 3px solid #3b82f6; padding-bottom: 10px;">🔧 Planerat underhåll</h1>
+  <p>Hej,</p>
+  <p>Vi kommer att utföra planerat underhåll av Source-plattformen för att förbättra prestanda och säkerhet.</p>
+  <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Tidpunkt:</strong> [DATUM OCH TID]</p>
+    <p style="margin: 10px 0 0 0;"><strong>Beräknad längd:</strong> [TIDSRAM]</p>
+    <p style="margin: 10px 0 0 0;"><strong>Påverkan:</strong> Kundportalen kommer vara otillgänglig under denna tid.</p>
+  </div>
+  <p>Vi rekommenderar att du planerar din verksamhet därefter och sparar eventuellt pågående arbete innan underhållet påbörjas.</p>
+  <p>Tack för din förståelse!</p>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      resolved: {
+        name: "Problem åtgärdat",
+        subject: "✅ Löst: Driftstörning i Source",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #10b981; border-bottom: 3px solid #10b981; padding-bottom: 10px;">✅ Problemet är löst!</h1>
+  <p>Hej,</p>
+  <p>Vi vill informera om att det tekniska problem som påverkade Source kundportal nu är helt åtgärdat.</p>
+  <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Status:</strong> ✅ Alla tjänster fungerar normalt igen.</p>
+  </div>
+  <p>Du kan nu logga in och använda systemet som vanligt. Vi har vidtagit åtgärder för att förhindra liknande problem i framtiden.</p>
+  <p>Vi ber om ursäkt för eventuella besvär detta kan ha orsakat och tackar för ditt tålamod!</p>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      security: {
+        name: "Säkerhetsuppdatering",
+        subject: "Viktig säkerhetsuppdatering - Source",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #f59e0b; border-bottom: 3px solid #f59e0b; padding-bottom: 10px;">🔒 Viktig säkerhetsuppdatering</h1>
+  <p>Hej,</p>
+  <p>Vi har genomfört en viktig säkerhetsuppdatering för att skydda ditt konto och dina data bättre.</p>
+  <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Vad har gjorts:</strong></p>
+    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+      <li>Förbättrad kryptering</li>
+      <li>Uppdaterade säkerhetsprotokoll</li>
+      <li>Förstärkt autentisering</li>
+    </ul>
+  </div>
+  <p><strong>Åtgärd från din sida:</strong> Vi rekommenderar att du byter lösenord vid nästa inloggning för maximal säkerhet.</p>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+
+      // ANNOUNCEMENT TEMPLATES
+      update: {
+        name: "Systemuppdatering",
+        subject: "Nya funktioner i Source!",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #8b5cf6; border-bottom: 3px solid #8b5cf6; padding-bottom: 10px;">🚀 Systemuppdatering</h1>
+  <p>Hej,</p>
+  <p>Vi har genomfört en uppdatering av Source-plattformen med spännande förbättringar!</p>
+  <div style="background: #f5f3ff; border-left: 4px solid #8b5cf6; padding: 15px; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Nyheter:</strong></p>
+    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+      <li><strong>[FUNKTION 1]</strong> - [Beskrivning]</li>
+      <li><strong>[FUNKTION 2]</strong> - [Beskrivning]</li>
+      <li><strong>[FÖRBÄTTRING 3]</strong> - [Beskrivning]</li>
+    </ul>
+  </div>
+  <p>Logga in för att utforska de nya funktionerna!</p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[LÄNK]" style="background: #8b5cf6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Utforska nu</a>
+  </div>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      feature: {
+        name: "Ny funktion",
+        subject: "Spännande nyhet: [FUNKTIONSNAMN] är här!",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #3b82f6; border-bottom: 3px solid #3b82f6; padding-bottom: 10px;">✨ Ny funktion lanserad!</h1>
+  <p>Hej,</p>
+  <p>Vi är glada att presentera <strong>[FUNKTIONSNAMN]</strong> - en efterlängtad funktion som kommer göra ditt arbete enklare!</p>
+  <div style="background: #eff6ff; padding: 20px; margin: 20px 0; border-radius: 8px;">
+    <h2 style="color: #1f2937; margin-top: 0;">Vad kan du göra?</h2>
+    <ul style="color: #374151;">
+      <li>[FÖRDEL 1]</li>
+      <li>[FÖRDEL 2]</li>
+      <li>[FÖRDEL 3]</li>
+    </ul>
+  </div>
+  <p><strong>Kom igång direkt!</strong> Funktionen är redan aktiverad i ditt konto.</p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[GUIDE-LÄNK]" style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Läs guiden</a>
+  </div>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      policy: {
+        name: "Policyändring",
+        subject: "Uppdatering av användarvillkor - Source",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #6b7280; border-bottom: 3px solid #6b7280; padding-bottom: 10px;">📋 Uppdaterade villkor</h1>
+  <p>Hej,</p>
+  <p>Vi har uppdaterat våra användarvillkor för att bättre återspegla hur vi arbetar med din data och dina rättigheter.</p>
+  <div style="background: #f3f4f6; border-left: 4px solid #6b7280; padding: 15px; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Vad är nytt:</strong></p>
+    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+      <li>Förtydligande kring datahantering</li>
+      <li>Uppdaterade GDPR-riktlinjer</li>
+      <li>Nya säkerhetsåtgärder</li>
+    </ul>
+  </div>
+  <p><strong>Träder i kraft:</strong> [DATUM]</p>
+  <p>Genom att fortsätta använda Source godkänner du de uppdaterade villkoren.</p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[LÄNK-TILL-VILLKOR]" style="background: #6b7280; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Läs villkoren</a>
+  </div>
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      survey: {
+        name: "Kundundersökning",
+        subject: "Vi vill höra din åsikt om Source!",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #10b981; border-bottom: 3px solid #10b981; padding-bottom: 10px;">💬 Din åsikt är viktig för oss!</h1>
+  <p>Hej,</p>
+  <p>Vi strävar ständigt efter att förbättra Source och ge dig bästa möjliga upplevelse. Din feedback hjälper oss att utvecklas!</p>
+  <div style="background: #d1fae5; padding: 20px; margin: 20px 0; border-radius: 8px;">
+    <p style="margin: 0; font-size: 16px;"><strong>Ta 2 minuter och dela dina tankar</strong></p>
+    <p style="margin: 10px 0 0 0;">Din feedback är anonym och hjälper oss att prioritera rätt funktioner.</p>
+  </div>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[ENKÄT-LÄNK]" style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 16px;">Svara på enkäten</a>
+  </div>
+  <p style="font-size: 14px; color: #6b7280;">Som tack för din tid kan du vinna [PRIS/INCITAMENT]!</p>
+  <p style="margin-top: 30px;">Tack på förhand!<br><strong>Source Team</strong></p>
+</div>`
+      },
+
+      // NEWS TEMPLATES
+      newsletter: {
+        name: "Månatligt nyhetsbrev",
+        subject: "Source Nyhetsbrev - [MÅNAD ÅR]",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #1f2937; border-bottom: 3px solid #3b82f6; padding-bottom: 10px;">📰 Source Nyhetsbrev</h1>
+  <p style="color: #6b7280; font-size: 14px;">[MÅNAD ÅR]</p>
+  
+  <h2 style="color: #3b82f6; margin-top: 30px;">🎯 Månadens höjdpunkter</h2>
+  <ul style="color: #374151; line-height: 1.8;">
+    <li><strong>[HÖJDPUNKT 1]</strong> - [Kort beskrivning]</li>
+    <li><strong>[HÖJDPUNKT 2]</strong> - [Kort beskrivning]</li>
+    <li><strong>[HÖJDPUNKT 3]</strong> - [Kort beskrivning]</li>
+  </ul>
+
+  <h2 style="color: #3b82f6; margin-top: 30px;">📊 Statistik</h2>
+  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+    <p style="margin: 5px 0;">✅ <strong>[ANTAL]</strong> nya funktioner lanserade</p>
+    <p style="margin: 5px 0;">👥 <strong>[ANTAL]</strong> nya kunder välkomnade</p>
+    <p style="margin: 5px 0;">⚡ <strong>[PROCENT]%</strong> snabbare systemrespons</p>
+  </div>
+
+  <h2 style="color: #3b82f6; margin-top: 30px;">💡 Tips från oss</h2>
+  <p>[TIPS ELLER RÅD RELATERAT TILL PRODUKTEN]</p>
+
+  <div style="text-align: center; margin: 30px 0; padding: 20px; background: #eff6ff; border-radius: 8px;">
+    <p style="margin: 0; font-size: 16px; color: #1f2937;">Vill du veta mer?</p>
+    <a href="[BLOGG-LÄNK]" style="background: #3b82f6; color: white; padding: 10px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Läs vår blogg</a>
+  </div>
+
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      casestudy: {
+        name: "Case study",
+        subject: "Kundcase: Hur [FÖRETAG] lyckades med Source",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #10b981; border-bottom: 3px solid #10b981; padding-bottom: 10px;">🌟 Kundberättelse</h1>
+  <p>Hej,</p>
+  <p>Vi vill dela en inspirerande berättelse om hur [FÖRETAG] har transformerat sin verksamhet med Source!</p>
+  
+  <div style="background: #f0fdf4; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981;">
+    <p style="margin: 0; font-style: italic; color: #065f46;">"[CITAT FRÅN KUND]"</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px; color: #6b7280;">- [NAMN], [TITEL] på [FÖRETAG]</p>
+  </div>
+
+  <h2 style="color: #1f2937;">Utmaningen</h2>
+  <p>[BESKRIV KUNDENS URSPRUNGLIGA UTMANING]</p>
+
+  <h2 style="color: #1f2937;">Lösningen</h2>
+  <p>[BESKRIV HUR SOURCE HJÄLPTE]</p>
+
+  <h2 style="color: #1f2937;">Resultatet</h2>
+  <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+    <p style="margin: 5px 0;">📈 <strong>[PROCENT]%</strong> ökad effektivitet</p>
+    <p style="margin: 5px 0;">💰 <strong>[BELOPP]</strong> SEK besparade per månad</p>
+    <p style="margin: 5px 0;">⏱️ <strong>[ANTAL]</strong> timmar sparade per vecka</p>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[FULLSTÄNDIG-CASE-LÄNK]" style="background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Läs hela berättelsen</a>
+  </div>
+
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      tips: {
+        name: "Tips & råd",
+        subject: "5 tips för att maximera din Source-upplevelse",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #8b5cf6; border-bottom: 3px solid #8b5cf6; padding-bottom: 10px;">💡 Experttips från Source</h1>
+  <p>Hej,</p>
+  <p>Vi har sammanställt några kraftfulla tips för att hjälpa dig få ut det mesta av Source!</p>
+
+  <div style="margin: 30px 0;">
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #8b5cf6; margin: 0;">1️⃣ [TIPS 1 RUBRIK]</h3>
+      <p style="margin: 5px 0 0 0; color: #374151;">[Beskrivning av tips 1]</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #8b5cf6; margin: 0;">2️⃣ [TIPS 2 RUBRIK]</h3>
+      <p style="margin: 5px 0 0 0; color: #374151;">[Beskrivning av tips 2]</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #8b5cf6; margin: 0;">3️⃣ [TIPS 3 RUBRIK]</h3>
+      <p style="margin: 5px 0 0 0; color: #374151;">[Beskrivning av tips 3]</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #8b5cf6; margin: 0;">4️⃣ [TIPS 4 RUBRIK]</h3>
+      <p style="margin: 5px 0 0 0; color: #374151;">[Beskrivning av tips 4]</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #8b5cf6; margin: 0;">5️⃣ [TIPS 5 RUBRIK]</h3>
+      <p style="margin: 5px 0 0 0; color: #374151;">[Beskrivning av tips 5]</p>
+    </div>
+  </div>
+
+  <div style="background: #f5f3ff; padding: 20px; border-radius: 8px; text-align: center;">
+    <p style="margin: 0; font-weight: 600;">Vill du ha fler tips?</p>
+    <a href="[KUNSKAPSBAS-LÄNK]" style="background: #8b5cf6; color: white; padding: 10px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Besök vår kunskapsbas</a>
+  </div>
+
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      roundup: {
+        name: "Månadens sammanfattning",
+        subject: "Månadens sammanfattning - [MÅNAD]",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #3b82f6; border-bottom: 3px solid #3b82f6; padding-bottom: 10px;">📊 Månadens sammanfattning</h1>
+  <p>Hej,</p>
+  <p>Här är dina highlights från [MÅNAD]!</p>
+
+  <h2 style="color: #1f2937;">Din aktivitet</h2>
+  <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin: 15px 0;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      <div>
+        <p style="margin: 0; color: #6b7280; font-size: 14px;">Inloggningar</p>
+        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #1f2937;">[ANTAL]</p>
+      </div>
+      <div>
+        <p style="margin: 0; color: #6b7280; font-size: 14px;">Skapade projekt</p>
+        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #1f2937;">[ANTAL]</p>
+      </div>
+      <div>
+        <p style="margin: 0; color: #6b7280; font-size: 14px;">Aktiva användare</p>
+        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #1f2937;">[ANTAL]</p>
+      </div>
+      <div>
+        <p style="margin: 0; color: #6b7280; font-size: 14px;">Sparad tid</p>
+        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #1f2937;">[ANTAL]h</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="color: #1f2937;">Nya funktioner du kanske missade</h2>
+  <ul style="color: #374151; line-height: 1.8;">
+    <li>[FUNKTION 1]</li>
+    <li>[FUNKTION 2]</li>
+    <li>[FUNKTION 3]</li>
+  </ul>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[DASHBOARD-LÄNK]" style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Se fullständig rapport</a>
+  </div>
+
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+
+      // MARKETING TEMPLATES
+      promotion: {
+        name: "Specialerbjudande",
+        subject: "🎁 Exklusivt erbjudande bara för dig!",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="margin: 0; font-size: 28px;">🎁 Specialerbjudande!</h1>
+    <p style="margin: 10px 0 0 0; font-size: 18px;">Bara för våra värdefulla kunder</p>
+  </div>
+  
+  <div style="padding: 30px; background: white;">
+    <p style="font-size: 16px; color: #1f2937;">Hej,</p>
+    <p style="color: #374151;">Som uppskattning för ditt förtroende vill vi erbjuda dig en exklusiv rabatt!</p>
+    
+    <div style="background: #fef3c7; border: 2px dashed #f59e0b; padding: 25px; margin: 25px 0; text-align: center; border-radius: 8px;">
+      <p style="margin: 0; font-size: 18px; font-weight: bold; color: #92400e;">RABATTKOD</p>
+      <p style="margin: 10px 0; font-size: 32px; font-weight: bold; color: #b45309; letter-spacing: 2px;">[RABATTKOD]</p>
+      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #92400e;">[PROCENT]% RABATT</p>
+    </div>
+
+    <p style="color: #374151;"><strong>Vad du får:</strong></p>
+    <ul style="color: #374151; line-height: 1.8;">
+      <li>[FÖRDEL 1]</li>
+      <li>[FÖRDEL 2]</li>
+      <li>[FÖRDEL 3]</li>
+    </ul>
+
+    <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; color: #991b1b; text-align: center;">⏰ <strong>Erbjudandet gäller till [DATUM]</strong></p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="[KAMPANJ-LÄNK]" style="background: #8b5cf6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 18px; font-weight: bold;">Utnyttja erbjudandet</a>
+    </div>
+
+    <p style="margin-top: 30px; color: #374151;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+  </div>
+</div>`
+      },
+      upgrade: {
+        name: "Uppgradera paket",
+        subject: "Redo att ta nästa steg? Uppgradera till [PAKET]",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #3b82f6; border-bottom: 3px solid #3b82f6; padding-bottom: 10px;">🚀 Redo för mer?</h1>
+  <p>Hej,</p>
+  <p>Vi märker att du använder Source aktivt! Kanske är det dags att utforska vad vårt [PAKET]-paket kan erbjuda?</p>
+
+  <div style="background: #eff6ff; padding: 25px; margin: 25px 0; border-radius: 8px;">
+    <h2 style="color: #1f2937; margin-top: 0;">Med [PAKET] får du:</h2>
+    <ul style="color: #374151; line-height: 1.8; margin: 15px 0;">
+      <li>✅ [FUNKTION 1]</li>
+      <li>✅ [FUNKTION 2]</li>
+      <li>✅ [FUNKTION 3]</li>
+      <li>✅ [FUNKTION 4]</li>
+      <li>✅ [FUNKTION 5]</li>
+    </ul>
+  </div>
+
+  <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0;">
+    <p style="margin: 0; font-size: 18px; color: #065f46;"><strong>Specialpris för befintliga kunder:</strong></p>
+    <p style="margin: 10px 0 0 0; font-size: 28px; font-weight: bold; color: #059669;">[PRIS] SEK/månad</p>
+    <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">(Ordinarie pris: [ORDINARIE-PRIS] SEK)</p>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[UPPGRADERINGS-LÄNK]" style="background: #3b82f6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 18px; font-weight: bold;">Uppgradera nu</a>
+  </div>
+
+  <p style="font-size: 14px; color: #6b7280; text-align: center;">Ingen bindningstid • Avsluta när du vill • 30 dagars pengarna-tillbaka-garanti</p>
+
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      referral: {
+        name: "Rekommendera vän",
+        subject: "Dela Source med en vän - Ni får båda [BELÖNING]!",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1 style="color: #10b981; border-bottom: 3px solid #10b981; padding-bottom: 10px;">🎁 Dela kärleken - Få belöning!</h1>
+  <p>Hej,</p>
+  <p>Älskar du Source? Bjud in dina kollegor och få fantastiska belöningar - både du och de får [BELÖNING]!</p>
+
+  <div style="background: #d1fae5; padding: 25px; margin: 25px 0; border-radius: 8px; text-align: center;">
+    <h2 style="color: #065f46; margin-top: 0;">Så här fungerar det</h2>
+    <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+      <p style="margin: 15px 0;"><strong>1️⃣</strong> Dela din unika länk med vänner</p>
+      <p style="margin: 15px 0;"><strong>2️⃣</strong> De registrerar sig via din länk</p>
+      <p style="margin: 15px 0;"><strong>3️⃣</strong> Ni får båda [BELÖNING]!</p>
+    </div>
+  </div>
+
+  <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <p style="margin: 0 0 10px 0; font-weight: bold; text-align: center;">Din unika referenslänk:</p>
+    <div style="background: white; padding: 15px; border-radius: 5px; text-align: center; border: 2px dashed #10b981;">
+      <code style="color: #10b981; font-size: 14px;">[REFERENS-LÄNK]</code>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="[DELA-LÄNK]" style="background: #10b981; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 18px; font-weight: bold;">Dela nu</a>
+  </div>
+
+  <p style="font-size: 14px; color: #6b7280; text-align: center;">Obegränsat antal rekommendationer • Ingen gräns för belöningar!</p>
+
+  <p style="margin-top: 30px;">Med vänliga hälsningar,<br><strong>Source Team</strong></p>
+</div>`
+      },
+      webinar: {
+        name: "Webbinarium",
+        subject: "Välkommen till vårt webbinarium: [WEBBINARIUM-TITEL]",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="margin: 0; font-size: 28px;">🎓 Exklusivt Webbinarium</h1>
+    <p style="margin: 15px 0 0 0; font-size: 20px; font-weight: bold;">[WEBBINARIUM-TITEL]</p>
+  </div>
+  
+  <div style="padding: 30px; background: white;">
+    <p style="font-size: 16px; color: #1f2937;">Hej,</p>
+    <p style="color: #374151;">Vi bjuder in dig till ett exklusivt webbinarium där vi delar [ÄMNE/VÄRDE]!</p>
+    
+    <div style="background: #eff6ff; padding: 25px; margin: 25px 0; border-radius: 8px;">
+      <p style="margin: 0; color: #1f2937;"><strong>📅 Datum:</strong> [DATUM]</p>
+      <p style="margin: 10px 0 0 0; color: #1f2937;"><strong>🕐 Tid:</strong> [TID]</p>
+      <p style="margin: 10px 0 0 0; color: #1f2937;"><strong>⏱️ Längd:</strong> [LÄNGD] minuter</p>
+      <p style="margin: 10px 0 0 0; color: #1f2937;"><strong>👤 Värd:</strong> [NAMN, TITEL]</p>
+    </div>
+
+    <h2 style="color: #1f2937;">Vad du kommer lära dig:</h2>
+    <ul style="color: #374151; line-height: 1.8;">
+      <li>[LÄRDOM 1]</li>
+      <li>[LÄRDOM 2]</li>
+      <li>[LÄRDOM 3]</li>
+      <li>[LÄRDOM 4]</li>
+    </ul>
+
+    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0; color: #92400e;">🎁 <strong>Bonus:</strong> Alla deltagare får [BONUS/RESURS]</p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="[REGISTRERINGS-LÄNK]" style="background: #8b5cf6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 18px; font-weight: bold;">Registrera dig nu</a>
+    </div>
+
+    <p style="font-size: 14px; color: #6b7280; text-align: center;">Begränsat antal platser • Inspelning skickas till alla anmälda</p>
+
+    <p style="margin-top: 30px; color: #374151;">Vi ser fram emot att se dig där!<br><strong>Source Team</strong></p>
+  </div>
+</div>`
+      }
+    };
+
+    function useTemplate(templateName) {
+      const template = templates[templateName];
+      if (template) {
+        $("subject").value = template.subject;
+        $("html").value = template.html;
+        $("campaignName").value = template.name;
+        log(`Mall "${template.name}" laddad. Anpassa efter dina behov.`, "ok");
+      }
+    }
 
     function setBusy(busy) {
       buttons.forEach(b => b.disabled = !!busy);
     }
 
-    function log(msg, type="info") {
-      const time = new Date().toLocaleTimeString("sv-SE", { hour12:false });
-      const prefix = type === "error" ? "❌" : type === "ok" ? "✅" : "•";
+    function log(msg, type = "info") {
+      const time = new Date().toLocaleTimeString("sv-SE", { hour12: false });
+      const prefix = type === "error" ? "❌" : type === "ok" ? "✅" : "ℹ️";
       logEl.textContent += `\n${prefix} [${time}] ${msg}`;
       logEl.scrollTop = logEl.scrollHeight;
     }
@@ -124,17 +1227,23 @@
       const html = $("html").value;
       const text = $("text").value.trim();
       const limit = Number($("limit").value) || undefined;
-      const plan = $("segPlan").value.trim();
+      const audienceType = $("audienceType").value;
+      
+      const segment = {};
+      if (audienceType === 'package' || audienceType === 'custom') {
+        const plan = $("segPlan").value;
+        if (plan) segment.plan = plan;
+      }
+      if (audienceType === 'industry' || audienceType === 'custom') {
       const industry = $("segIndustry").value.trim();
-      const test = $("testMode").checked;
-      const testRecipients = $("testRecipients").value
+        if (industry) segment.industry = industry;
+      }
+
+      const test = audienceType === 'test';
+      const testRecipients = test ? $("testRecipients").value
         .split(",")
         .map(s => s.trim())
-        .filter(Boolean);
-
-      const segment = {};
-      if (plan) segment.plan = plan;
-      if (industry) segment.industry = industry;
+        .filter(Boolean) : [];
 
       return {
         subject,
@@ -144,36 +1253,63 @@
         segment,
         test,
         testRecipients,
-        dryRun
+        dryRun,
+        campaignType: currentCampaignType,
+        campaignName: $("campaignName").value.trim() || undefined
       };
     }
 
+    // Load customer statistics
+    async function loadStats() {
+      try {
+        const res = await fetch("/api/dashboard/stats");
+        const data = await res.json();
+        $("total-customers").textContent = data.totalCustomers?.toLocaleString() || "0";
+        $("active-customers").textContent = data.activeCustomers?.toLocaleString() || "0";
+        log(`Laddade statistik: ${data.totalCustomers} kunder i systemet`, "ok");
+      } catch (e) {
+        log("Kunde inte hämta kundstatistik", "error");
+      }
+    }
+
     $("verifySmtp").addEventListener("click", async () => {
-      log("Kontrollerar SMTP…");
+      log("Kontrollerar SMTP-anslutning...");
       setBusy(true);
       try {
         const res = await fetch("/api/email/verify", { credentials: "include" });
         const data = await res.json().catch(() => ({}));
         if (res.status === 401 || res.status === 403) {
-          log("Åtkomst nekad (logga in som admin).", "error");
+          log("Åtkomst nekad. Logga in som admin.", "error");
+          $("smtp-status").textContent = "Ej autentiserad";
+          $("smtp-status").style.color = "#ef4444";
         } else if (data.success) {
-          log("SMTP OK", "ok");
+          log("SMTP-anslutning fungerar! ✅", "ok");
+          $("smtp-status").textContent = "Fungerar";
+          $("smtp-status").style.color = "#10b981";
         } else {
-          log(`SMTP fel: ${data.message || res.status}`, "error");
+          log(`SMTP-fel: ${data.message || res.status}`, "error");
+          $("smtp-status").textContent = "Fel";
+          $("smtp-status").style.color = "#ef4444";
         }
       } catch (e) {
-        log(`SMTP exception: ${e?.message}`, "error");
-      } finally { setBusy(false); }
+        log(`SMTP-undantag: ${e?.message}`, "error");
+        $("smtp-status").textContent = "Fel";
+        $("smtp-status").style.color = "#ef4444";
+      } finally {
+        setBusy(false);
+      }
     });
 
     $("sendTest").addEventListener("click", async () => {
-      const to = prompt("Ange testmottagare (e-post):");
+      const to = prompt("Ange testmottagarens e-postadress:");
       if (!to) return;
 
       const { subject, html, text } = getPayload();
-      if (!subject || !html) return log("subject och html krävs för testutskick.", "error");
+      if (!subject || !html) {
+        return log("Ämnesrad och HTML-innehåll krävs för testutskick.", "error");
+      }
 
-      log(`Skickar enskilt test till ${to}…`);
+      log(`Skickar testmail till ${to}...`);
       setBusy(true);
       try {
         const res = await fetch("/api/email/send", {
@@ -183,21 +1319,40 @@
           body: JSON.stringify({ to, subject, html, text })
         });
         const data = await res.json().catch(() => ({}));
-        if (res.ok && data.success) log("Testmejl skickat", "ok");
-        else log(`Misslyckades: ${data.message || data.error || res.status}`, "error");
+        if (res.ok && data.success) {
+          log(`Testmail skickat till ${to} ✅`, "ok");
+        } else {
+          log(`Misslyckades: ${data.message || data.error || res.status}`, "error");
+        }
       } catch (e) {
-        log(`Exception: ${e?.message}`, "error");
-      } finally { setBusy(false); }
+        log(`Undantag: ${e?.message}`, "error");
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    $("previewEmail").addEventListener("click", () => {
+      const html = $("html").value;
+      if (!html) {
+        return log("Lägg till HTML-innehåll först.", "error");
+      }
+      
+      const previewWindow = window.open("", "Email Preview", "width=800,height=600");
+      previewWindow.document.write(html);
+      previewWindow.document.close();
+      log("Förhandsvisning öppnad i nytt fönster", "ok");
     });
 
     $("dryRun").addEventListener("click", async () => {
       const payload = getPayload({ dryRun: true });
-      if (!payload.subject || !payload.html) return log("subject och html krävs även för dry run.", "error");
+      if (!payload.subject || !payload.html) {
+        return log("Ämnesrad och HTML-innehåll krävs även för testköring.", "error");
+      }
       if (payload.test && (!payload.testRecipients || payload.testRecipients.length === 0)) {
-        return log("Test-läge kräver minst en testmottagare.", "error");
+        return log("Testläge kräver minst en testmottagare.", "error");
       }
 
-      log("Kör dry run (hämtar urval & sample)…");
+      log("Kör testköring (hämtar mottagarlista utan att skicka)...");
       setBusy(true);
       try {
         const res = await fetch("/api/email/masssend", {
@@ -207,22 +1362,42 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json().catch(() => ({}));
-        if (!data.success) return log(`Dry run misslyckades: ${data.message || data.error || res.status}`, "error");
-        log(`Dry run klart. Antal i urval: ${data.count ?? "okänt"}. Sample: ${Array.isArray(data.sample) ? data.sample.join(", ") : "-"}`, "ok");
+        if (!data.success) {
+          return log(`Testköring misslyckades: ${data.message || data.error || res.status}`, "error");
+        }
+        log(`✅ Testköring klar!`, "ok");
+        log(`📊 Antal mottagare: ${data.count ?? "okänt"}`, "info");
+        if (Array.isArray(data.sample) && data.sample.length > 0) {
+          log(`📧 Första 10 mottagare: ${data.sample.join(", ")}`, "info");
+        }
       } catch (e) {
-        log(`Exception: ${e?.message}`, "error");
-      } finally { setBusy(false); }
+        log(`Undantag: ${e?.message}`, "error");
+      } finally {
+        setBusy(false);
+      }
     });
 
     $("massSend").addEventListener("click", async () => {
       const payload = getPayload();
-      if (!payload.subject || !payload.html) return log("subject och html krävs.", "error");
-      if (payload.test && (!payload.testRecipients || payload.testRecipients.length === 0)) {
-        return log("Test-läge kräver minst en testmottagare.", "error");
+      if (!payload.subject || !payload.html) {
+        return log("Ämnesrad och HTML-innehåll krävs.", "error");
       }
-      if (!confirm("Är du säker på att du vill starta massutskicket?")) return;
+      if (payload.test && (!payload.testRecipients || payload.testRecipients.length === 0)) {
+        return log("Testläge kräver minst en testmottagare.", "error");
+      }
+      
+      if ($("scheduleEmail").checked) {
+        log("Schemalagd e-post stöds ej än. Skickas omedelbart.", "error");
+        return;
+      }
 
-      log("Startar massutskick…");
+      const confirmMessage = payload.test 
+        ? `Skicka ${payload.testRecipients.length} testmail?`
+        : `⚠️ VARNING: Du skickar mail till ${$("total-customers").textContent} kunder!\n\nKampanjtyp: ${currentCampaignType}\n\nÄr du ABSOLUT säker?`;
+      
+      if (!confirm(confirmMessage)) return;
+
+      log("🚀 Startar massutskick...");
       setBusy(true);
       try {
         const res = await fetch("/api/email/masssend", {
@@ -232,22 +1407,38 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json().catch(() => ({}));
-        if (!data.success) return log(`Misslyckades: ${data.message || data.error || res.status}`, "error");
-        log(`Klart! Skickat: ${data.sent}, Misslyckade: ${data.failed}`, "ok");
+        if (!data.success) {
+          return log(`Misslyckades: ${data.message || data.error || res.status}`, "error");
+        }
+        log(`✅ Massutskick klart!`, "ok");
+        log(`📧 Skickade: ${data.sent}, Misslyckade: ${data.failed}`, "info");
         if (Array.isArray(data.errors) && data.errors.length) {
-          const preview = data.errors.slice(0,5).map(e => `${e.to}: ${e.error}`).join(" | ");
-          log(`Felposter: ${preview}${data.errors.length>5 ? " …" : ""}`, "error");
+          const preview = data.errors.slice(0, 5).map(e => `${e.to || 'BCC-batch'}: ${e.error}`).join(" | ");
+          log(`❌ Fel: ${preview}${data.errors.length > 5 ? " ..." : ""}`, "error");
         }
       } catch (e) {
-        log(`Exception: ${e?.message}`, "error");
-      } finally { setBusy(false); }
+        log(`Undantag: ${e?.message}`, "error");
+      } finally {
+        setBusy(false);
+      }
     });
 
     $("resetForm").addEventListener("click", () => {
-      ["subject","html","text","limit","segPlan","segIndustry","testRecipients"].forEach(id => $(id).value = "");
-      $("testMode").checked = false;
-      log("Formulär nollställt.");
+      ["subject", "html", "text", "limit", "segPlan", "segIndustry", "testRecipients", "campaignName", "preheader", "fromName", "replyTo"].forEach(id => $(id).value = "");
+      $("audienceType").value = "all";
+      $("scheduleEmail").checked = false;
+      updateAudienceInfo();
+      toggleSchedule();
+      log("Formulär rensat och återställt.");
     });
+
+    // Load stats on page load
+    loadStats();
+    
+    // Auto-verify SMTP on load
+    setTimeout(() => {
+      $("verifySmtp").click();
+    }, 500);
   </script>
 </body>
 </html>
