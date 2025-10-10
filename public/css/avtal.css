@@ -2,6 +2,16 @@
    AVTAL MANAGEMENT STYLES
    =================================== */
 
+/* Content Area - ensure it fills the space */
+.content {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: hidden;
+  max-width: 100%;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
 :root {
   --primary-blue: #3b82f6;
   --primary-blue-hover: #2563eb;
