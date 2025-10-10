@@ -10,6 +10,33 @@ const path = require('path');
 // All routes require admin authentication
 router.use(requireAdminLogin);
 
+// Helper function to stop future invoices when agreement is terminated
+async function stopFutureInvoices(customerId, effectiveDate) {
+  try {
+    const result = await Invoice.updateMany(
+      { 
+        customerId, 
+        dueDate: { $gt: effectiveDate },
+        status: { $in: ['draft', 'pending'] }
+      },
+      { 
+        status: 'cancelled',
+        cancelledReason: 'Agreement terminated',
+        cancelledDate: new Date()
+      }
+    );
+    
+    console.log(`Stopped ${result.modifiedCount} future invoices for customer ${customerId}`);
+    return result;
+  } catch (err) {
+    console.error('Error stopping future invoices:', err);
+    throw err;
+  }
+}
+
+// Export for use in contracts route
+router.stopFutureInvoices = stopFutureInvoices;
+
 // 📊 GET /api/invoices/stats - Dashboard statistics
 router.get('/stats', async (req, res) => {
   try {

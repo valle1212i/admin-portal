@@ -1,171 +1,243 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <title>Avtalshantering - Adminportal</title>
-  <link rel="stylesheet" href="styles.css" />
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
-    h1 { margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: #fff; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background: #eee; }
-    .upload-box { background: #fff; padding: 20px; border: 1px solid #ccc; }
-    .upload-box input, .upload-box select { margin: 10px 0; padding: 5px; }
-    .btn { background: #007bff; color: white; padding: 8px 15px; border: none; cursor: pointer; }
-    .btn:hover { background: #0056b3; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avtalshantering - Source Admin Portal</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/avtal.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Avtalshantering</h1>
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+      <div class="logo">
+        <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
+      </div>
+      <nav class="menu">
+        <a href="/admin-dashboard.html" class="menu-item">
+          Hem och data
+        </a>
+        <a href="/search.html" class="menu-item">
+          Sök Kund
+        </a>
+        <a href="/cases.html" class="menu-item">
+          Cases & kundkontakt
+        </a>
+        <a href="/avtal.html" class="menu-item active">
+          Avtal
+        </a>
+        <a href="/invoicing.html" class="menu-item">
+          Faktuering
+        </a>
+        <a href="/admin-marknadsforing.html" class="menu-item">
+          Marknadsföring
+        </a>
+        <a href="/massmail.html" class="menu-item">
+          Massutskick av Mejl
+        </a>
+      </nav>
+    </aside>
 
-  <!-- Lista med sparade avtal -->
-  <h2>Befintliga avtal</h2>
-  <table id="contractsTable">
-    <thead>
-      <tr>
-        <th>Kund</th>
-        <th>Filnamn</th>
-        <th>Datum</th>
-        <th>Status</th>
-        <th>Länk</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Header -->
+      <header class="page-header">
+        <h1>Avtalshantering</h1>
+        <p class="page-subtitle">Hantera kundavtal, paket och uppsägningar</p>
+      </header>
 
-  <!-- Ladda upp nytt avtal -->
-  <div class="upload-box">
-    <h2>Ladda upp nytt avtal</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-      <label for="customerSearch">Välj kund:</label><br>
-      <input id="customerSearch" list="customersList" placeholder="Sök namn eller e-post" autocomplete="off" required />
-      <datalist id="customersList"></datalist>
-      <input type="hidden" id="customerId" name="customerId" />
-      <br>
+      <!-- Search Section -->
+      <section class="search-section">
+        <div class="search-input-wrapper">
+          <input 
+            type="text" 
+            id="customer-search" 
+            class="search-input"
+            placeholder="Sök kund efter namn eller e-post..."
+          />
+          <div class="search-results" id="search-results"></div>
+        </div>
+      </section>
 
-      <label for="contractFile">Avtalsfil (PDF/DOCX):</label><br>
-      <input type="file" id="contractFile" name="contractFile" accept=".pdf,.doc,.docx" required><br>
+      <!-- Customer Details Section (hidden until customer selected) -->
+      <section class="customer-details" id="customer-details" style="display: none;">
+        <!-- Customer Info Card -->
+        <div class="card customer-info-card">
+          <div class="card-header">
+            <h2 id="customer-name">Kundnamn</h2>
+            <p id="customer-email" class="customer-email">email@example.com</p>
+          </div>
+          <div class="status-badges">
+            <span class="badge" id="agreement-status-badge">Aktiv</span>
+            <span class="badge package-badge" id="current-package-badge">Bas</span>
+            <span class="badge user-count-badge" id="user-count-badge">1/2 användare</span>
+          </div>
+        </div>
 
-      <label for="status">Status:</label><br>
-      <select id="status" name="status">
-        <option value="Aktivt">Aktivt</option>
-        <option value="Utgått">Utgått</option>
-        <option value="Pågående">Pågående</option>
-      </select><br>
+        <!-- Package Management Card -->
+        <div class="card package-card">
+          <h3>Pakethantering</h3>
+          <div class="package-info">
+            <p><strong>Nuvarande paket:</strong> <span id="current-package-text">Bas</span></p>
+            <p><strong>Max användare:</strong> <span id="max-users-text">2</span></p>
+            <p><strong>Aktiva användare:</strong> <span id="current-users-text">1</span></p>
+          </div>
+          
+          <div class="package-selector">
+            <div class="form-group">
+              <label for="package-select">Välj nytt paket:</label>
+              <select id="package-select" class="form-select">
+                <option value="Bas">Bas (Max 2 användare)</option>
+                <option value="Grower">Grower (Max 5 användare)</option>
+                <option value="Enterprise">Enterprise (Max 10 användare)</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="effective-date">Träder i kraft:</label>
+              <select id="effective-date" class="form-select">
+                <option value="immediate">Omedelbart</option>
+                <option value="next_billing">Nästa faktureringscykel</option>
+              </select>
+            </div>
+            
+            <button id="request-package-change" class="btn-primary">Begär paketändring</button>
+          </div>
 
-      <button type="submit" class="btn">📤 Ladda upp</button>
-    </form>
+          <!-- Pending Package Change Requests -->
+          <div id="pending-requests" class="pending-requests"></div>
+        </div>
+
+        <!-- Agreements & Documents Card -->
+        <div class="card agreements-card">
+          <div class="card-header-with-action">
+            <h3>Avtal och dokument</h3>
+            <button id="upload-new-contract" class="btn-secondary">Ladda upp nytt avtal</button>
+          </div>
+          <div id="contracts-list" class="contracts-list"></div>
+        </div>
+
+        <!-- Termination Card -->
+        <div class="card termination-card" id="termination-card">
+          <h3>Uppsägning av avtal</h3>
+          <p class="termination-info">
+            Kunden kommer ha full tillgång till tjänsten till slutet av innevarande månad. 
+            Efter det övergår kontot till läsläge. Kunddata sparas i 12 månader.
+          </p>
+          <div class="termination-actions">
+            <button id="terminate-agreement" class="btn-danger">Säg upp avtal</button>
+          </div>
+        </div>
+
+        <!-- Termination Status Card (shown if already terminated) -->
+        <div class="card termination-status-card" id="termination-status-card" style="display: none;">
+          <h3>Uppsagt avtal</h3>
+          <div class="termination-details">
+            <p><strong>Uppsägningsdatum:</strong> <span id="termination-date"></span></p>
+            <p><strong>Sista aktivitetsdag:</strong> <span id="termination-effective-date"></span></p>
+            <p><strong>Data sparas till:</strong> <span id="data-retention-date"></span></p>
+            <p><strong>Anledning:</strong> <span id="termination-reason"></span></p>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <script>
-    // Label -> _id mappning för datalist
-    let CUSTOMER_LABEL_TO_ID = new Map();
+  <!-- Upload Contract Modal -->
+  <div id="upload-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ladda upp avtal</h2>
+        <button class="modal-close" onclick="closeUploadModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="upload-form" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="contract-file">Avtalsfil (PDF/DOCX):</label>
+            <input type="file" id="contract-file" name="contractFile" accept=".pdf,.doc,.docx" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="contract-status">Status:</label>
+            <select id="contract-status" name="status" class="form-select">
+              <option value="Aktivt">Aktivt</option>
+              <option value="Pågående">Pågående</option>
+              <option value="Utgått">Utgått</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="package-type">Paket:</label>
+            <select id="package-type" name="packageType" class="form-select">
+              <option value="Bas">Bas</option>
+              <option value="Grower">Grower</option>
+              <option value="Enterprise">Enterprise</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeUploadModal()">Avbryt</button>
+        <button class="btn-primary" onclick="submitUpload()">Ladda upp</button>
+      </div>
+    </div>
+  </div>
 
-    // Hämta kunder (admin-skyddad minimal-lista)
-    async function loadCustomers() {
-      try {
-        const res = await fetch('/api/customers/all-basic', { credentials: 'include' });
-        if (!res.ok) {
-          const txt = await res.text().catch(() => '');
-          console.warn('❌ Kundlista svar:', res.status, txt);
-          throw new Error(`Kunde inte hämta kunder (${res.status})`);
-        }
+  <!-- Termination Confirmation Modal -->
+  <div id="termination-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Bekräfta uppsägning av avtal</h2>
+        <button class="modal-close" onclick="closeTerminationModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Kund:</strong> <span id="term-customer-name"></span></p>
+        <p class="warning-text">Detta kommer att:</p>
+        <ul class="termination-consequences">
+          <li>Sätta kontot i läsläge från och med slutet av innevarande månad</li>
+          <li>Stoppa alla framtida fakturor</li>
+          <li>Spara kunddata i 12 månader</li>
+          <li>Markera alla avtal som uppsagda</li>
+        </ul>
+        
+        <div class="form-group">
+          <label for="termination-reason">Anledning till uppsägning:</label>
+          <textarea id="termination-reason" class="form-textarea" rows="3" placeholder="T.ex. Kundens begäran, betalningsproblem..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeTerminationModal()">Avbryt</button>
+        <button class="btn-danger" onclick="confirmTermination()">Säg upp avtal</button>
+      </div>
+    </div>
+  </div>
 
-        const customers = await res.json();
-        const dl = document.getElementById('customersList');
-        dl.innerHTML = '';
-        CUSTOMER_LABEL_TO_ID.clear();
+  <!-- Add Document Modal -->
+  <div id="add-document-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Lägg till dokument</h2>
+        <button class="modal-close" onclick="closeAddDocumentModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-document-form" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="additional-document">Dokument (PDF/DOCX):</label>
+            <input type="file" id="additional-document" name="document" accept=".pdf,.doc,.docx" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeAddDocumentModal()">Avbryt</button>
+        <button class="btn-primary" onclick="submitAddDocument()">Lägg till</button>
+      </div>
+    </div>
+  </div>
 
-        customers.forEach(c => {
-          const label = `${c.name || 'Namnlös'} (${c.email || 'okänd'})`;
-          const opt = document.createElement('option');
-          opt.value = label;          // visas i förslagen
-          dl.appendChild(opt);
-          CUSTOMER_LABEL_TO_ID.set(label, c._id); // label -> id
-        });
-      } catch (err) {
-        console.error('❌ loadCustomers fel:', err);
-        alert('Kunde inte ladda kundlistan.');
-      }
-    }
-
-    // Sätt hidden customerId när man väljer ett förslag
-    document.addEventListener('DOMContentLoaded', () => {
-      const input = document.getElementById('customerSearch');
-      const hiddenId = document.getElementById('customerId');
-
-      input.addEventListener('input', () => {
-        const typed = input.value;
-        hiddenId.value = CUSTOMER_LABEL_TO_ID.get(typed) || '';
-      });
-    });
-
-    // Hämta befintliga avtal
-    async function loadContracts() {
-      try {
-        const res = await fetch('/api/contracts', { credentials: 'include' });
-        if (!res.ok) throw new Error('Kunde inte hämta avtal');
-
-        const data = await res.json();
-        const tbody = document.querySelector('#contractsTable tbody');
-        tbody.innerHTML = '';
-
-        data.forEach(contract => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${contract.customerName}</td>
-            <td>${contract.filename}</td>
-            <td>${new Date(contract.uploadedAt).toLocaleDateString('sv-SE')}</td>
-            <td>${contract.status}</td>
-            <td><a href="${contract.fileUrl}" target="_blank" rel="noopener">Öppna</a></td>
-          `;
-          tbody.appendChild(row);
-        });
-      } catch (err) {
-        console.error('❌ loadContracts fel:', err);
-        alert('Kunde inte ladda avtalen.');
-      }
-    }
-
-    // Ladda upp nytt avtal
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const customerId = document.getElementById('customerId').value;
-      if (!customerId) {
-        alert('Välj en kund från listan (använd förslagen).');
-        document.getElementById('customerSearch').focus();
-        return;
-      }
-
-      const formData = new FormData(e.target);
-
-      try {
-        const res = await fetch('/api/contracts/upload', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include'
-        });
-        if (!res.ok) {
-          const txt = await res.text().catch(() => '');
-          console.warn('❌ Upload svar:', res.status, txt);
-          throw new Error('Upload misslyckades');
-        }
-
-        alert('✅ Avtalet laddades upp');
-        e.target.reset();
-        document.getElementById('customerId').value = '';
-        loadContracts();
-      } catch (err) {
-        console.error('❌ Upload-fel:', err);
-        alert('❌ Misslyckades att ladda upp avtal');
-      }
-    });
-
-    // Init
-    loadCustomers();
-    loadContracts();
-  </script>
+  <script src="/js/avtal.js"></script>
 </body>
 </html>

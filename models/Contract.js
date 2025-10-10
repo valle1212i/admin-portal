@@ -5,7 +5,15 @@ const contractSchema = new mongoose.Schema({
   filename: { type: String, required: true },
   fileUrl: { type: String, required: true },
   status: { type: String, enum: ["Aktivt", "Utgått", "Pågående"], default: "Pågående" },
-  uploadedAt: { type: Date, default: Date.now }
+  uploadedAt: { type: Date, default: Date.now },
+  packageType: String,
+  additionalDocuments: [{ 
+    name: String, 
+    fileUrl: String, 
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+  terminatedAt: Date,
+  terminatedBy: String
 });
 
 module.exports = mongoose.model('Contract', contractSchema);
