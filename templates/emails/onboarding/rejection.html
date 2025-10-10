@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angående din ansökan</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #6b7280; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .reason-box { background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Angående din ansökan</h1>
+  </div>
+  
+  <div class="content">
+    <p>Hej {{contactName}},</p>
+    
+    <p>Tack för din ansökan för <strong>{{companyName}}</strong> hos Source.</p>
+    
+    <p>Efter granskning kan vi tyvärr inte godkänna din ansökan för närvarande.</p>
+    
+    <div class="reason-box">
+      <p><strong>Orsak:</strong></p>
+      <p>{{reason}}</p>
+    </div>
+    
+    <p>Om du har frågor om detta beslut eller vill diskutera möjligheten att ansöka igen i framtiden, är du välkommen att kontakta oss:</p>
+    
+    <p>📧 E-post: {{contactEmail}}<br>
+    👤 Kontaktperson: {{rejectedBy}}</p>
+    
+    <p>Vi uppskattar ditt intresse för Source och önskar er lycka till framöver.</p>
+    
+    <p>Med vänliga hälsningar,<br>
+    {{rejectedBy}}<br>
+    Source Team</p>
+  </div>
+  
+  <div class="footer">
+    <p>Source<br>
+    {{contactEmail}}</p>
+  </div>
+</body>
+</html>
+

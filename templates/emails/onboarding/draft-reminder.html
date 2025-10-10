@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Påminnelse: Slutför din registrering</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #f59e0b; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .button { display: inline-block; background: #f59e0b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding: 20px; }
+    .progress { background: #e5e7eb; height: 8px; border-radius: 4px; margin: 20px 0; }
+    .progress-bar { background: #f59e0b; height: 8px; border-radius: 4px; width: {{currentStep}}0%; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Din registrering väntar</h1>
+  </div>
+  
+  <div class="content">
+    <p>Hej {{contactName}},</p>
+    
+    <p>Vi ser att du har påbörjat registreringen av <strong>{{companyName}}</strong> hos Source, men att den ännu inte är slutförd.</p>
+    
+    <p>Du är för närvarande på <strong>steg {{currentStep}} av 10</strong>.</p>
+    
+    <div class="progress">
+      <div class="progress-bar"></div>
+    </div>
+    
+    <p>Vi vill hjälpa dig komma igång så snabbt som möjligt! Slutför din registrering idag för att:</p>
+    <ul>
+      <li>✓ Få tillgång till Source kundportal</li>
+      <li>✓ Börja hantera dina projekt och kunder</li>
+      <li>✓ Dra nytta av alla funktioner i ditt valda paket</li>
+    </ul>
+    
+    <p style="text-align: center;">
+      <a href="{{continueUrl}}" class="button">Fortsätt där du slutade</a>
+    </p>
+    
+    <p>Din information är sparad och du kan fortsätta när det passar dig.</p>
+    
+    <p>Behöver du hjälp? Kontakta oss på support@source.se</p>
+    
+    <p>Med vänliga hälsningar,<br>
+    Source Team</p>
+  </div>
+  
+  <div class="footer">
+    <p>Detta är en påminnelse för din pågående registrering hos Source.</p>
+  </div>
+</body>
+</html>
+

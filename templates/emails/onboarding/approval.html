@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Välkommen till Source!</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .credentials-box { background: #eff6ff; border: 2px solid #3b82f6; padding: 20px; margin: 20px 0; border-radius: 6px; }
+    .button { display: inline-block; background: #3b82f6; color: white; padding: 14px 35px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+    .info-item { background: white; padding: 15px; border-radius: 6px; border: 1px solid #e5e7eb; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin: 0; font-size: 32px;">🎉 Välkommen till Source!</h1>
+    <p style="margin: 10px 0 0 0; font-size: 18px;">Ditt konto är nu aktiverat</p>
+  </div>
+  
+  <div class="content">
+    <p>Hej {{contactName}},</p>
+    
+    <p>Grattis! Vi är glada att meddela att din ansökan för <strong>{{companyName}}</strong> har godkänts och ditt konto är nu aktiverat.</p>
+    
+    <div class="credentials-box">
+      <p><strong>🔐 Dina inloggningsuppgifter:</strong></p>
+      <p><strong>E-post:</strong> {{email}}<br>
+      <strong>Tillfälligt lösenord:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px;">{{temporaryPassword}}</code></p>
+      <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px;">
+        ⚠️ Vänligen byt lösenord vid första inloggningen
+      </p>
+    </div>
+    
+    <p style="text-align: center;">
+      <a href="{{loginUrl}}" class="button">Logga in nu →</a>
+    </p>
+    
+    <p><strong>Din prenumeration:</strong></p>
+    <div class="info-grid">
+      <div class="info-item">
+        <strong>Paket</strong><br>
+        {{packageName}}
+      </div>
+      <div class="info-item">
+        <strong>Månadskostnad</strong><br>
+        {{monthlyPrice}}
+      </div>
+    </div>
+    
+    <p><strong>Fakturering:</strong><br>
+    Din första faktura skickas {{firstInvoiceDate}}.</p>
+    
+    <p><strong>Kom igång:</strong></p>
+    <ol>
+      <li>Logga in på kundportalen med dina uppgifter ovan</li>
+      <li>Byt till ett säkert lösenord</li>
+      <li>Bjud in dina teammedlemmar (om du har valt ett paket med flera användare)</li>
+      <li>Börja använda alla funktioner i ditt {{packageName}}-paket</li>
+    </ol>
+    
+    <p><strong>Behöver du hjälp?</strong><br>
+    Vårt supportteam finns här för dig:<br>
+    📧 {{supportEmail}}<br>
+    💬 Live chat i kundportalen</p>
+    
+    <p>Vi ser fram emot att arbeta tillsammans med er!</p>
+    
+    <p>Med vänliga hälsningar,<br>
+    Source Team</p>
+  </div>
+  
+  <div class="footer">
+    <p><strong>Source</strong> - Din partner för affärsutveckling<br>
+    {{supportEmail}}</p>
+  </div>
+</body>
+</html>
+

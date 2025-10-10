@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Välkommen till Source</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #3b82f6; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .button { display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Välkommen till Source!</h1>
+  </div>
+  
+  <div class="content">
+    <p>Hej {{contactName}},</p>
+    
+    <p>Tack för att du har påbörjat registreringen av <strong>{{companyName}}</strong> hos Source!</p>
+    
+    <p>Du har nu skapat ett utkast för din onboarding. För att slutföra registreringen och aktivera ditt konto behöver du fylla i alla steg i onboarding-processen.</p>
+    
+    <p><strong>Nästa steg:</strong></p>
+    <ul>
+      <li>Fyll i företagsinformation</li>
+      <li>Välj ditt paket</li>
+      <li>Ladda upp verifieringsdokument</li>
+      <li>Granska och skicka in din ansökan</li>
+    </ul>
+    
+    <p style="text-align: center;">
+      <a href="{{continueUrl}}" class="button">Fortsätt registrering</a>
+    </p>
+    
+    <p>Din registrering sparas automatiskt, så du kan avbryta när som helst och fortsätta senare.</p>
+    
+    <p>Om du har några frågor är du välkommen att kontakta oss på support@source.se</p>
+    
+    <p>Med vänliga hälsningar,<br>
+    Source Team</p>
+  </div>
+  
+  <div class="footer">
+    <p>Detta är ett automatiskt meddelande från Source.<br>
+    Du får detta mail för att du har påbörjat en registrering hos oss.</p>
+  </div>
+</body>
+</html>
+

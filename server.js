@@ -174,6 +174,9 @@ app.use('/api/security', securityRouter);
 // … efter session & static …
 app.use('/api/email', require('./routes/emailRoutes'));
 
+// Onboarding routes
+app.use('/api/onboarding', require('./routes/onboarding'));
+
 // ✅ MONTERA ADMIN-ROUTERNA + LOGGA
 try {
   const adminAds = require('./routes/adminAds');
@@ -231,6 +234,15 @@ app.get("/admin-chat.html", requireAdminLogin, (req, res) =>
 );
 app.get("/login.html", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "login.html"))
+);
+app.get("/onboarding.html", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "onboarding.html"))
+);
+app.get("/onboarding-admin.html", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "onboarding-admin.html"))
+);
+app.get("/onboarding-review.html", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "onboarding-review.html"))
 );
 
 app.post("/admin-login", async (req, res) => {

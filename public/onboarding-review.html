@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Granska Onboarding - Source Admin Portal</title>
+  <link rel="stylesheet" href="/css/onboarding.css">
+  <style>
+    .review-container {
+      max-width: 1000px;
+    }
+    
+    .review-section {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .review-section h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    
+    .info-item {
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 6px;
+    }
+    
+    .info-item label {
+      display: block;
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+    
+    .info-item .value {
+      font-size: 15px;
+      color: #111827;
+      font-weight: 500;
+    }
+    
+    .action-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 20px;
+    }
+    
+    .action-panel h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    
+    .action-panel textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    
+    .action-panel button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    .document-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .document-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    
+    .document-item .doc-info {
+      flex: 1;
+    }
+    
+    .document-item .doc-name {
+      font-weight: 500;
+      color: #111827;
+    }
+    
+    .document-item .doc-type {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    
+    .btn-download {
+      padding: 6px 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+      <div class="logo">
+        <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
+      </div>
+      <nav class="menu" aria-label="Admin Portal Navigation">
+        <a href="/dashboard" class="menu-item">Hem och data</a>
+        <a href="/search.html" class="menu-item">Sök Kund</a>
+        <a href="/cases.html" class="menu-item">Cases & kundkontakt</a>
+        <a href="/avtal.html" class="menu-item">Avtal</a>
+        <a href="/invoicing.html" class="menu-item">Faktuering</a>
+        <a href="/admin-marknadsforing.html" class="menu-item">Marknadsföring</a>
+        <a href="/massmail.html" class="menu-item">Massutskick av Mejl</a>
+        <a href="/onboarding-admin.html" class="menu-item active">Onboarding</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div style="display: flex; gap: 30px;">
+        <!-- Left Column - Details -->
+        <div style="flex: 2;">
+          <div style="margin-bottom: 20px;">
+            <a href="/onboarding-admin.html" style="color: #3b82f6; text-decoration: none;">← Tillbaka till lista</a>
+          </div>
+          
+          <header class="onboarding-header">
+            <h1 id="companyName">Laddar...</h1>
+            <p class="subtitle" id="organizationNumber"></p>
+          </header>
+
+          <!-- Company Information -->
+          <div class="review-section">
+            <h2>Företagsinformation</h2>
+            <div class="info-grid" id="companyInfo">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Business Classification -->
+          <div class="review-section">
+            <h2>Affärsklassificering</h2>
+            <div class="info-grid" id="businessInfo">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Contact Person -->
+          <div class="review-section">
+            <h2>Kontaktperson</h2>
+            <div class="info-grid" id="contactInfo">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Package & Pricing -->
+          <div class="review-section">
+            <h2>Paket & Prissättning</h2>
+            <div class="info-grid" id="packageInfo">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Legal & Compliance -->
+          <div class="review-section">
+            <h2>Juridik & Efterlevnad</h2>
+            <div class="info-grid" id="legalInfo">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Documents -->
+          <div class="review-section">
+            <h2>Verifieringsdokument</h2>
+            <ul class="document-list" id="documentsList">
+              <!-- Populated by JavaScript -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Right Column - Actions -->
+        <div style="flex: 1;">
+          <div class="action-panel">
+            <h3>Åtgärder</h3>
+            
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; font-weight: 500; margin-bottom: 8px;">Status</label>
+              <span id="currentStatus" class="status-badge">-</span>
+            </div>
+            
+            <label style="display: block; font-weight: 500; margin-bottom: 8px;">Admin-anteckningar</label>
+            <textarea id="adminNotes" rows="4" placeholder="Lägg till anteckningar..."></textarea>
+            
+            <button class="btn-primary" id="approveBtn">
+              ✓ Godkänn & Skapa Kund
+            </button>
+            
+            <button class="btn-secondary" id="requestInfoBtn" style="background: #f59e0b; color: white; border: none;">
+              📧 Begär mer information
+            </button>
+            
+            <button class="btn-secondary" id="rejectBtn" style="background: #ef4444; color: white; border: none;">
+              ✗ Avvisa ansökan
+            </button>
+            
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+            
+            <div style="font-size: 13px; color: #6b7280;">
+              <p><strong>Skapad:</strong> <span id="createdAt">-</span></p>
+              <p><strong>Inskickad:</strong> <span id="submittedAt">-</span></p>
+              <p><strong>Tilldelad:</strong> <span id="assignedTo">-</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast" style="display: none;">
+    <span class="toast-message"></span>
+  </div>
+
+  <script src="/js/onboarding-review.js"></script>
+</body>
+</html>
+

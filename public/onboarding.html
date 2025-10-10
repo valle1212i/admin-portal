@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kundregistrering - Source Admin Portal</title>
+  <link rel="stylesheet" href="/css/onboarding.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+      <div class="logo">
+        <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
+      </div>
+      <nav class="menu" aria-label="Admin Portal Navigation">
+        <a href="/dashboard" class="menu-item">Hem och data</a>
+        <a href="/search.html" class="menu-item">Sök Kund</a>
+        <a href="/cases.html" class="menu-item">Cases & kundkontakt</a>
+        <a href="/avtal.html" class="menu-item">Avtal</a>
+        <a href="/invoicing.html" class="menu-item">Faktuering</a>
+        <a href="/admin-marknadsforing.html" class="menu-item">Marknadsföring</a>
+        <a href="/massmail.html" class="menu-item">Massutskick av Mejl</a>
+        <a href="/onboarding.html" class="menu-item active" aria-current="page">Onboarding</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Header with Progress Bar -->
+      <header class="onboarding-header">
+        <h1>Ny kundregistrering</h1>
+        <p class="subtitle">Registrera en ny kund i Source kundportal</p>
+        
+        <!-- Progress Bar -->
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-steps">
+            <div class="step-indicator active" data-step="1">
+              <div class="step-number">1</div>
+              <div class="step-label">Företag</div>
+            </div>
+            <div class="step-indicator" data-step="2">
+              <div class="step-number">2</div>
+              <div class="step-label">Klassificering</div>
+            </div>
+            <div class="step-indicator" data-step="3">
+              <div class="step-number">3</div>
+              <div class="step-label">Kontakt</div>
+            </div>
+            <div class="step-indicator" data-step="4">
+              <div class="step-number">4</div>
+              <div class="step-label">Betalning</div>
+            </div>
+            <div class="step-indicator" data-step="5">
+              <div class="step-number">5</div>
+              <div class="step-label">Paket</div>
+            </div>
+            <div class="step-indicator" data-step="6">
+              <div class="step-number">6</div>
+              <div class="step-label">Användare</div>
+            </div>
+            <div class="step-indicator" data-step="7">
+              <div class="step-number">7</div>
+              <div class="step-label">Integrationer</div>
+            </div>
+            <div class="step-indicator" data-step="8">
+              <div class="step-number">8</div>
+              <div class="step-label">Juridik</div>
+            </div>
+            <div class="step-indicator" data-step="9">
+              <div class="step-number">9</div>
+              <div class="step-label">Verifiering</div>
+            </div>
+            <div class="step-indicator" data-step="10">
+              <div class="step-number">10</div>
+              <div class="step-label">Granska</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto-save Indicator -->
+        <div class="autosave-indicator" id="autosaveIndicator">
+          <span class="status">Sparad</span>
+        </div>
+      </header>
+
+      <!-- Form Steps Container -->
+      <div class="onboarding-steps" id="onboardingSteps">
+        
+        <!-- Step 1: Company Information -->
+        <section class="step step-1" data-step="1">
+          <h2>Företagsinformation</h2>
+          <p class="step-description">Grundläggande information om företaget som registreras.</p>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="organizationNumber">Organisationsnummer *</label>
+              <div class="input-with-button">
+                <input type="text" id="organizationNumber" name="organizationNumber" 
+                       placeholder="XXXXXX-XXXX" required 
+                       pattern="[0-9]{6}-[0-9]{4}">
+                <button type="button" class="btn-secondary" id="lookupOrgBtn">Slå upp</button>
+              </div>
+              <small>Format: XXXXXX-XXXX</small>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="companyName">Företagsnamn *</label>
+              <input type="text" id="companyName" name="companyName" required>
+            </div>
+
+            <div class="form-group">
+              <label for="legalEntityType">Företagsform *</label>
+              <select id="legalEntityType" name="legalEntityType" required>
+                <option value="">Välj företagsform</option>
+                <option value="AB">AB - Aktiebolag</option>
+                <option value="Aktiebolag">Aktiebolag</option>
+                <option value="Enskild firma">Enskild firma</option>
+                <option value="Handelsbolag">Handelsbolag</option>
+                <option value="Kommanditbolag">Kommanditbolag</option>
+                <option value="Ekonomisk förening">Ekonomisk förening</option>
+                <option value="Stiftelse">Stiftelse</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="registrationDate">Registreringsdatum</label>
+              <input type="date" id="registrationDate" name="registrationDate">
+            </div>
+
+            <div class="form-group full-width">
+              <label for="website">Webbplats</label>
+              <input type="url" id="website" name="website" placeholder="https://www.example.se">
+            </div>
+
+            <div class="form-group full-width">
+              <h3>Besöksadress</h3>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="businessStreet">Gatuadress *</label>
+              <input type="text" id="businessStreet" name="businessAddress.street" required>
+            </div>
+
+            <div class="form-group">
+              <label for="businessPostalCode">Postnummer *</label>
+              <input type="text" id="businessPostalCode" name="businessAddress.postalCode" 
+                     pattern="[0-9]{3}\s?[0-9]{2}" placeholder="123 45" required>
+            </div>
+
+            <div class="form-group">
+              <label for="businessCity">Ort *</label>
+              <input type="text" id="businessCity" name="businessAddress.city" required>
+            </div>
+
+            <div class="form-group">
+              <label for="businessCountry">Land *</label>
+              <input type="text" id="businessCountry" name="businessAddress.country" value="Sverige" required>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="checkbox-label">
+                <input type="checkbox" id="sameBillingAddress" name="billingAddress.sameAsBusiness" checked>
+                <span>Fakturaadress samma som besöksadress</span>
+              </label>
+            </div>
+
+            <div id="billingAddressFields" class="form-group full-width" style="display: none;">
+              <h3>Fakturaadress</h3>
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="billingStreet">Gatuadress</label>
+                  <input type="text" id="billingStreet" name="billingAddress.street">
+                </div>
+                <div class="form-group">
+                  <label for="billingPostalCode">Postnummer</label>
+                  <input type="text" id="billingPostalCode" name="billingAddress.postalCode" pattern="[0-9]{3}\s?[0-9]{2}">
+                </div>
+                <div class="form-group">
+                  <label for="billingCity">Ort</label>
+                  <input type="text" id="billingCity" name="billingAddress.city">
+                </div>
+                <div class="form-group">
+                  <label for="billingCountry">Land</label>
+                  <input type="text" id="billingCountry" name="billingAddress.country" value="Sverige">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Telefon *</label>
+              <input type="tel" id="phone" name="phone" placeholder="+46 70 123 45 67" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email">E-post *</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Business Classification -->
+        <section class="step step-2" data-step="2" style="display: none;">
+          <h2>Affärsklassificering</h2>
+          <p class="step-description">Information om företagets verksamhet och bransch.</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="mccCode">MCC-kod *</label>
+              <select id="mccCode" name="mccCode" required>
+                <option value="">Välj MCC-kod</option>
+                <option value="5734">5734 - Programvarubutiker</option>
+                <option value="7372">7372 - Programmering/Databehandling</option>
+                <option value="5045">5045 - Datorer/Elektronik</option>
+                <option value="7311">7311 - Annonsering</option>
+                <option value="8999">8999 - Professionella tjänster</option>
+                <option value="5399">5399 - Diverse detaljhandel</option>
+                <option value="7379">7379 - Datareparation</option>
+                <option value="5999">5999 - Diverse specialbutiker</option>
+                <option value="other">Annat (ange nedan)</option>
+              </select>
+              <small>Merchant Category Code - används för betalningshantering</small>
+            </div>
+
+            <div class="form-group" id="mccCodeCustomGroup" style="display: none;">
+              <label for="mccCodeCustom">Ange MCC-kod</label>
+              <input type="text" id="mccCodeCustom" name="mccCodeCustom" placeholder="XXXX">
+            </div>
+
+            <div class="form-group">
+              <label for="sniCode">SNI-kod</label>
+              <input type="text" id="sniCode" name="sniCode" placeholder="XX.XX.X">
+              <small>Standard för svensk näringsgrensindelning (valfritt)</small>
+            </div>
+
+            <div class="form-group">
+              <label for="industry">Bransch *</label>
+              <select id="industry" name="industry" required>
+                <option value="">Välj bransch</option>
+                <option value="E-commerce">E-handel</option>
+                <option value="SaaS">SaaS</option>
+                <option value="Consulting">Konsult</option>
+                <option value="Retail">Detaljhandel</option>
+                <option value="Manufacturing">Tillverkning</option>
+                <option value="Services">Tjänster</option>
+                <option value="Technology">Teknik</option>
+                <option value="Marketing">Marknadsföring</option>
+                <option value="Other">Annat</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="businessDescription">Verksamhetsbeskrivning *</label>
+              <textarea id="businessDescription" name="businessDescription" rows="4" 
+                        maxlength="500" required 
+                        placeholder="Beskriv kort företagets verksamhet och tjänster..."></textarea>
+              <small><span id="charCount">0</span>/500 tecken</small>
+            </div>
+
+            <div class="form-group">
+              <label for="annualRevenue">Årlig omsättning</label>
+              <select id="annualRevenue" name="annualRevenue">
+                <option value="">Välj intervall</option>
+                <option value="0-500k">0 - 500 000 SEK</option>
+                <option value="500k-2M">500 000 - 2 000 000 SEK</option>
+                <option value="2M-10M">2 000 000 - 10 000 000 SEK</option>
+                <option value="10M+">10 000 000+ SEK</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="employeeCount">Antal anställda</label>
+              <input type="number" id="employeeCount" name="employeeCount" min="0" placeholder="5">
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: Primary Contact Person -->
+        <section class="step step-3" data-step="3" style="display: none;">
+          <h2>Primär kontaktperson</h2>
+          <p class="step-description">Den huvudsakliga kontaktpersonen för detta konto.</p>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="contactName">Fullständigt namn *</label>
+              <input type="text" id="contactName" name="primaryContact.name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="contactEmail">E-post *</label>
+              <input type="email" id="contactEmail" name="primaryContact.email" required>
+            </div>
+
+            <div class="form-group">
+              <label for="contactPhone">Telefon *</label>
+              <input type="tel" id="contactPhone" name="primaryContact.phone" required>
+            </div>
+
+            <div class="form-group">
+              <label for="contactPersonalNumber">Personnummer</label>
+              <input type="text" id="contactPersonalNumber" name="primaryContact.personalNumber" 
+                     placeholder="YYYYMMDD-XXXX" pattern="[0-9]{8}-[0-9]{4}">
+              <small>Används för BankID-verifiering (valfritt)</small>
+            </div>
+
+            <div class="form-group">
+              <label for="contactRole">Roll/Titel</label>
+              <input type="text" id="contactRole" name="primaryContact.role" placeholder="VD, Grundare, etc.">
+            </div>
+
+            <div class="form-group full-width">
+              <label for="contactLinkedIn">LinkedIn-profil</label>
+              <input type="url" id="contactLinkedIn" name="primaryContact.linkedin" 
+                     placeholder="https://linkedin.com/in/...">
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 4: Payment & Banking -->
+        <section class="step step-4" data-step="4" style="display: none;">
+          <h2>Betalning & Bank</h2>
+          <p class="step-description">Bankinformation och betalningsmetoder.</p>
+          
+          <div class="form-grid">
+            <h3 class="full-width">Bankinformation</h3>
+
+            <div class="form-group">
+              <label for="bankName">Banknamn</label>
+              <input type="text" id="bankName" name="bankDetails.bankName" placeholder="Swedbank, SEB, etc.">
+            </div>
+
+            <div class="form-group">
+              <label for="accountHolder">Kontoinnehavare</label>
+              <input type="text" id="accountHolder" name="bankDetails.accountHolder">
+            </div>
+
+            <div class="form-group">
+              <label for="clearingNumber">Clearingnummer</label>
+              <input type="text" id="clearingNumber" name="bankDetails.clearingNumber" placeholder="XXXX">
+            </div>
+
+            <div class="form-group">
+              <label for="accountNumber">Kontonummer</label>
+              <input type="text" id="accountNumber" name="bankDetails.accountNumber">
+            </div>
+
+            <div class="form-group">
+              <label for="iban">IBAN</label>
+              <input type="text" id="iban" name="bankDetails.iban" placeholder="SE## #### #### #### #### ####">
+            </div>
+
+            <div class="form-group">
+              <label for="bic">BIC/SWIFT</label>
+              <input type="text" id="bic" name="bankDetails.bic" placeholder="XXXXXXXX">
+            </div>
+
+            <h3 class="full-width">Betalningsinställningar</h3>
+
+            <div class="form-group full-width">
+              <label>Föredragna betalningsmetoder</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" name="preferredPaymentMethods" value="Swish">
+                  <span>Swish</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="preferredPaymentMethods" value="Bankgiro">
+                  <span>Bankgiro</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="preferredPaymentMethods" value="Plusgiro">
+                  <span>Plusgiro</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="preferredPaymentMethods" value="Credit Card">
+                  <span>Kreditkort</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="preferredPaymentMethods" value="Invoice" checked>
+                  <span>Faktura</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="billingCurrency">Valuta</label>
+              <select id="billingCurrency" name="billingCurrency">
+                <option value="SEK" selected>SEK - Svensk krona</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="USD">USD - US Dollar</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentTerms">Betalningsvillkor</label>
+              <select id="paymentTerms" name="paymentTerms">
+                <option value="10">10 dagar</option>
+                <option value="15">15 dagar</option>
+                <option value="30" selected>30 dagar</option>
+                <option value="60">60 dagar</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 5: Package Selection -->
+        <section class="step step-5" data-step="5" style="display: none;">
+          <h2>Välj paket</h2>
+          <p class="step-description">Välj det paket som bäst passar kundens behov.</p>
+          
+          <!-- Package Cards -->
+          <div class="package-cards">
+            <div class="package-card" data-package="Bas">
+              <div class="package-header">
+                <h3>Bas</h3>
+                <div class="package-price">
+                  <span class="price">499</span>
+                  <span class="currency">SEK/mån</span>
+                </div>
+              </div>
+              <ul class="package-features">
+                <li>✓ Upp till 2 användare</li>
+                <li>✓ Grundläggande funktioner</li>
+                <li>✓ 5 GB lagring</li>
+                <li>✓ E-postsupport</li>
+                <li>✓ Månatlig fakturering</li>
+              </ul>
+              <button type="button" class="btn-package" data-package="Bas">Välj Bas</button>
+            </div>
+
+            <div class="package-card popular" data-package="Grower">
+              <div class="popular-badge">Populärast</div>
+              <div class="package-header">
+                <h3>Grower</h3>
+                <div class="package-price">
+                  <span class="price">999</span>
+                  <span class="currency">SEK/mån</span>
+                </div>
+              </div>
+              <ul class="package-features">
+                <li>✓ Upp till 5 användare</li>
+                <li>✓ Alla grundfunktioner</li>
+                <li>✓ 25 GB lagring</li>
+                <li>✓ Prioriterad support</li>
+                <li>✓ Avancerad rapportering</li>
+                <li>✓ API-åtkomst</li>
+              </ul>
+              <button type="button" class="btn-package" data-package="Grower">Välj Grower</button>
+            </div>
+
+            <div class="package-card" data-package="Enterprise">
+              <div class="package-header">
+                <h3>Enterprise</h3>
+                <div class="package-price">
+                  <span class="price">1999</span>
+                  <span class="currency">SEK/mån</span>
+                </div>
+              </div>
+              <ul class="package-features">
+                <li>✓ Upp till 20 användare</li>
+                <li>✓ Alla funktioner</li>
+                <li>✓ Obegränsad lagring</li>
+                <li>✓ 24/7 support</li>
+                <li>✓ Dedikerad account manager</li>
+                <li>✓ Custom integrationer</li>
+                <li>✓ SLA-garanti</li>
+              </ul>
+              <button type="button" class="btn-package" data-package="Enterprise">Välj Enterprise</button>
+            </div>
+          </div>
+
+          <input type="hidden" id="selectedPackage" name="package" required>
+
+          <div class="form-grid" style="margin-top: 40px;">
+            <div class="form-group">
+              <label for="billingFrequency">Faktureringscykel</label>
+              <select id="billingFrequency" name="billingFrequency">
+                <option value="monthly" selected>Månadsvis</option>
+                <option value="quarterly">Kvartalsvis (10% rabatt)</option>
+                <option value="annually">Årsvis (20% rabatt)</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Tilläggstjänster</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" name="additionalServices" value="email_integration">
+                  <span>E-postintegration (+199 SEK/mån)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="additionalServices" value="ai_chatbot">
+                  <span>AI Chatbot (+299 SEK/mån)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="additionalServices" value="advanced_analytics">
+                  <span>Avancerad analys (+399 SEK/mån)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="additionalServices" value="inventory_management">
+                  <span>Lagerhantering (+499 SEK/mån)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="additionalServices" value="marketing_automation">
+                  <span>Marknadsföringsautomation (+599 SEK/mån)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Price Summary -->
+            <div class="price-summary full-width">
+              <h3>Prissammanfattning</h3>
+              <div class="summary-row">
+                <span>Baspaket:</span>
+                <span id="summaryBasePrice">0 SEK</span>
+              </div>
+              <div class="summary-row">
+                <span>Tilläggstjänster:</span>
+                <span id="summaryAddOns">0 SEK</span>
+              </div>
+              <div class="summary-row total">
+                <span><strong>Total per månad:</strong></span>
+                <span><strong id="summaryTotal">0 SEK</strong></span>
+              </div>
+              <div class="summary-row discount" id="summaryDiscount" style="display: none;">
+                <span>Rabatt:</span>
+                <span id="summaryDiscountAmount">0%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 6: User Accounts -->
+        <section class="step step-6" data-step="6" style="display: none;">
+          <h2>Användarkonton</h2>
+          <p class="step-description">Konfigurera de första användarkontona. Fler kan läggas till senare.</p>
+          
+          <div id="usersList">
+            <!-- Primary Admin (auto-filled from step 3) -->
+            <div class="user-card" data-user-index="0">
+              <h4>Primär administratör <span class="badge">Admin</span></h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Namn</label>
+                  <input type="text" name="initialUsers[0].name" readonly>
+                </div>
+                <div class="form-group">
+                  <label>E-post</label>
+                  <input type="email" name="initialUsers[0].email" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Telefon</label>
+                  <input type="tel" name="initialUsers[0].phone" readonly>
+                </div>
+                <input type="hidden" name="initialUsers[0].role" value="Admin">
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-secondary" id="addUserBtn">
+            + Lägg till användare
+          </button>
+          <p class="user-limit-info">Du kan lägga till <span id="userLimitText">0</span> användare med ditt valda paket.</p>
+        </section>
+
+        <!-- Step 7: Integration Preferences -->
+        <section class="step step-7" data-step="7" style="display: none;">
+          <h2>Integrationer</h2>
+          <p class="step-description">Välj vilka system kunden vill integrera med.</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="accountingSoftware">Bokföringssystem</label>
+              <select id="accountingSoftware" name="integrations.accountingSoftware">
+                <option value="None">Ingen integration</option>
+                <option value="Fortnox">Fortnox</option>
+                <option value="Visma">Visma</option>
+                <option value="Bokio">Bokio</option>
+                <option value="PE Accounting">PE Accounting</option>
+                <option value="Other">Annat</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="crmSystem">CRM-system</label>
+              <select id="crmSystem" name="integrations.crmSystem">
+                <option value="None">Ingen integration</option>
+                <option value="HubSpot">HubSpot</option>
+                <option value="Salesforce">Salesforce</option>
+                <option value="Pipedrive">Pipedrive</option>
+                <option value="Other">Annat</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="ecommercePlatform">E-handelsplattform</label>
+              <select id="ecommercePlatform" name="integrations.ecommercePlatform">
+                <option value="None">Ingen integration</option>
+                <option value="Shopify">Shopify</option>
+                <option value="WooCommerce">WooCommerce</option>
+                <option value="Magento">Magento</option>
+                <option value="Custom">Anpassad lösning</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Marknadsföringsverktyg</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" name="integrations.marketingTools" value="Google Ads">
+                  <span>Google Ads</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="integrations.marketingTools" value="Meta Ads">
+                  <span>Meta Ads (Facebook/Instagram)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="integrations.marketingTools" value="TikTok Ads">
+                  <span>TikTok Ads</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" name="integrations.marketingTools" value="LinkedIn Ads">
+                  <span>LinkedIn Ads</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 8: Legal & Compliance -->
+        <section class="step step-8" data-step="8" style="display: none;">
+          <h2>Juridik & Efterlevnad</h2>
+          <p class="step-description">Juridisk information och godkännanden.</p>
+          
+          <div class="form-grid">
+            <h3 class="full-width">Skatteinformation</h3>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="vatRegistered" name="legal.vatRegistered">
+                <span>Momsregistrerat företag</span>
+              </label>
+            </div>
+
+            <div class="form-group" id="vatNumberGroup" style="display: none;">
+              <label for="vatNumber">Momsnummer</label>
+              <input type="text" id="vatNumber" name="legal.vatNumber" placeholder="SE############">
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="legal.fSkatt">
+                <span>Har F-skattsedel</span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="legal.reverseVat">
+                <span>Omvänd moms (Reverse VAT)</span>
+              </label>
+            </div>
+
+            <h3 class="full-width">Godkännanden (obligatoriskt)</h3>
+
+            <div class="form-group full-width">
+              <label class="checkbox-label required">
+                <input type="checkbox" id="termsAccepted" name="legal.termsAccepted" required>
+                <span>Jag accepterar <a href="#" id="viewTerms">Användarvillkoren</a> *</span>
+              </label>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="checkbox-label required">
+                <input type="checkbox" id="privacyAccepted" name="legal.privacyPolicyAccepted" required>
+                <span>Jag accepterar <a href="#" id="viewPrivacy">Integritetspolicyn</a> *</span>
+              </label>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="checkbox-label required">
+                <input type="checkbox" id="gdprConsent" name="legal.gdprConsent" required>
+                <span>Jag samtycker till GDPR-databehandling *</span>
+              </label>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="checkbox-label">
+                <input type="checkbox" name="legal.dataProcessingAgreement">
+                <span>Jag godkänner Personuppgiftsbiträdesavtalet (DPA)</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 9: Business Verification -->
+        <section class="step step-9" data-step="9" style="display: none;">
+          <h2>Verifiering</h2>
+          <p class="step-description">Ladda upp dokument för verifiering av företaget.</p>
+          
+          <div class="document-upload-section">
+            <h3>Registreringsbevis</h3>
+            <p>Registreringsbevis från Bolagsverket</p>
+            <div class="file-dropzone" data-document-type="registration_certificate">
+              <input type="file" id="regCert" accept=".pdf,.png,.jpg,.jpeg" hidden>
+              <div class="dropzone-content">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Dra och släpp fil här eller klicka för att välja</p>
+                <small>PDF, PNG, JPG (max 5MB)</small>
+              </div>
+              <div class="file-preview" style="display: none;"></div>
+            </div>
+
+            <h3>ID-handling</h3>
+            <p>Giltig ID-handling för primär kontaktperson</p>
+            <div class="file-dropzone" data-document-type="id_document">
+              <input type="file" id="idDoc" accept=".pdf,.png,.jpg,.jpeg" hidden>
+              <div class="dropzone-content">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Dra och släpp fil här eller klicka för att välja</p>
+                <small>PDF, PNG, JPG (max 5MB)</small>
+              </div>
+              <div class="file-preview" style="display: none;"></div>
+            </div>
+
+            <h3>Bankintyg (valfritt)</h3>
+            <p>Intyg från bank som bekräftar kontouppgifter</p>
+            <div class="file-dropzone" data-document-type="bank_certificate">
+              <input type="file" id="bankCert" accept=".pdf,.png,.jpg,.jpeg" hidden>
+              <div class="dropzone-content">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Dra och släpp fil här eller klicka för att välja</p>
+                <small>PDF, PNG, JPG (max 5MB)</small>
+              </div>
+              <div class="file-preview" style="display: none;"></div>
+            </div>
+
+            <h3>F-skattsedel (om tillämpligt)</h3>
+            <p>F-skattsedel från Skatteverket</p>
+            <div class="file-dropzone" data-document-type="f_skatt_certificate">
+              <input type="file" id="fSkattCert" accept=".pdf,.png,.jpg,.jpeg" hidden>
+              <div class="dropzone-content">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Dra och släpp fil här eller klicka för att välja</p>
+                <small>PDF, PNG, JPG (max 5MB)</small>
+              </div>
+              <div class="file-preview" style="display: none;"></div>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top: 30px;">
+            <div class="form-group">
+              <label for="verificationMethod">Verifieringsmetod</label>
+              <select id="verificationMethod" name="verificationMethod">
+                <option value="email">E-postverifiering</option>
+                <option value="manual">Manuell granskning</option>
+                <option value="bankid">BankID (kommer senare)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 10: Review & Confirmation -->
+        <section class="step step-10" data-step="10" style="display: none;">
+          <h2>Granska & Bekräfta</h2>
+          <p class="step-description">Granska all information innan du skickar in ansökan.</p>
+          
+          <div class="review-section">
+            <div class="review-card">
+              <div class="review-header">
+                <h3>Företagsinformation</h3>
+                <button type="button" class="btn-edit" data-goto-step="1">Redigera</button>
+              </div>
+              <dl class="review-details" id="reviewCompany">
+                <!-- Populated by JavaScript -->
+              </dl>
+            </div>
+
+            <div class="review-card">
+              <div class="review-header">
+                <h3>Kontaktperson</h3>
+                <button type="button" class="btn-edit" data-goto-step="3">Redigera</button>
+              </div>
+              <dl class="review-details" id="reviewContact">
+                <!-- Populated by JavaScript -->
+              </dl>
+            </div>
+
+            <div class="review-card">
+              <div class="review-header">
+                <h3>Paket & Prissättning</h3>
+                <button type="button" class="btn-edit" data-goto-step="5">Redigera</button>
+              </div>
+              <dl class="review-details" id="reviewPackage">
+                <!-- Populated by JavaScript -->
+              </dl>
+            </div>
+
+            <div class="review-card">
+              <div class="review-header">
+                <h3>Användare</h3>
+                <button type="button" class="btn-edit" data-goto-step="6">Redigera</button>
+              </div>
+              <dl class="review-details" id="reviewUsers">
+                <!-- Populated by JavaScript -->
+              </dl>
+            </div>
+
+            <div class="review-card">
+              <div class="review-header">
+                <h3>Dokument</h3>
+                <button type="button" class="btn-edit" data-goto-step="9">Redigera</button>
+              </div>
+              <dl class="review-details" id="reviewDocuments">
+                <!-- Populated by JavaScript -->
+              </dl>
+            </div>
+
+            <div class="info-box">
+              <h4>Vad händer nu?</h4>
+              <ol>
+                <li>Din ansökan kommer att granskas av vårt team</li>
+                <li>Vi verifierar dokumenten och uppgifterna</li>
+                <li>Kunden får ett mejl när kontot är aktiverat (normalt inom 1-2 arbetsdagar)</li>
+                <li>Första fakturan genereras automatiskt</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="step-navigation">
+        <button type="button" class="btn-secondary" id="prevStepBtn" disabled>
+          ← Föregående
+        </button>
+        <button type="button" class="btn-secondary" id="saveDraftBtn">
+          💾 Spara utkast
+        </button>
+        <button type="button" class="btn-primary" id="nextStepBtn">
+          Nästa →
+        </button>
+        <button type="button" class="btn-primary" id="submitOnboardingBtn" style="display: none;">
+          ✓ Skicka in ansökan
+        </button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast" style="display: none;">
+    <span class="toast-message"></span>
+  </div>
+
+  <!-- Modal for Terms/Privacy -->
+  <div class="modal" id="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="/js/onboarding.js"></script>
+</body>
+</html>
+

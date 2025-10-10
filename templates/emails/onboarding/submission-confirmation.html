@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ansökan mottagen</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .info-box { background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>✓ Ansökan mottagen!</h1>
+  </div>
+  
+  <div class="content">
+    <p>Hej {{contactName}},</p>
+    
+    <p>Tack för att du har skickat in din ansökan för <strong>{{companyName}}</strong>!</p>
+    
+    <div class="info-box">
+      <p><strong>Ansökningsdetaljer:</strong></p>
+      <ul style="margin: 10px 0; padding-left: 20px;">
+        <li>Företag: {{companyName}}</li>
+        <li>Paket: {{packageName}}</li>
+        <li>Inskickat: {{submittedDate}}</li>
+      </ul>
+    </div>
+    
+    <p><strong>Vad händer nu?</strong></p>
+    <ol>
+      <li>Vårt team kommer att granska din ansökan inom <strong>{{estimatedReviewTime}}</strong></li>
+      <li>Vi verifierar dina dokument och uppgifter</li>
+      <li>Du får ett mejl när ditt konto är aktiverat</li>
+    </ol>
+    
+    <p>Vi strävar efter att aktivera ditt konto så snabbt som möjligt. I de flesta fall sker detta inom 24 timmar.</p>
+    
+    <p>Om vi behöver ytterligare information kommer vi att kontakta dig via mejl.</p>
+    
+    <p><strong>Frågor?</strong><br>
+    Kontakta oss gärna på support@source.se om du har några funderingar.</p>
+    
+    <p>Med vänliga hälsningar,<br>
+    Source Team</p>
+  </div>
+  
+  <div class="footer">
+    <p>Source - Din partner för affärsutveckling<br>
+    support@source.se</p>
+  </div>
+</body>
+</html>
+
