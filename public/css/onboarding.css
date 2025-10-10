@@ -25,11 +25,14 @@ body {
   background: #f9fafb;
   color: var(--text-primary);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 .container {
   display: flex;
   min-height: 100vh;
+  background: #f9fafb;
+  width: 100%;
 }
 
 /* Sidebar */
@@ -83,7 +86,7 @@ body {
   margin-left: 250px;
   flex: 1;
   padding: 40px;
-  max-width: 1200px;
+  width: calc(100vw - 250px);
   background: #f9fafb;
   min-height: 100vh;
 }
