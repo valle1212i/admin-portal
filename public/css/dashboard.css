@@ -141,6 +141,10 @@ body {
   margin-bottom: var(--space-12);
   padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--gray-700);
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .logo img {
