@@ -177,6 +177,10 @@ app.use('/api/email', require('./routes/emailRoutes'));
 // Onboarding routes
 app.use('/api/onboarding', require('./routes/onboarding'));
 
+// Statistics routes
+app.use('/api/statistics', require('./routes/statistics'));
+console.log('✅ Mounted: /api/statistics');
+
 // ✅ MONTERA ADMIN-ROUTERNA + LOGGA
 try {
   const adminAds = require('./routes/adminAds');
@@ -243,6 +247,9 @@ app.get("/onboarding-admin.html", requireAdminLogin, (req, res) =>
 );
 app.get("/onboarding-review.html", requireAdminLogin, (req, res) =>
   res.sendFile(path.join(__dirname, "public", "onboarding-review.html"))
+);
+app.get("/statistics.html", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "statistics.html"))
 );
 
 app.post("/admin-login", async (req, res) => {
@@ -366,6 +373,41 @@ mongoose
   .then(() => {
     console.log("✅ MongoDB (adminportal) ansluten");
     if (process.env.PROCESS_OUTBOX === 'true') startOutboxWorker();
+    
+    // Start statistics background jobs (if enabled)
+    if (process.env.ENABLE_STATS_JOBS === 'true') {
+      try {
+        const cron = require('node-cron');
+        const { calculateDailyEngagement } = require('./services/engagementCalculator');
+        const { analyzeDailySupportMetrics } = require('./services/supportAnalyzer');
+        
+        // Run engagement calculation daily at 1 AM
+        cron.schedule('0 1 * * *', async () => {
+          console.log('⏰ Running daily engagement calculation...');
+          try {
+            await calculateDailyEngagement();
+            console.log('✅ Daily engagement calculation complete');
+          } catch (err) {
+            console.error('❌ Error in engagement calculation:', err);
+          }
+        });
+        
+        // Run support quality analysis daily at 2 AM
+        cron.schedule('0 2 * * *', async () => {
+          console.log('⏰ Running daily support quality analysis...');
+          try {
+            await analyzeDailySupportMetrics();
+            console.log('✅ Daily support analysis complete');
+          } catch (err) {
+            console.error('❌ Error in support analysis:', err);
+          }
+        });
+        
+        console.log('✅ Statistics background jobs scheduled');
+      } catch (err) {
+        console.error('❌ Failed to start statistics jobs:', err);
+      }
+    }
   })
   .catch((err) => console.error("❌ MongoDB-anslutning misslyckades:", err));
 

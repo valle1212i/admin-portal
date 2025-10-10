@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistik - Source Admin Portal</title>
+  <link rel="stylesheet" href="/css/statistics.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo">
+        <h2>Source Admin</h2>
+      </div>
+      <nav class="nav">
+        <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="/cases.html"><i class="fas fa-ticket-alt"></i> Ärenden</a>
+        <a href="/admin-customer.html"><i class="fas fa-users"></i> Kunder</a>
+        <a href="/invoicing.html"><i class="fas fa-file-invoice-dollar"></i> Fakturering</a>
+        <a href="/avtal.html"><i class="fas fa-file-contract"></i> Avtal</a>
+        <a href="/onboarding-admin.html"><i class="fas fa-user-plus"></i> Onboarding</a>
+        <a href="/statistics.html" class="active"><i class="fas fa-chart-bar"></i> Statistik</a>
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logga ut</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <h1><i class="fas fa-chart-line"></i> Statistik & Analytics</h1>
+        <div class="header-controls">
+          <select id="dateRange" class="date-selector">
+            <option value="7">Senaste 7 dagarna</option>
+            <option value="30" selected>Senaste 30 dagarna</option>
+            <option value="90">Senaste 90 dagarna</option>
+            <option value="365">Senaste året</option>
+          </select>
+          <button class="btn-refresh" onclick="refreshAllData()">
+            <i class="fas fa-sync-alt"></i> Uppdatera
+          </button>
+        </div>
+      </header>
+
+      <!-- Loading Overlay -->
+      <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+        <div class="spinner"></div>
+        <p>Laddar statistik...</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <section class="kpi-section">
+        <div class="kpi-card kpi-primary">
+          <div class="kpi-icon"><i class="fas fa-users"></i></div>
+          <div class="kpi-content">
+            <h3>Totalt antal kunder</h3>
+            <p class="kpi-value" id="kpi-total-customers">-</p>
+            <span class="kpi-change" id="kpi-customer-growth">-</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-success">
+          <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+          <div class="kpi-content">
+            <h3>MRR</h3>
+            <p class="kpi-value" id="kpi-mrr">-</p>
+            <span class="kpi-subtitle">ARR: <span id="kpi-arr">-</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-info">
+          <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
+          <div class="kpi-content">
+            <h3>Aktiva användare (nu)</h3>
+            <p class="kpi-value" id="kpi-online-users">-</p>
+            <span class="kpi-subtitle">Online senaste 15 min</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-warning">
+          <div class="kpi-icon"><i class="fas fa-robot"></i></div>
+          <div class="kpi-content">
+            <h3>AI Nöjdhet</h3>
+            <p class="kpi-value" id="kpi-ai-satisfaction">-</p>
+            <span class="kpi-subtitle">Positiv feedback %</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-danger">
+          <div class="kpi-icon"><i class="fas fa-ticket-alt"></i></div>
+          <div class="kpi-content">
+            <h3>Öppna ärenden</h3>
+            <p class="kpi-value" id="kpi-open-tickets">-</p>
+            <span class="kpi-subtitle">Behöver åtgärd</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+          <div class="kpi-content">
+            <h3>Avg. lösn. tid</h3>
+            <p class="kpi-value" id="kpi-avg-resolution">-</p>
+            <span class="kpi-subtitle">Minuter</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts Grid -->
+      <section class="charts-section">
+        <!-- Row 1 -->
+        <div class="chart-card chart-card-large">
+          <h3><i class="fas fa-chart-line"></i> AI Prestanda Trender</h3>
+          <canvas id="aiPerformanceChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3><i class="fas fa-chart-pie"></i> Paketfördelning</h3>
+          <canvas id="packageDistributionChart"></canvas>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="chart-card">
+          <h3><i class="fas fa-chart-bar"></i> Mest använda funktioner</h3>
+          <canvas id="featureUsageChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3><i class="fas fa-chart-area"></i> Support Volym</h3>
+          <canvas id="supportVolumeChart"></canvas>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="chart-card chart-card-large">
+          <h3><i class="fas fa-dollar-sign"></i> Intäkts Trender (MRR)</h3>
+          <canvas id="revenueChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3><i class="fas fa-heartbeat"></i> Kund Engagement</h3>
+          <canvas id="engagementChart"></canvas>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="chart-card chart-card-full">
+          <h3><i class="fas fa-funnel-dollar"></i> Onboarding Konverteringsflöde</h3>
+          <canvas id="onboardingFunnelChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Tables Section -->
+      <section class="tables-section">
+        <!-- AI Negative Feedback Table -->
+        <div class="table-card">
+          <h3><i class="fas fa-thumbs-down"></i> Senaste Negativa AI Feedback</h3>
+          <div class="table-container">
+            <table id="aiFeedbackTable">
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Kund</th>
+                  <th>Fråga</th>
+                  <th>AI Svar</th>
+                  <th>Feedback</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="no-data">Laddar data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Support Team Performance -->
+        <div class="table-card">
+          <h3><i class="fas fa-user-friends"></i> Support Team Prestanda</h3>
+          <div class="table-container">
+            <table id="supportTeamTable">
+              <thead>
+                <tr>
+                  <th>Admin</th>
+                  <th>Ärenden</th>
+                  <th>Avg. Svarstid (min)</th>
+                  <th>Avg. Lösn. (min)</th>
+                  <th>Kundnöjdhet</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="no-data">Laddar data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Customers at Risk -->
+        <div class="table-card">
+          <h3><i class="fas fa-exclamation-triangle"></i> Kunder i Riskzon</h3>
+          <div class="table-container">
+            <table id="atRiskTable">
+              <thead>
+                <tr>
+                  <th>Kund</th>
+                  <th>Paket</th>
+                  <th>Health Score</th>
+                  <th>Status</th>
+                  <th>Senaste Login</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="no-data">Laddar data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Customer Issues -->
+        <div class="table-card">
+          <h3><i class="fas fa-tags"></i> Vanligaste Support Ärenden</h3>
+          <div class="table-container">
+            <table id="topIssuesTable">
+              <thead>
+                <tr>
+                  <th>Kategori</th>
+                  <th>Antal</th>
+                  <th>Avg. Lösn. Tid</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" class="no-data">Laddar data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/statistics.js"></script>
+</body>
+</html>
+
