@@ -63,6 +63,37 @@
         </div>
       </section>
 
+      <!-- Empty State (shown when no customer selected) -->
+      <section class="empty-state-container" id="empty-state">
+        <div class="empty-state-content">
+          <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="color: #9ca3af; margin-bottom: 1.5rem;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M16 11l2 2 4-4"></path>
+          </svg>
+          <h3>Välj en kund för att hantera avtal</h3>
+          <p>Sök efter en kund genom att skriva deras namn eller e-postadress i sökfältet ovan.</p>
+          <div class="empty-state-features">
+            <div class="feature-item">
+              <span class="feature-icon">📦</span>
+              <span>Hantera paket (Bas, Grower, Enterprise)</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📄</span>
+              <span>Ladda upp och hantera avtalsdokument</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">🔄</span>
+              <span>Begär och godkänn paketändringar</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">⚠️</span>
+              <span>Säg upp avtal med automatisk fakturastopp</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Customer Details Section (hidden until customer selected) -->
       <section class="customer-details" id="customer-details" style="display: none;">
         <!-- Customer Info Card -->
@@ -164,9 +195,9 @@
           <div class="form-group">
             <label for="contract-status">Status:</label>
             <select id="contract-status" name="status" class="form-select">
-              <option value="Aktivt">Aktivt</option>
+        <option value="Aktivt">Aktivt</option>
               <option value="Pågående">Pågående</option>
-              <option value="Utgått">Utgått</option>
+        <option value="Utgått">Utgått</option>
             </select>
           </div>
           
@@ -178,7 +209,7 @@
               <option value="Enterprise">Enterprise</option>
             </select>
           </div>
-        </form>
+    </form>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" onclick="closeUploadModal()">Avbryt</button>

@@ -95,8 +95,12 @@ function formatAgreementStatus(status) {
 async function selectCustomer(customerId) {
   currentCustomerId = customerId;
   document.getElementById('search-results').classList.remove('active');
-  await loadCustomerDetails(customerId);
+  
+  // Hide empty state and show customer details
+  document.getElementById('empty-state').style.display = 'none';
   document.getElementById('customer-details').style.display = 'grid';
+  
+  await loadCustomerDetails(customerId);
 }
 
 // ===================================
