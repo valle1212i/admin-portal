@@ -655,7 +655,7 @@ function updateAIFeedbackTable(data) {
   tbody.innerHTML = data.map(item => `
     <tr>
       <td>${formatDate(item.timestamp)}</td>
-      <td>${item.customerId?.name || 'Okänd'}</td>
+      <td>${item.customer?.name || 'Okänd'}</td>
       <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${truncateText(item.question, 50)}</td>
       <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${truncateText(item.aiResponse, 50)}</td>
       <td>${item.feedbackText || '-'}</td>
@@ -699,7 +699,7 @@ function updateAtRiskTable(data) {
   }
   
   tbody.innerHTML = data.slice(0, 10).map(item => {
-    const customer = item.customerId || {};
+    const customer = item.customer || {};
     const statusBadge = item.healthStatus === 'churning' ? 
       '<span class="badge badge-danger">Churn Risk</span>' :
       '<span class="badge badge-warning">I Riskzon</span>';

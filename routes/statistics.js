@@ -393,14 +393,31 @@ router.get('/ai-performance', async (req, res) => {
     ]);
 
     // Recent negative feedback
-    const recentNegative = await AIFeedback.find({ 
+    const recentNegativeRaw = await AIFeedback.find({ 
       rating: 'negative',
       timestamp: { $gte: startDate }
     })
-    .populate('customerId', 'name email')
     .sort({ timestamp: -1 })
     .limit(10)
     .lean();
+
+    // Fetch customer data separately since Customer model is on different connection
+    const recentNegative = await Promise.all(recentNegativeRaw.map(async (feedback) => {
+      try {
+        const Customer = require('../models/Customer');
+        const customer = await Customer.findById(feedback.customerId).lean();
+        return {
+          ...feedback,
+          customer: customer ? { name: customer.name, email: customer.email } : null
+        };
+      } catch (err) {
+        console.warn(`Could not fetch customer ${feedback.customerId}:`, err.message);
+        return {
+          ...feedback,
+          customer: null
+        };
+      }
+    }));
 
     // Trending questions (most common)
     const trendingQuestions = await AIFeedback.aggregate([
@@ -663,14 +680,31 @@ router.get('/customer-engagement', async (req, res) => {
     ]);
 
     // Customers at risk (health score trend declining)
-    const atRiskCustomers = await CustomerEngagementScore.find({
+    const atRiskCustomersRaw = await CustomerEngagementScore.find({
       healthStatus: { $in: ['at_risk', 'churning'] },
       date: { $gte: startDate }
     })
     .sort({ date: -1 })
     .limit(20)
-    .populate('customerId', 'name email package')
     .lean();
+
+    // Fetch customer data separately since Customer model is on different connection
+    const atRiskCustomers = await Promise.all(atRiskCustomersRaw.map(async (engagement) => {
+      try {
+        const Customer = require('../models/Customer');
+        const customer = await Customer.findById(engagement.customerId).lean();
+        return {
+          ...engagement,
+          customer: customer ? { name: customer.name, email: customer.email, package: customer.package } : null
+        };
+      } catch (err) {
+        console.warn(`Could not fetch customer ${engagement.customerId}:`, err.message);
+        return {
+          ...engagement,
+          customer: null
+        };
+      }
+    }));
 
     // Engagement trends over time
     const engagementTrends = await CustomerEngagementScore.aggregate([
