@@ -121,6 +121,29 @@ router.post('/', async (req, res) => {
         return null; // Filter out invalid messages
       }).filter(msg => msg !== null); // Remove null entries
 
+      // Map Swedish status values to English enum values
+      const statusMapping = {
+        'Öppen': 'open',
+        'Nytt': 'new', 
+        'Arbetande': 'in_progress',
+        'Väntar svar': 'waiting',
+        'On Hold': 'on_hold',
+        'Stängt': 'closed',
+        'open': 'open',
+        'new': 'new',
+        'in_progress': 'in_progress',
+        'waiting': 'waiting',
+        'on_hold': 'on_hold',
+        'closed': 'closed'
+      };
+      
+      const cleanStatus = statusMapping[caseData.status] || 'open';
+      
+      console.log('[ADMIN INGEST CASE] Status mapping:', { 
+        original: caseData.status, 
+        mapped: cleanStatus 
+      });
+
       // Create case document for AdminPanel.adminportal.cases
       const caseDocument = {
         customerId: caseData.customerId,
@@ -131,7 +154,7 @@ router.post('/', async (req, res) => {
         priority: caseData.priority || 'Normal',
         tags: caseData.tags || [],
         tenant: caseData.tenantId || 'default',
-        status: caseData.status || 'open',
+        status: cleanStatus,
         createdAt: new Date(),
         updatedAt: new Date()
       };
