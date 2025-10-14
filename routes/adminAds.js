@@ -25,6 +25,12 @@ router.get('/', async (req, res) => {
   try {
     // --- filter & paginering ---
     const filter = {};
+    
+    // NEW: Category filter
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+    
     if (req.query.tenant)   filter.tenantId = req.query.tenant;
     if (req.query.platform) filter.platform = req.query.platform;
     if (req.query.status)   filter.status   = req.query.status;
@@ -35,18 +41,20 @@ router.get('/', async (req, res) => {
       if (req.query.to)   filter.createdAt.$lte = new Date(req.query.to);
     }
 
-    // Free-text q: sök i både nytt schema (answers.q1..q7) och ev. legacy q1..q7
+    // Enhanced search to include category-specific fields
     const q = (req.query.q || '').trim();
     if (q) {
       const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [
-        // nytt schema
+        // Standard fields
         { 'answers.q1': rx }, { 'answers.q2': rx }, { 'answers.q3': rx },
         { 'answers.q4': rx }, { 'answers.q5': rx }, { 'answers.q6': rx }, { 'answers.q7': rx },
-        // legacy
         { q1: rx }, { q2: rx }, { q3: rx }, { q4: rx }, { q5: rx }, { q6: rx }, { q7: rx },
-        // övrigt
-        { extraInfo: rx }, { userEmail: rx }, { userId: rx }
+        { extraInfo: rx }, { userEmail: rx }, { userId: rx },
+        // AI Studio fields
+        { 'aiStudioData.generationType': rx }, { 'aiStudioData.prompt': rx },
+        // Rådgivning fields
+        { 'radgivningData.questions.question': rx }, { 'radgivningData.questions.answer': rx }
       ];
     }
 
@@ -89,21 +97,23 @@ router.get('/', async (req, res) => {
       Ad.countDocuments(adFilter)
     ]);
 
-    // Behåll fälten som admin-UI:t förväntar (preview funkar ändå mot answers)
+    // Enhanced response with category-specific fields
     res.json({
       page, limit, total, source: 'primary',
       items: items.map(d => ({
         _id: d._id,
+        category: d.category || 'ads',
         platform: d.platform || null,
         createdAt: d.createdAt || null,
-        // passera vidare ev. legacy fält för kompatibilitet
-        q1: d.q1, q2: d.q2, q3: d.q3, q4: d.q4, q5: d.q5, q6: d.q6, q7: d.q7,
-        extraInfo: d.extraInfo,
+        tenantId: d.tenantId,
         userEmail: d.userEmail,
         userId: d.userId,
-        // viktigast: answers (nytt schema) – admin-marknadsföring.html läser detta
         answers: d.answers || {},
-        tenantId: d.tenantId || null
+        aiStudioData: d.aiStudioData,
+        radgivningData: d.radgivningData,
+        // Legacy fields for compatibility
+        q1: d.q1, q2: d.q2, q3: d.q3, q4: d.q4, q5: d.q5, q6: d.q6, q7: d.q7,
+        extraInfo: d.extraInfo
       }))
     });
   } catch (err) {

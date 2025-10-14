@@ -6,508 +6,49 @@
   <title>Admin – Marknadsföring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-bg: #0a0a0a;
-      --secondary-bg: #1a1a1a;
-      --card-bg: #1e1e1e;
-      --card-border: #2a2a2a;
-      --accent-green: #00ff88;
-      --accent-blue: #00d4ff;
-      --accent-purple: #8b5cf6;
-      --accent-orange: #ff6b35;
-      --text-primary: #ffffff;
-      --text-secondary: #a0a0a0;
-      --text-muted: #666666;
-      --border-color: #333333;
-      --hover-bg: #2a2a2a;
-      --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --gradient-green: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
-      --gradient-card: linear-gradient(145deg, #1e1e1e 0%, #2a2a2a 100%);
-      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
-      --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--primary-bg);
-      color: var(--text-primary);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 20%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: -1;
-    }
-    
-    .layout {
-      display: block;
-      min-height: 100vh;
-      padding: 0;
-    }
-    
-    main {
-      padding: 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    
-    .back-button {
-      margin-bottom: 24px;
-    }
-    
-    .back-button a {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 20px;
-      background: var(--gradient-card);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      color: var(--text-primary);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      box-shadow: var(--shadow-card);
-    }
-    
-    .back-button a:hover {
-      background: var(--hover-bg);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--accent-blue);
-    }
-    
-    .back-button a i {
-      color: var(--accent-blue);
-    }
-    
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin: 0 0 32px 0;
-      background: var(--gradient-green);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-align: center;
-    }
-    
-    .card {
-      background: var(--gradient-card);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-card);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gradient-green);
-      opacity: 0.3;
-    }
-    
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--accent-blue);
-    }
-    
-    .card h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 0 0 20px 0;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .card h2::before {
-      content: '';
-      width: 4px;
-      height: 24px;
-      background: var(--gradient-green);
-      border-radius: 2px;
-    }
-    
-    .card h3 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin: 0 0 8px 0;
-      color: var(--text-primary);
-    }
-    
-    .card .meta {
-      color: var(--text-secondary);
-      font-size: 13px;
-      margin: 4px 0;
-    }
-    
-    .card strong {
-      color: var(--accent-blue);
-      font-weight: 600;
-    }
-    
-    .card details summary {
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
-    
-    .card .btn-detail {
-      background: var(--gradient-primary);
-      border: none;
-      color: var(--text-primary);
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .card .btn-detail:hover {
-      background: var(--accent-blue);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
-    }
-    
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 24px;
-      align-items: center;
-    }
-    
-    .toolbar input[type="search"], 
-    .toolbar input[type="date"], 
-    .toolbar select {
-      padding: 12px 16px;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--secondary-bg);
-      color: var(--text-primary);
-      font-size: 14px;
-      transition: all 0.3s ease;
-      min-width: 200px;
-    }
-    
-    .toolbar input[type="search"]:focus,
-    .toolbar input[type="date"]:focus,
-    .toolbar select:focus {
-      outline: none;
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
-    }
-    
-    .toolbar .btn {
-      padding: 12px 24px;
-      border: 1px solid var(--accent-blue);
-      background: var(--gradient-primary);
-      color: var(--text-primary);
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .toolbar .btn:hover {
-      background: var(--accent-blue);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
-    }
-    
-    .sort-controls {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      margin-bottom: 20px;
-      padding: 16px;
-      background: var(--secondary-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-    }
-    
-    .sort-controls label {
-      font-size: 14px;
-      color: var(--text-secondary);
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    
-    .sort-controls select {
-      padding: 8px 16px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      background: var(--card-bg);
-      color: var(--text-primary);
-      font-size: 14px;
-      min-width: 250px;
-    }
-    
-    .status {
-      font-size: 14px;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-    
-    .grid {
-      display: grid;
-      gap: 16px;
-    }
-    
-    .row {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    
-    .badges {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-    
-    .badge {
-      font-size: 12px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .badge.green {
-      background: linear-gradient(135deg, #00ff88, #00d4ff);
-      color: #000;
-    }
-    
-    .badge.gray {
-      background: var(--secondary-bg);
-      color: var(--text-secondary);
-      border: 1px solid var(--border-color);
-    }
-    
-    .badge.orange {
-      background: linear-gradient(135deg, #ff6b35, #f7931e);
-      color: #fff;
-    }
-    
-    .badge.blue {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
-    }
-    
-    .platforms {
-      display: flex;
-      gap: 8px;
-      color: var(--accent-blue);
-      font-size: 18px;
-    }
-    
-    .meta {
-      color: var(--text-secondary);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    
-    .kv {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 12px 20px;
-      margin: 16px 0;
-    }
-    
-    details {
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 16px;
-      background: var(--secondary-bg);
-      transition: all 0.3s ease;
-    }
-    
-    details[open] {
-      background: var(--card-bg);
-      border-color: var(--accent-blue);
-    }
-    
-    details summary {
-      cursor: pointer;
-      font-weight: 500;
-      color: var(--accent-blue);
-      padding: 8px 0;
-    }
-    
-    .pager {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-top: 20px;
-      justify-content: center;
-    }
-    
-    .pager .btn {
-      padding: 10px 20px;
-      border: 1px solid var(--border-color);
-      background: var(--secondary-bg);
-      color: var(--text-primary);
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s ease;
-    }
-    
-    .pager .btn:hover {
-      background: var(--accent-blue);
-      border-color: var(--accent-blue);
-      transform: translateY(-1px);
-    }
-    
-    .empty {
-      color: var(--text-muted);
-      text-align: center;
-      padding: 40px;
-      font-style: italic;
-    }
-    
-    .error {
-      color: #ff4757;
-      text-align: center;
-      padding: 20px;
-      background: rgba(255, 71, 87, 0.1);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 71, 87, 0.2);
-    }
-    
-    .split {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-      gap: 24px;
-    }
-    
-    .mono {
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 12px;
-      background: var(--secondary-bg);
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-    
-    @media (max-width: 1200px) {
-      .split {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      main {
-        padding: 16px;
-      }
-      
-      h1 {
-        font-size: 2rem;
-      }
-      
-      .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .toolbar input[type="search"], 
-      .toolbar input[type="date"], 
-      .toolbar select {
-        min-width: auto;
-        width: 100%;
-      }
-      
-      .sort-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .sort-controls select {
-        min-width: auto;
-        width: 100%;
-      }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin-marknadsforing.css">
 </head>
 <body>
 <div class="layout">
   <main>
     <div class="back-button">
       <a href="admin-dashboard.html">
-        <i class="fas fa-arrow-left"></i>
         ← Tillbaka till Dashboard
       </a>
     </div>
-    <h1>🚀 Marknadsföring & Analytics</h1>
+    <h1>Marknadsföring & Analytics</h1>
 
-    <!-- Filter/verktyg för BRIEFS -->
+    <!-- Marketing Briefs Section -->
     <section class="card">
-      <h2>📊 Marketing Briefs</h2>
+      <h2>Marketing Briefs</h2>
+      <div class="category-tabs">
+        <button class="tab-btn active" data-category="ads">Ads</button>
+        <button class="tab-btn" data-category="ai-studio">AI Studio</button>
+        <button class="tab-btn" data-category="radgivning">Rådgivning</button>
+      </div>
+      
       <div class="sort-controls">
         <label for="adsSort">Sortera briefs:</label>
         <select id="adsSort">
           <option value="createdAt-desc">Senast skapade (nyast först)</option>
           <option value="createdAt-asc">Äldst skapade (äldst först)</option>
-          <option value="objectId-asc">Object ID (A-Ö)</option>
-          <option value="objectId-desc">Object ID (Ö-A)</option>
+          <option value="category-asc">Kategori (A-Ö)</option>
+          <option value="category-desc">Kategori (Ö-A)</option>
           <option value="tenantId-asc">Företag (A-Ö)</option>
           <option value="tenantId-desc">Företag (Ö-A)</option>
-          <option value="platform-asc">Plattform (A-Ö)</option>
-          <option value="platform-desc">Plattform (Ö-A)</option>
-          <option value="userEmail-asc">Användare (A-Ö)</option>
-          <option value="userEmail-desc">Användare (Ö-A)</option>
         </select>
       </div>
+      
       <div class="toolbar">
-        <input id="q" type="search" placeholder="Sök i svaren (q1–q7, extraInfo)…"/>
+        <input id="q" type="search" placeholder="Sök i svaren…"/>
         <input id="from" type="date"/>
         <input id="to" type="date"/>
-        <select id="platform">
-          <option value="">Alla plattformar</option>
-          <option value="google">Google</option>
-          <option value="meta">Meta</option>
-          <option value="tiktok">TikTok</option>
-          <option value="linkedin">LinkedIn</option>
+        <select id="category">
+          <option value="">Alla kategorier</option>
+          <option value="ads">Ads</option>
+          <option value="ai-studio">AI Studio</option>
+          <option value="radgivning">Rådgivning</option>
         </select>
         <button id="filterBtn" class="btn">Filtrera</button>
         <span id="adsStatus" class="status">–</span>
@@ -524,59 +65,22 @@
       </div>
     </section>
 
-    <div class="split">
-      <!-- SUPPORT-ÖVERSIKT -->
-      <section class="card">
-        <h2>🤖 AI Studio & Rådgivning</h2>
-        <div class="sort-controls">
-          <label for="supportSort">Sortera ärenden:</label>
-          <select id="supportSort">
-            <option value="createdAt-desc">Senast skapade (nyast först)</option>
-            <option value="createdAt-asc">Äldst skapade (äldst först)</option>
-            <option value="objectId-asc">Object ID (A-Ö)</option>
-            <option value="objectId-desc">Object ID (Ö-A)</option>
-            <option value="tenantId-asc">Företag (A-Ö)</option>
-            <option value="tenantId-desc">Företag (Ö-A)</option>
-            <option value="status-asc">Status (A-Ö)</option>
-            <option value="status-desc">Status (Ö-A)</option>
-            <option value="dataType-asc">Datatyp (A-Ö)</option>
-            <option value="dataType-desc">Datatyp (Ö-A)</option>
-          </select>
-        </div>
-        <div class="toolbar">
-          <input id="sq" type="search" placeholder="Sök i företag/Object ID/AI Studio svar/rådgivning…"/>
-          <select id="sstatus">
-            <option value="">Alla statusar</option>
-            <option value="open">Öppna</option>
-            <option value="closed">Stängda</option>
-          </select>
-          <input id="sfrom" type="date"/>
-          <input id="sto" type="date"/>
-          <button id="sbtn" class="btn">Filtrera</button>
-          <span id="supportStatus" class="status">–</span>
-        </div>
-        <div id="supportList" class="grid">
-          <p class="meta">Laddar support…</p>
-        </div>
-      </section>
-
-      <!-- LIVE-SUMMOR & HÄLSA -->
-      <section class="card">
-        <h2>📈 Sammanfattning</h2>
-        <div id="summaryBox" class="kv">
-          <div>Antal briefs</div><div id="sumBriefs">–</div>
-          <div>Källa</div><div id="sumSource">–</div>
-          <div>Öppna ärenden</div><div id="sumOpen">–</div>
-          <div>Stängda ärenden</div><div id="sumClosed">–</div>
-          <div>DB-hälsa</div><div id="dbHealth" class="mono">–</div>
-        </div>
-      </section>
-    </div>
+    <!-- Summary Section -->
+    <section class="card">
+      <h2>Sammanfattning</h2>
+      <div id="summaryBox" class="kv">
+        <div>Antal briefs</div><div id="sumBriefs">–</div>
+        <div>Ads</div><div id="sumAds">–</div>
+        <div>AI Studio</div><div id="sumAIStudio">–</div>
+        <div>Rådgivning</div><div id="sumRadgivning">–</div>
+        <div>Källa</div><div id="sumSource">–</div>
+      </div>
+    </section>
   </main>
 </div>
 
 <script>
-  // === Små utils ===
+  // === Utils ===
   function esc(s){ return String(s != null ? s : '').replace(/[&<>"]/g, m => ( {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'} )[m]); }
   function dse(x){ try{ return new Date(x).toLocaleString('sv-SE'); } catch{ return '–'; } }
   function short(s, n=160){ s=String(s||''); return s.length>n? s.slice(0,n)+'…' : s; }
@@ -584,9 +88,8 @@
 
   // === State ===
   let page=1, limit=20, lastTotal=0, lastSource='primary';
-  let s_last = { open:0, closed:0 };
   let adsSortBy = 'createdAt-desc';
-  let supportSortBy = 'createdAt-desc';
+  let currentCategory = 'ads';
 
   // Plocka ut answers oavsett schema (nytt eller legacy)
   function extractAnswers(it){
@@ -635,6 +138,18 @@
     return `<i class="fa-brands ${i}"></i>`;
   }
 
+  // === Category tab switching ===
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.dataset.category;
+      document.getElementById('category').value = currentCategory;
+      page = 1;
+      loadAds();
+    });
+  });
+
   // === ADS (briefs) ===
   async function loadAds(){
     const elList = document.getElementById('adsList');
@@ -644,11 +159,11 @@
     const q = document.getElementById('q').value.trim();
     const from = document.getElementById('from').value;
     const to   = document.getElementById('to').value;
-    const platform = document.getElementById('platform').value;
+    const category = document.getElementById('category').value;
 
     const params = new URLSearchParams({ page, limit });
     if (q) params.set('q', q);
-    if (platform) params.set('platform', platform);
+    if (category) params.set('category', category);
     if (from) params.set('from', new Date(from).toISOString());
     if (to)   params.set('to', new Date(to).toISOString());
     if (adsSortBy) params.set('sort', adsSortBy);
@@ -666,20 +181,17 @@
       elSt.textContent  = `Källa: ${lastSource}`;
 
       if (!data.items?.length){
-        elList.innerHTML = `<p class="empty">Inga briefs hittades.</p>`;
-        document.getElementById('sumBriefs').textContent = '0';
-        document.getElementById('sumSource').textContent = lastSource;
+        elList.innerHTML = `<p class="empty">Inga briefs hittades för kategori "${currentCategory}".</p>`;
+        updateSummary(data.items || []);
         return;
       }
 
-      document.getElementById('sumBriefs').textContent = data.total ?? data.items.length;
-      document.getElementById('sumSource').textContent = lastSource;
-
+      updateSummary(data.items);
       elList.innerHTML = data.items.map(renderAdItem).join('');
       bindAdDetailButtons();
     }catch(err){
       console.error(err);
-      elList.innerHTML = `<p class="error">⛔️ Kunde inte hämta briefs. Är <code>/admin/api/ads</code> implementerad?</p>`;
+      elList.innerHTML = `<p class="error">Kunde inte hämta briefs. Är <code>/admin/api/ads</code> implementerad?</p>`;
       elLbl.textContent = '';
       elSt.textContent  = 'Fel';
     }
@@ -689,15 +201,55 @@
     const ans = extractAnswers(it);
     const preview = esc(answersPreview(ans));
     const platform = String(it.platform || '-').toLowerCase();
+    const category = it.category || 'ads';
+    
+    // Category-specific rendering
+    let categoryBadge = '';
+    let categoryContent = '';
+    
+    switch (category) {
+      case 'ai-studio':
+        categoryBadge = '<span class="badge orange">AI Studio</span>';
+        if (it.aiStudioData) {
+          categoryContent = `
+            <div class="meta" style="margin-top:.25rem">
+              <strong>Typ:</strong> ${esc(it.aiStudioData.generationType || 'Okänt')}
+            </div>
+            ${it.aiStudioData.generatedImages?.length ? `
+              <div class="meta" style="margin-top:.25rem">
+                <strong>Genererade bilder:</strong> ${it.aiStudioData.generatedImages.length} st
+              </div>
+            ` : ''}
+            ${it.aiStudioData.generatedPDFs?.length ? `
+              <div class="meta" style="margin-top:.25rem">
+                <strong>Genererade PDFs:</strong> ${it.aiStudioData.generatedPDFs.length} st
+              </div>
+            ` : ''}
+          `;
+        }
+        break;
+      case 'radgivning':
+        categoryBadge = '<span class="badge blue">Rådgivning</span>';
+        if (it.radgivningData) {
+          categoryContent = `
+            <div class="meta" style="margin-top:.25rem">
+              <strong>Frågor:</strong> ${it.radgivningData.questions?.length || 0} st
+            </div>
+            <div class="meta" style="margin-top:.25rem">
+              <strong>Prioritet:</strong> ${esc(it.radgivningData.priority || 'medium')}
+            </div>
+          `;
+        }
+        break;
+      default:
+        categoryBadge = '<span class="badge green">Ads</span>';
+        break;
+    }
+
     const idBtn = it._id
       ? `<button class="btn btn-detail" data-id="${esc(it._id)}">Visa detalj</button>`
       : `<span class="badge gray">Ingen detalj (legacy)</span>`;
 
-    // valfri källa-badge, fallback om ni vill markera migrerad data
-    const isFallback = !!it._fallback;
-    const sourceBadge = `<span class="badge ${isFallback?'orange':'green'}">${isFallback?'fallback':'primary'}</span>`;
-
-    // Display tenant name and Object ID
     const tenantName = it.tenantId || it.tenant || 'Okänt företag';
     const objectId = it.userId || it.objectId || it.meta?.userId || it._id || 'Ingen Object ID';
     const userLabel = `${esc(tenantName)} (${esc(objectId)})`;
@@ -706,7 +258,7 @@
       <div class="card">
         <div class="row">
           <div>
-            <div class="badges">${sourceBadge} <span class="badge">${esc(platform)}</span></div>
+            <div class="badges">${categoryBadge} ${platform !== '-' ? `<span class="badge">${esc(platform)}</span>` : ''}</div>
             <h3 style="margin:.35rem 0 .15rem 0">${esc(userLabel)}</h3>
             <div class="meta">Skapad: ${dse(it.createdAt)}</div>
           </div>
@@ -715,6 +267,7 @@
 
         <div class="meta" style="margin-top:.4rem">${preview || '<span class="meta">–</span>'}</div>
         ${it.userEmail ? `<div class="meta" style="margin-top:.25rem">E-post: ${esc(it.userEmail)}</div>` : ''}
+        ${categoryContent}
 
         <details>
           <summary>Visa fälten</summary>
@@ -746,6 +299,7 @@
   function renderDoc(d){
     const ans = extractAnswers(d);
     const hdr = [
+      `category: ${d.category ?? '-'}`,
       `platform: ${d.platform ?? '-'}`,
       `tenantId: ${d.tenantId ?? '-'}`,
       `createdAt: ${dse(d.createdAt)}`
@@ -754,211 +308,53 @@
     return `${hdr}\n---\n${kv}`;
   }
 
+  // Enhanced summary update function
+  function updateSummary(items) {
+    const counts = {
+      ads: 0,
+      aiStudio: 0,
+      radgivning: 0
+    };
+    
+    items.forEach(item => {
+      const category = item.category || 'ads';
+      if (counts.hasOwnProperty(category)) {
+        counts[category]++;
+      }
+    });
+    
+    document.getElementById('sumBriefs').textContent = items.length;
+    document.getElementById('sumAds').textContent = counts.ads;
+    document.getElementById('sumAIStudio').textContent = counts.aiStudio;
+    document.getElementById('sumRadgivning').textContent = counts.radgivning;
+    document.getElementById('sumSource').textContent = lastSource;
+  }
+
   // Pager + filter + sort
   document.getElementById('filterBtn').addEventListener('click', ()=>{page=1; loadAds();});
   document.getElementById('prevAds').addEventListener('click', ()=>{ if (page>1){ page--; loadAds(); }});
   document.getElementById('nextAds').addEventListener('click', ()=>{ if (page*limit < lastTotal){ page++; loadAds(); }});
   document.getElementById('adsSort').addEventListener('change', (e)=>{adsSortBy=e.target.value; page=1; loadAds();});
-  document.getElementById('supportSort').addEventListener('change', (e)=>{supportSortBy=e.target.value; loadSupport();});
 
-  // === SUPPORT ===
-  async function loadSupport(){
-    const el = document.getElementById('supportList');
-    const st = document.getElementById('supportStatus');
-    const sq = document.getElementById('sq').value.trim();
-    const sstatus = document.getElementById('sstatus').value;
-    const sfrom = document.getElementById('sfrom').value;
-    const sto   = document.getElementById('sto').value;
-
-    const params = new URLSearchParams({ page:1, limit:200 });
-    if (sq) params.set('q', sq);
-    if (sstatus) params.set('status', sstatus);
-    if (sfrom) params.set('from', new Date(sfrom).toISOString());
-    if (sto)   params.set('to', new Date(sto).toISOString());
-    if (supportSortBy) params.set('sort', supportSortBy);
-
-    el.innerHTML = '<p class="meta">Hämtar…</p>';
-
-    try{
-      const res = await fetch('/api/admin/studio-radgivning?'+params.toString(), { credentials:'include' });
-      if (!res.ok) throw new Error('GET /api/admin/studio-radgivning: '+res.status);
-      const data = await res.json();
-
-      if (!data.items?.length){
-        el.innerHTML = `<p class="empty">Inga ärenden hittades.</p>`;
-        st.textContent = '0 ärenden';
-        s_last = { open:0, closed:0 };
-        updateSummary();
-        return;
-      }
-
-      const open = data.items.filter(t=>String(t.status).toLowerCase()==='open').length;
-      const closed = data.items.filter(t=>String(t.status).toLowerCase()==='closed').length;
-      s_last = { open, closed };
-      st.textContent = `${data.total} ärenden (öppna: ${open}, stängda: ${closed})`;
-      updateSummary();
-
-      el.innerHTML = data.items.map(renderTicket).join('');
-    }catch(err){
-      console.error(err);
-      el.innerHTML = `<p class="error">⛔️ Kunde inte hämta studio/rådgivning data. ${err.message.includes('401') ? 'Logga in först.' : 'Kontrollera att /api/admin/studio-radgivning är implementerad.'}</p>`;
-      st.textContent = 'Fel';
-      s_last = { open:0, closed:0 };
-      updateSummary();
-    }
-  }
-
-  function renderTicket(t){
-    const b = `<span class="badge ${t.status==='open'?'green':'gray'}">${esc(t.status)}</span>`;
-    const dataTypeBadge = `<span class="badge ${t.dataType==='ai-studio'?'orange':'blue'}">${t.dataType==='ai-studio'?'AI Studio':'Rådgivning'}</span>`;
-    
-    // Extract preview text
-    let preview = '';
-    if (t.dataType === 'ai-studio') {
-      const answers = t.answers || {};
-      const previewTexts = [];
-      ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'extraInfo'].forEach(k => {
-        if (answers[k] && answers[k].trim()) {
-          previewTexts.push(answers[k].trim());
-        }
-      });
-      preview = previewTexts.slice(0, 3).join(' | ');
-    } else {
-      preview = t.message || t.description || t.topic || '';
-    }
-
-    // Display tenant name and Object ID instead of email
-    const tenantName = t.tenantId || t.tenant || 'Okänt företag';
-    const objectId = t.userId || t.objectId || t._id || 'Ingen Object ID';
-    const displayName = `${esc(tenantName)} (${esc(objectId)})`;
-
-    // Create detailed rådgivning data display
-    let rådgivningDetails = '';
-    if (t.dataType === 'rådgivning' || t.source === 'rådgivning') {
-      const rådgivningFields = [
-        { key: 'message', label: 'Meddelande' },
-        { key: 'primaryGoal', label: 'Primärt mål' },
-        { key: 'designStrategy', label: 'Designstrategi' },
-        { key: 'ongoingSupport', label: 'Pågående support' },
-        { key: 'aiMediaHelp', label: 'AI Media hjälp' },
-        { key: 'extra', label: 'Extra information' },
-        { key: 'category', label: 'Kategori' },
-        { key: 'topic', label: 'Ämne' },
-        { key: 'description', label: 'Beskrivning' }
-      ];
-      
-      rådgivningDetails = rådgivningFields
-        .filter(field => t[field.key] && t[field.key].trim())
-        .map(field => `<div class="meta" style="margin-top:.25rem"><strong>${field.label}:</strong> ${esc(short(t[field.key], 100))}</div>`)
-        .join('');
-    }
-
-    // Make the card clickable for full details
-    const cardId = t._id || t.id || Math.random().toString(36).substr(2, 9);
-    const clickableCard = rådgivningDetails ? `onclick="showRådgivningDetails('${cardId}')" style="cursor: pointer;"` : '';
-
-    return `
-      <div class="card" ${clickableCard}>
-        <div class="row">
-          <div>
-            <div class="badges">${b} ${dataTypeBadge}</div>
-            <strong>${displayName}</strong>
-            <div class="meta">${dse(t.createdAt)}</div>
-          </div>
-          ${rådgivningDetails ? '<div class="meta" style="color: var(--accent-blue); font-size: 12px;">Klicka för detaljer →</div>' : ''}
-        </div>
-        <div class="meta" style="margin-top:.25rem">${esc(short(preview,180))}</div>
-        ${rådgivningDetails}
-        ${t.tags?.length ? `<div class="meta" style="margin-top:.25rem">Taggar: ${t.tags.map(esc).join(', ')}</div>` : ''}
-        ${t.platform ? `<div class="meta" style="margin-top:.25rem">Plattform: ${esc(t.platform)}</div>` : ''}
-        ${t.sessionId ? `<div class="meta" style="margin-top:.25rem">Session: ${esc(t.sessionId)}</div>` : ''}
-        ${t.customerEmail ? `<div class="meta" style="margin-top:.25rem">E-post: ${esc(t.customerEmail)}</div>` : ''}
-        
-        <!-- Hidden detailed data for modal -->
-        <div id="rådgivning-${cardId}" style="display: none;">
-          ${JSON.stringify(t, null, 2)}
-        </div>
-      </div>
-    `;
-  }
-
-  // === SUMMARY & HEALTH ===
-  async function health(){
-    try{
-      const res = await fetch('/_health/db', { credentials:'include' });
-      const j = await res.json();
-      document.getElementById('dbHealth').textContent = JSON.stringify(j);
-    }catch(e){
-      document.getElementById('dbHealth').textContent = 'N/A';
-    }
-  }
-  
-  // === RÅDGIVNING DETAILS MODAL ===
-  function showRådgivningDetails(cardId) {
-    const dataElement = document.getElementById(`rådgivning-${cardId}`);
-    if (!dataElement) return;
-    
-    try {
-      const data = JSON.parse(dataElement.textContent);
-      
-      // Create modal content
-      const modalContent = `
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
-          <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; max-width: 80%; max-height: 80%; overflow-y: auto; box-shadow: var(--shadow-hover);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-              <h2 style="margin: 0; color: var(--text-primary);">📋 Rådgivning Detaljer</h2>
-              <button onclick="closeRådgivningModal()" style="background: var(--accent-blue); color: white; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 14px;">Stäng</button>
-            </div>
-            <div style="display: grid; gap: 16px;">
-              ${Object.entries(data).map(([key, value]) => {
-                if (!value || (typeof value === 'string' && !value.trim())) return '';
-                const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-                const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-                return `
-                  <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                    <div style="font-weight: 600; color: var(--accent-blue); margin-bottom: 4px;">${esc(label)}</div>
-                    <div style="color: var(--text-primary); white-space: pre-wrap; font-family: monospace; font-size: 13px;">${esc(displayValue)}</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-      
-      // Add modal to page
-      const modal = document.createElement('div');
-      modal.innerHTML = modalContent;
-      modal.id = 'rådgivning-modal';
-      document.body.appendChild(modal);
-      
-    } catch (error) {
-      console.error('Error showing rådgivning details:', error);
-      alert('Fel vid visning av detaljer: ' + error.message);
-    }
-  }
-  
-  function closeRådgivningModal() {
-    const modal = document.getElementById('rådgivning-modal');
-    if (modal) {
-      modal.remove();
-    }
-  }
-  function updateSummary(){
-    document.getElementById('sumOpen').textContent = s_last.open;
-    document.getElementById('sumClosed').textContent = s_last.closed;
-  }
-
-  // === Init ===
-  document.getElementById('sbtn').addEventListener('click', loadSupport);
-  
   // Set initial sort values
   document.getElementById('adsSort').value = adsSortBy;
-  document.getElementById('supportSort').value = supportSortBy;
   
-  loadAds();
-  loadSupport();
-  health();
+  // Check admin session before initializing
+  fetch("/api/admin/me", { credentials: "include" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Admin is logged in, initialize the page
+        loadAds();
+      } else {
+        // Not logged in, redirect to login
+        window.location.href = "/login.html";
+      }
+    })
+    .catch(err => {
+      console.error('Session check failed:', err);
+      window.location.href = "/login.html";
+    });
 </script>
 
 </body>
