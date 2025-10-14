@@ -339,8 +339,22 @@
   // Set initial sort values
   document.getElementById('adsSort').value = adsSortBy;
   
-  // Initialize
-  loadAds();
+  // Check admin session before initializing
+  fetch("/api/admin/me", { credentials: "include" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Admin is logged in, initialize the page
+        loadAds();
+      } else {
+        // Not logged in, redirect to login
+        window.location.href = "/login.html";
+      }
+    })
+    .catch(err => {
+      console.error('Session check failed:', err);
+      window.location.href = "/login.html";
+    });
 </script>
 
 </body>

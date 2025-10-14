@@ -251,6 +251,9 @@ app.get("/onboarding-review.html", requireAdminLogin, (req, res) =>
 app.get("/statistics.html", requireAdminLogin, (req, res) =>
   res.sendFile(path.join(__dirname, "public", "statistics.html"))
 );
+app.get("/admin-marknadsforing.html", requireAdminLogin, (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "admin-marknadsforing.html"))
+);
 
 app.post("/admin-login", async (req, res) => {
   const { email, password } = req.body;
