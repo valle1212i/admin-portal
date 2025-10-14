@@ -96,13 +96,38 @@ router.post('/', async (req, res) => {
       const caseData = (payload && typeof payload.case === 'object') ? payload.case : {};
       const data = (payload && typeof payload.data === 'object') ? payload.data : {};
 
+      // Clean and validate messages
+      const cleanedMessages = (caseData.messages || []).map(msg => {
+        // Clean sender value - convert to lowercase and handle common variations
+        let cleanSender = msg.sender;
+        if (cleanSender) {
+          cleanSender = cleanSender.toLowerCase();
+          if (cleanSender === 'support') cleanSender = 'admin'; // Map support to admin
+        }
+        
+        // Ensure message is not empty/undefined
+        const cleanMessage = msg.message && msg.message.trim() ? msg.message.trim() : null;
+        
+        // Only include messages that have valid content
+        if (cleanMessage && cleanSender) {
+          return {
+            sender: cleanSender,
+            senderName: msg.senderName || '',
+            senderEmail: msg.senderEmail || '',
+            message: cleanMessage,
+            timestamp: msg.timestamp || new Date()
+          };
+        }
+        return null; // Filter out invalid messages
+      }).filter(msg => msg !== null); // Remove null entries
+
       // Create case document for AdminPanel.adminportal.cases
       const caseDocument = {
         customerId: caseData.customerId,
         sessionId: caseData.sessionId,
         topic: caseData.topic,
         description: caseData.description,
-        messages: caseData.messages || [],
+        messages: cleanedMessages,
         priority: caseData.priority || 'Normal',
         tags: caseData.tags || [],
         tenant: caseData.tenantId || 'default',
@@ -136,12 +161,20 @@ router.post('/', async (req, res) => {
         return res.status(404).json({ success: false, error: 'Case not found' });
       }
 
+      // Validate and clean the response message
+      const cleanMessage = responseData.message && responseData.message.trim() ? responseData.message.trim() : null;
+      
+      if (!cleanMessage) {
+        console.log('[ADMIN INGEST CASE_RESPONSE] Invalid message content:', responseData.message);
+        return res.status(400).json({ success: false, error: 'Message content is required' });
+      }
+
       // Add customer response to case
       const newMessage = {
         sender: 'customer',
         senderName: responseData.senderName || 'Customer',
         senderEmail: responseData.senderEmail || '',
-        message: responseData.message,
+        message: cleanMessage,
         timestamp: responseData.timestamp || new Date()
       };
 
