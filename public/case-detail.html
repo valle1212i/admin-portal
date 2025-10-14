@@ -956,23 +956,38 @@
     const data = await res.json();
 
     // Update case information
-    document.getElementById("case-id").textContent = data._id;
-    document.getElementById("case-id-code").textContent = data._id;
-    document.getElementById("customer-name").textContent = data.customerName || "Okänd";
-    document.getElementById("customer-email").textContent = data.customerEmail || "Ingen e-post";
-    document.getElementById("customer-id").textContent = `ID: ${data._id}`;
-    document.getElementById("case-type").textContent = data.topic || "-";
-    document.getElementById("case-type-display").textContent = `📝 ${data.topic || "Okänd"}`;
-    document.getElementById("case-title").textContent = data.topic || "Okänt ärende";
-    document.getElementById("case-description").textContent = data.description || "-";
-    document.getElementById("created-at").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
-    document.getElementById("case-created-time").textContent = new Date(data.createdAt).toLocaleString("sv-SE");
-    document.getElementById("admin-display").value = data.assignedAdminName || "Ingen";
+    const caseIdElement = document.getElementById("case-id-code");
+    if (caseIdElement) caseIdElement.textContent = data._id;
+    
+    const customerNameElement = document.getElementById("customer-name");
+    if (customerNameElement) customerNameElement.textContent = data.customerName || "Okänd";
+    
+    const customerEmailElement = document.getElementById("customer-email");
+    if (customerEmailElement) customerEmailElement.textContent = data.customerEmail || "Ingen e-post";
+    
+    const customerIdElement = document.getElementById("customer-id");
+    if (customerIdElement) customerIdElement.textContent = `ID: ${data._id}`;
+    
+    const caseTypeDisplayElement = document.getElementById("case-type-display");
+    if (caseTypeDisplayElement) caseTypeDisplayElement.textContent = `📝 ${data.topic || "Okänd"}`;
+    
+    const caseTitleElement = document.getElementById("case-title");
+    if (caseTitleElement) caseTitleElement.textContent = data.topic || "Okänt ärende";
+    
+    const caseDescriptionElement = document.getElementById("case-description");
+    if (caseDescriptionElement) caseDescriptionElement.textContent = data.description || "-";
+    
+    const createdAtElement = document.getElementById("created-at");
+    if (createdAtElement) createdAtElement.textContent = new Date(data.createdAt).toLocaleString("sv-SE");
+    
+    const adminDisplayElement = document.getElementById("admin-display");
+    if (adminDisplayElement) adminDisplayElement.value = data.assignedAdminName || "Ingen";
 
     // Update customer avatar with initials
     const customerName = data.customerName || "Okänd";
     const initials = customerName.split(' ').map(n => n[0]).join('').toUpperCase();
-    document.getElementById("customer-avatar").textContent = initials;
+    const customerAvatarElement = document.getElementById("customer-avatar");
+    if (customerAvatarElement) customerAvatarElement.textContent = initials;
 
     // Build comprehensive timeline
     buildTimeline(data);
@@ -982,45 +997,54 @@
 
     // Update status button
     const btn = document.querySelector(`.status-buttons button[data-status="${data.status}"]`);
-    if (btn) btn.classList.add("active");
+    if (btn) {
+      // Remove active class from all buttons first
+      document.querySelectorAll('.status-buttons button').forEach(b => b.classList.remove('active'));
+      // Add active class to current status button
+      btn.classList.add("active");
+    }
 
     // Update chat messages
     const transcript = document.getElementById("chat-transcript");
-    if (data.messages && data.messages.length > 0) {
-      transcript.innerHTML = data.messages.map(msg => {
-        const messageClass = msg.sender === 'customer' ? 'customer' : 
-                            msg.sender === 'system' ? 'system' : 'admin';
-        const senderDisplay = msg.senderName || msg.sender;
-        const senderEmail = msg.senderEmail ? ` (${msg.senderEmail})` : '';
-        
-        return `
-          <div class="message ${messageClass}">
-            <div class="message-header">
-              <strong>${senderDisplay}${senderEmail}</strong>
-              <span class="message-time">${new Date(msg.timestamp).toLocaleString("sv-SE")}</span>
+    if (transcript) {
+      if (data.messages && data.messages.length > 0) {
+        transcript.innerHTML = data.messages.map(msg => {
+          const messageClass = msg.sender === 'customer' ? 'customer' : 
+                              msg.sender === 'system' ? 'system' : 'admin';
+          const senderDisplay = msg.senderName || msg.sender;
+          const senderEmail = msg.senderEmail ? ` (${msg.senderEmail})` : '';
+          
+          return `
+            <div class="message ${messageClass}">
+              <div class="message-header">
+                <strong>${senderDisplay}${senderEmail}</strong>
+                <span class="message-time">${new Date(msg.timestamp).toLocaleString("sv-SE")}</span>
+              </div>
+              <div class="message-content">${msg.message}</div>
             </div>
-            <div class="message-content">${msg.message}</div>
-          </div>
-        `;
-      }).join("");
-      
-      // Scroll to bottom of messages
-      transcript.scrollTop = transcript.scrollHeight;
-    } else {
-      transcript.innerHTML = '<div class="message system"><div class="message-content">Inga meddelanden än. Konversationen kommer att visas här.</div></div>';
+          `;
+        }).join("");
+        
+        // Scroll to bottom of messages
+        transcript.scrollTop = transcript.scrollHeight;
+      } else {
+        transcript.innerHTML = '<div class="message system"><div class="message-content">Inga meddelanden än. Konversationen kommer att visas här.</div></div>';
+      }
     }
 
     // Update internal notes
     const noteList = document.getElementById("note-list");
-    if (data.internalNotes && data.internalNotes.length > 0) {
-      noteList.innerHTML = data.internalNotes.map(n => `
-        <div class="note-item">
-          ${n.note}
-          <small>🕒 ${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</small>
-        </div>
-      `).join("");
-    } else {
-      noteList.innerHTML = '<p class="text-gray-500">Inga interna anteckningar än.</p>';
+    if (noteList) {
+      if (data.internalNotes && data.internalNotes.length > 0) {
+        noteList.innerHTML = data.internalNotes.map(n => `
+          <div class="note-item">
+            ${n.note}
+            <small>🕒 ${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</small>
+          </div>
+        `).join("");
+      } else {
+        noteList.innerHTML = '<p class="text-gray-500">Inga interna anteckningar än.</p>';
+      }
     }
   }
 
