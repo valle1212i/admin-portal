@@ -16,7 +16,7 @@
     <aside class="case-sidebar">
       <!-- Customer Info Card -->
       <div class="customer-card">
-        <h3>👤 Kundinformation</h3>
+        <h3>Kundinformation</h3>
         <div class="customer-details">
           <div class="customer-avatar" id="customer-avatar">EW</div>
           <div class="customer-info">
@@ -29,7 +29,7 @@
       
       <!-- SLA Timer -->
       <div class="sla-timer">
-        <h4>⏱️ SLA Status</h4>
+        <h4>SLA Status</h4>
         <div class="sla-info">
           <div class="sla-item">
             <span class="sla-label">Svarstid:</span>
@@ -48,14 +48,14 @@
 
       <!-- Quick Actions -->
       <div class="quick-actions">
-        <button class="btn-primary" id="call-customer-btn">📞 Ring kund</button>
-        <button class="btn-secondary" id="email-customer-btn">📧 Skicka e-post</button>
-        <button class="btn-secondary" id="view-profile-btn">👤 Visa profil</button>
+        <button class="btn-primary" id="call-customer-btn">Ring kund</button>
+        <button class="btn-secondary" id="email-customer-btn">Skicka e-post</button>
+        <button class="btn-secondary" id="view-profile-btn">Visa profil</button>
       </div>
       
       <!-- Case Timeline -->
       <div class="case-timeline">
-        <h4>📅 Tidslinje</h4>
+        <h4>Tidslinje</h4>
         <div id="timeline-container">
           <div class="timeline-item">
             <span class="timeline-dot created"></span>
@@ -83,8 +83,8 @@
           <div class="case-title">
             <h1 id="case-title">Laddar...</h1>
             <div class="case-meta">
-              <span class="case-type" id="case-type-display">📝 Test</span>
-              <span class="case-priority high">🔴 Hög prioritet</span>
+              <span class="case-type" id="case-type-display">Test</span>
+              <span class="case-priority high">Hög prioritet</span>
             </div>
           </div>
           <div class="case-id-display">
@@ -95,16 +95,16 @@
         
         <div class="status-controls">
           <div class="status-buttons" role="group" aria-label="Välj ärende status">
-            <button class="status-btn btn-secondary" data-status="Nytt" aria-pressed="false">🗂️ Nytt</button>
-            <button class="status-btn btn-secondary" data-status="Arbetande" aria-pressed="false">🛠️ Arbetande</button>
-            <button class="status-btn btn-secondary" data-status="Väntar svar" aria-pressed="false">⏳ Väntar svar</button>
-            <button class="status-btn btn-secondary" data-status="On Hold" aria-pressed="false">🛑 On Hold</button>
-            <button class="status-btn btn-secondary" data-status="open" aria-pressed="false">📂 Öppen</button>
-            <button class="status-btn btn-secondary" data-status="Stängt" aria-pressed="false">✅ Stängt</button>
+            <button class="status-btn btn-secondary" data-status="Nytt" aria-pressed="false">Nytt</button>
+            <button class="status-btn btn-secondary" data-status="Arbetande" aria-pressed="false">Arbetande</button>
+            <button class="status-btn btn-secondary" data-status="Väntar svar" aria-pressed="false">Väntar svar</button>
+            <button class="status-btn btn-secondary" data-status="On Hold" aria-pressed="false">On Hold</button>
+            <button class="status-btn btn-secondary" data-status="open" aria-pressed="false">Öppen</button>
+            <button class="status-btn btn-secondary" data-status="Stängt" aria-pressed="false">Stängt</button>
           </div>
           <div class="status-actions">
-            <button id="update-status-btn" class="btn-primary">✅ Bekräfta status</button>
-            <button id="add-note-btn" class="btn-secondary">📝 Lägg till anteckning</button>
+            <button id="update-status-btn" class="btn-primary">Bekräfta status</button>
+            <button id="add-note-btn" class="btn-secondary">Lägg till anteckning</button>
           </div>
         </div>
       </div>
@@ -113,11 +113,11 @@
       <div class="communication-section">
         <div class="chat-container">
           <div class="chat-header">
-            <h3>💬 Konversation</h3>
+            <h3>Konversation</h3>
             <div class="chat-actions">
-              <button class="btn-sm" id="search-messages-btn">🔍 Sök</button>
-              <button class="btn-sm" id="filter-messages-btn">🔽 Filtrera</button>
-              <button class="btn-sm" id="attach-file-btn">📎 Bifoga</button>
+              <button class="btn-sm" id="search-messages-btn">Sök</button>
+              <button class="btn-sm" id="filter-messages-btn">Filtrera</button>
+              <button class="btn-sm" id="attach-file-btn">Bifoga</button>
             </div>
           </div>
           
@@ -128,7 +128,7 @@
           
           <!-- Quick Response Templates -->
           <div class="response-templates">
-            <h4>📋 Snabbsvar</h4>
+            <h4>Snabbsvar</h4>
             <div class="template-buttons">
               <button class="template-btn" data-template="greeting">"Hej! Tack för att du kontaktar oss..."</button>
               <button class="template-btn" data-template="info-request">"Jag behöver mer information..."</button>
@@ -141,9 +141,9 @@
           <div class="message-input">
             <textarea placeholder="Skriv ditt svar här..." id="customer-message"></textarea>
             <div class="input-actions">
-              <button class="btn-sm" id="emoji-btn">😊</button>
+              <button class="btn-sm" id="emoji-btn">Emoji</button>
               <button class="btn-sm" id="format-btn">A</button>
-              <button id="send-message-btn" class="btn-primary">📤 Skicka</button>
+              <button id="send-message-btn" class="btn-primary">Skicka</button>
             </div>
           </div>
         </div>
@@ -152,13 +152,13 @@
       <!-- Case Details (Collapsible) -->
       <div class="case-details-section">
         <button class="toggle-details-btn" onclick="toggleCaseDetails()">
-          <span>📄 Visa ärendedetaljer</span>
+            <span>Visa ärendedetaljer</span>
           <span class="toggle-icon">▼</span>
         </button>
         
         <div class="case-details-content" id="case-details-content" style="display: none;">
           <article class="card case-info" aria-labelledby="case-info-heading">
-            <h2 id="case-info-heading">📄 Ärendeinfo</h2>
+              <h2 id="case-info-heading">Ärendeinfo</h2>
           
             <dl class="case-details">
               <div class="detail-item">
@@ -172,21 +172,21 @@
             </dl>
 
             <div class="admin-assignment">
-              <label for="admin-display">🧑‍💼 Ansvarig admin:</label>
+                <label for="admin-display">Ansvarig admin:</label>
               <div class="readonly-box">
                 <input type="text" id="admin-display" readonly aria-label="Tilldelad admin" />
-                <button type="button" class="edit-icon" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">✏️</button>
+                <button type="button" class="edit-icon" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">Redigera</button>
               </div>
               <input type="text" id="admin-input" style="display: none;" placeholder="Sök admin..." oninput="filterAdmins(this.value)" list="admin-suggestions" aria-label="Sök och välj admin" />
               <datalist id="admin-suggestions"></datalist>
             </div>
 
             <section class="note-section" aria-labelledby="notes-heading">
-              <h3 id="notes-heading">📝 Intern anteckning</h3>
+              <h3 id="notes-heading">Intern anteckning</h3>
               <label for="internal-note" class="sr-only">Skriv intern anteckning</label>
               <textarea id="internal-note" placeholder="Skriv en intern anteckning..." aria-describedby="note-help"></textarea>
               <div id="note-help" class="sr-only">Skriv interna anteckningar som bara admin kan se</div>
-              <button type="button" class="btn-primary" onclick="saveNote()">💾 Spara anteckning</button>
+              <button type="button" class="btn-primary" onclick="saveNote()">Spara anteckning</button>
 
               <div class="note-list" id="note-list" role="list" aria-label="Interna anteckningar"></div>
             </section>
@@ -969,7 +969,7 @@
     if (customerIdElement) customerIdElement.textContent = `ID: ${data._id}`;
     
     const caseTypeDisplayElement = document.getElementById("case-type-display");
-    if (caseTypeDisplayElement) caseTypeDisplayElement.textContent = `📝 ${data.topic || "Okänd"}`;
+    if (caseTypeDisplayElement) caseTypeDisplayElement.textContent = `${data.topic || "Okänd"}`;
     
     const caseTitleElement = document.getElementById("case-title");
     if (caseTitleElement) caseTitleElement.textContent = data.topic || "Okänt ärende";
@@ -1039,7 +1039,7 @@
         noteList.innerHTML = data.internalNotes.map(n => `
           <div class="note-item">
             ${n.note}
-            <small>🕒 ${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</small>
+            <small>${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</small>
           </div>
         `).join("");
       } else {
@@ -1099,11 +1099,11 @@
       .then(res => res.json())
       .then(result => {
         if (result.success) {
-          alert("📝 Anteckning sparad.");
+          alert("Anteckning sparad.");
           document.getElementById("internal-note").value = "";
           loadCaseData(); // 🔄 Ladda om anteckningar direkt
         } else {
-          alert("❌ Kunde inte spara anteckning.");
+          alert("Kunde inte spara anteckning.");
         }
       });
   }
@@ -1323,7 +1323,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, status: activeBtn.dataset.status })
-    }).then(() => alert("✅ Status uppdaterad!"));
+    }).then(() => alert("Status uppdaterad!"));
   });
 
   // Quick response template buttons
@@ -1372,10 +1372,10 @@
         .then(res => res.json())
         .then(result => {
           if (result.success) {
-            alert("📝 Anteckning sparad.");
+            alert("Anteckning sparad.");
             loadCaseData();
           } else {
-            alert("❌ Kunde inte spara anteckning.");
+            alert("Kunde inte spara anteckning.");
           }
         });
     }
