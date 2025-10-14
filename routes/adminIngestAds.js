@@ -19,6 +19,46 @@ function verifySignature(raw, header) {
   catch { return false; }
 }
 
+// NEW: Categorization function
+function categorizeSubmission(payload) {
+  const categorized = { ...payload };
+  
+  // Check for AI Studio indicators
+  if (payload.meta?.source === 'ai-studio' || 
+      payload.answers?.generationType ||
+      payload.meta?.generationType ||
+      payload.answers?.generatedImages ||
+      payload.answers?.generatedPDFs) {
+    categorized.category = 'ai-studio';
+    categorized.aiStudioData = {
+      generatedImages: payload.answers?.generatedImages || payload.meta?.generatedImages || [],
+      generatedPDFs: payload.answers?.generatedPDFs || payload.meta?.generatedPDFs || [],
+      generationType: payload.answers?.generationType || payload.meta?.generationType,
+      prompt: payload.answers?.prompt || payload.extraInfo || payload.meta?.prompt
+    };
+  }
+  // Check for Rådgivning indicators
+  else if (payload.meta?.source === 'radgivning' ||
+           payload.sessionId ||
+           payload.answers?.questions ||
+           payload.meta?.questions ||
+           payload.answers?.primaryGoal ||
+           payload.answers?.designStrategy) {
+    categorized.category = 'radgivning';
+    categorized.radgivningData = {
+      questions: payload.answers?.questions || payload.meta?.questions || [],
+      sessionId: payload.sessionId,
+      priority: payload.meta?.priority || 'medium'
+    };
+  }
+  // Default to ads
+  else {
+    categorized.category = 'ads';
+  }
+  
+  return categorized;
+}
+
 // POST /admin/api/ingest/ads
 router.post('/', async (req, res) => {
   try {
@@ -39,10 +79,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success:false, error:'Missing idempotencyKey' });
     }
 
+    // NEW: Categorize the submission
+    const categorizedPayload = categorizeSubmission(payload);
+    
     // Upsert på idempotencyKey (idempotent)
     await Ad.updateOne(
-      { idempotencyKey: payload.idempotencyKey },
-      { $setOnInsert: payload },
+      { idempotencyKey: categorizedPayload.idempotencyKey },
+      { $setOnInsert: categorizedPayload },
       { upsert: true }
     );
 
