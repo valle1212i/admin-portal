@@ -19,6 +19,7 @@
         <button class="status-btn btn-secondary" data-status="Arbetande" aria-pressed="false">🛠️ Arbetande</button>
         <button class="status-btn btn-secondary" data-status="Väntar svar" aria-pressed="false">⏳ Väntar svar</button>
         <button class="status-btn btn-secondary" data-status="On Hold" aria-pressed="false">🛑 On Hold</button>
+        <button class="status-btn btn-secondary" data-status="open" aria-pressed="false">📂 Öppen</button>
         <button class="status-btn btn-secondary" data-status="Stängt" aria-pressed="false">✅ Stängt</button>
       </div>
       <button id="update-status-btn" class="btn-primary">📁 Bekräfta status</button>
@@ -247,6 +248,34 @@
       border-left: 4px solid var(--warning-500);
     }
 
+    .message.customer {
+      background: #f0f7ff;
+      border-left: 4px solid #0066cc;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-2);
+      font-size: var(--font-size-sm);
+    }
+
+    .message-header strong {
+      color: var(--gray-800);
+    }
+
+    .message-time {
+      color: var(--gray-500);
+      font-size: var(--font-size-xs);
+      font-weight: normal;
+    }
+
+    .message-content {
+      color: var(--gray-700);
+      line-height: 1.5;
+    }
+
     @media (max-width: 1024px) {
       .case-detail-main .section {
         grid-template-columns: 1fr;
@@ -290,11 +319,22 @@
     if (btn) btn.classList.add("active");
 
     const transcript = document.getElementById("chat-transcript");
-    transcript.innerHTML = (data.messages || []).map(msg => `
-      <div class="message ${msg.sender === 'System' ? 'system' : 'admin'}">
-        <strong>${msg.sender}:</strong> ${msg.message}<br/>
-        <small>${new Date(msg.timestamp).toLocaleString("sv-SE")}</small>
-      </div>`).join("");
+    transcript.innerHTML = (data.messages || []).map(msg => {
+      const messageClass = msg.sender === 'customer' ? 'customer' : 
+                          msg.sender === 'system' ? 'system' : 'admin';
+      const senderDisplay = msg.senderName || msg.sender;
+      const senderEmail = msg.senderEmail ? ` (${msg.senderEmail})` : '';
+      
+      return `
+        <div class="message ${messageClass}">
+          <div class="message-header">
+            <strong>${senderDisplay}${senderEmail}</strong>
+            <span class="message-time">${new Date(msg.timestamp).toLocaleString("sv-SE")}</span>
+          </div>
+          <div class="message-content">${msg.message}</div>
+        </div>
+      `;
+    }).join("");
 
       const noteList = document.getElementById("note-list");
 noteList.innerHTML = (data.internalNotes || []).map(n => `

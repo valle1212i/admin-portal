@@ -67,7 +67,8 @@ router.get("/meta/:sessionId", async (req, res) => {
       messages: caseDoc.messages,
       internalNotes: caseDoc.internalNotes || [],
       createdAt: caseDoc.createdAt,
-      customerName: customer?.name || "Okänd"
+      customerName: customer?.name || "Okänd",
+      customerEmail: customer?.email || "" // Add customer email
     });
   } catch (err) {
     console.error("❌ Fel vid hämtning av case-meta:", err);
@@ -158,8 +159,14 @@ router.post("/send-message", async (req, res) => {
   }
 
   try {
+    // Get admin info from session
+    const adminName = req.session?.admin?.name || "Admin";
+    const adminEmail = req.session?.admin?.email || "";
+
     const msg = {
       sender: "admin",
+      senderName: adminName,
+      senderEmail: adminEmail,
       message,
       timestamp: new Date()
     };
@@ -194,6 +201,44 @@ router.post("/send-message", async (req, res) => {
   } catch (err) {
     console.error("❌ Fel vid skickande av meddelande:", err);
     res.status(500).json({ success: false });
+  }
+});
+
+// 📨 Customer response endpoint (called from customer portal)
+router.post("/:caseId/customer-response", async (req, res) => {
+  try {
+    const { caseId } = req.params;
+    const { message, senderName, senderEmail } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, message: "Message required" });
+    }
+
+    const customerMessage = {
+      sender: "customer",
+      senderName: senderName || "Customer",
+      senderEmail: senderEmail || "",
+      message,
+      timestamp: new Date()
+    };
+
+    const caseDoc = await Case.findByIdAndUpdate(
+      caseId,
+      { 
+        $push: { messages: customerMessage },
+        status: "open" // Auto-update to open when customer responds
+      },
+      { new: true }
+    );
+
+    if (!caseDoc) {
+      return res.status(404).json({ success: false, message: "Case not found" });
+    }
+
+    res.json({ success: true, message: "Response received" });
+  } catch (err) {
+    console.error("❌ Error saving customer response:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

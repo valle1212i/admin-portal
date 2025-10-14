@@ -27,6 +27,12 @@ const caseSchema = new mongoose.Schema({
         enum: ["admin", "customer", "system"],
         required: true
       },
+      senderName: {
+        type: String
+      },
+      senderEmail: {
+        type: String
+      },
       message: {
         type: String,
         required: true
@@ -44,7 +50,7 @@ const caseSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["new", "in_progress", "waiting", "on_hold", "closed"],
+    enum: ["new", "in_progress", "waiting", "on_hold", "closed", "open"],
     default: "new"
   },
   internalNotes: [
