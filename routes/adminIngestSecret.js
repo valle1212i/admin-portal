@@ -4,7 +4,7 @@ const AdminStudioRådgivning = require('../models/AdminStudioRådgivning');
 
 const router = express.Router();
 
-console.log('🟢 routes/adminIngest.js laddad');
+console.log('🟢 routes/adminIngestSecret.js laddad');
 
 // Middleware to validate shared secret
 const validateSecret = (req, res, next) => {
