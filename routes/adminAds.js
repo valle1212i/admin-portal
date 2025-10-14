@@ -20,6 +20,29 @@ router.use((req, res, next) => {
   next();
 });
 
+// GET /api/admin/ads/summary - Get total counts for summary
+router.get('/summary', async (req, res) => {
+  try {
+    const [adsCount, aiStudioCount, radgivningCount] = await Promise.all([
+      Ad.countDocuments({ category: 'ads' }),
+      Ad.countDocuments({ category: 'ai-studio' }),
+      Ad.countDocuments({ category: 'radgivning' })
+    ]);
+    
+    const total = adsCount + aiStudioCount + radgivningCount;
+    
+    res.json({
+      total,
+      ads: adsCount,
+      aiStudio: aiStudioCount,
+      radgivning: radgivningCount
+    });
+  } catch (error) {
+    console.error('Summary endpoint error:', error);
+    res.status(500).json({ error: 'Failed to fetch summary' });
+  }
+});
+
 // GET /api/admin/ads - Main handler using Mongoose Ad model
 router.get('/', async (req, res) => {
   try {

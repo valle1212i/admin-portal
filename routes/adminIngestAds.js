@@ -97,8 +97,36 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success:false, error:'Missing idempotencyKey' });
     }
 
+    // Log incoming payload for debugging
+    console.log('[INGEST] Received payload:', {
+      idempotencyKey: payload.idempotencyKey,
+      tenantId: payload.tenantId,
+      type: payload.type,
+      category: payload.meta?.category,
+      hasImageUrl: !!payload.imageUrl,
+      hasPdfUrl: !!payload.pdfUrl,
+      hasMessage: !!payload.message,
+      hasPrimaryGoal: !!payload.primaryGoal,
+      hasDesignStrategy: !!payload.designStrategy,
+      keys: Object.keys(payload)
+    });
+
     // NEW: Categorize the submission
     const categorizedPayload = categorizeSubmission(payload);
+    
+    // Log categorization result
+    console.log('[INGEST] Categorized as:', {
+      category: categorizedPayload.category,
+      aiStudioData: categorizedPayload.aiStudioData ? {
+        generationType: categorizedPayload.aiStudioData.generationType,
+        imagesCount: categorizedPayload.aiStudioData.generatedImages?.length || 0,
+        pdfsCount: categorizedPayload.aiStudioData.generatedPDFs?.length || 0
+      } : null,
+      radgivningData: categorizedPayload.radgivningData ? {
+        questionsCount: categorizedPayload.radgivningData.questions?.length || 0,
+        priority: categorizedPayload.radgivningData.priority
+      } : null
+    });
     
     // Upsert på idempotencyKey (idempotent)
     await Ad.updateOne(
