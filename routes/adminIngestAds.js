@@ -23,30 +23,48 @@ function verifySignature(raw, header) {
 function categorizeSubmission(payload) {
   const categorized = { ...payload };
   
-  // Check for AI Studio indicators
-  if (payload.meta?.source === 'ai-studio' || 
+  // Check for AI Studio indicators (based on customer portal logs)
+  if (payload.type === 'ai-studio' || 
+      payload.meta?.type === 'ai-studio' ||
+      payload.meta?.source === 'ai-studio' || 
+      payload.imageUrl ||
+      payload.pdfUrl ||
+      payload.answers?.imageUrl ||
+      payload.answers?.pdfUrl ||
       payload.answers?.generationType ||
-      payload.meta?.generationType ||
-      payload.answers?.generatedImages ||
-      payload.answers?.generatedPDFs) {
+      payload.meta?.generationType) {
     categorized.category = 'ai-studio';
     categorized.aiStudioData = {
-      generatedImages: payload.answers?.generatedImages || payload.meta?.generatedImages || [],
-      generatedPDFs: payload.answers?.generatedPDFs || payload.meta?.generatedPDFs || [],
-      generationType: payload.answers?.generationType || payload.meta?.generationType,
-      prompt: payload.answers?.prompt || payload.extraInfo || payload.meta?.prompt
+      generatedImages: payload.imageUrl ? [payload.imageUrl] : (payload.answers?.imageUrl ? [payload.answers.imageUrl] : []),
+      generatedPDFs: payload.pdfUrl ? [payload.pdfUrl] : (payload.answers?.pdfUrl ? [payload.answers.pdfUrl] : []),
+      generationType: payload.answers?.generationType || payload.meta?.generationType || 'artwork',
+      prompt: payload.answers?.prompt || payload.extraInfo || payload.meta?.prompt || 'AI Studio generation'
     };
   }
-  // Check for Rådgivning indicators
-  else if (payload.meta?.source === 'radgivning' ||
-           payload.sessionId ||
-           payload.answers?.questions ||
-           payload.meta?.questions ||
+  // Check for Rådgivning indicators (based on customer portal logs)
+  else if (payload.type === 'rådgivning' ||
+           payload.type === 'radgivning' ||
+           payload.meta?.type === 'rådgivning' ||
+           payload.meta?.type === 'radgivning' ||
+           payload.meta?.source === 'radgivning' ||
+           payload.message ||
+           payload.primaryGoal ||
+           payload.designStrategy ||
+           payload.ongoingSupport ||
+           payload.aiMediaHelp ||
+           payload.answers?.message ||
            payload.answers?.primaryGoal ||
            payload.answers?.designStrategy) {
     categorized.category = 'radgivning';
     categorized.radgivningData = {
-      questions: payload.answers?.questions || payload.meta?.questions || [],
+      questions: [
+        { question: 'Meddelande', answer: payload.message || payload.answers?.message || '' },
+        { question: 'Primärt mål', answer: payload.primaryGoal || payload.answers?.primaryGoal || '' },
+        { question: 'Designstrategi', answer: payload.designStrategy || payload.answers?.designStrategy || '' },
+        { question: 'Pågående support', answer: payload.ongoingSupport || payload.answers?.ongoingSupport || '' },
+        { question: 'AI Media hjälp', answer: payload.aiMediaHelp || payload.answers?.aiMediaHelp || '' },
+        { question: 'Extra information', answer: payload.extra || payload.answers?.extra || '' }
+      ].filter(q => q.answer.trim()),
       sessionId: payload.sessionId,
       priority: payload.meta?.priority || 'medium'
     };
