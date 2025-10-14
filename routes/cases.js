@@ -262,4 +262,76 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// GET /api/cases/customer/:customerId - Fetch cases for specific customer
+router.get('/customer/:customerId', async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { status = 'open', limit = 10, page = 1 } = req.query;
+    const tenant = req.get('x-tenant') || 'default';
+    
+    console.log('🔍 Admin Portal: Fetching cases for customer:', { customerId, status, tenant });
+
+    // Map Swedish status to English for database query
+    const statusMapping = {
+      'Öppen': 'open',
+      'Nytt': 'new', 
+      'Arbetande': 'in_progress',
+      'Väntar svar': 'waiting',
+      'On Hold': 'on_hold',
+      'Stängt': 'closed',
+      'open': 'open',
+      'new': 'new',
+      'in_progress': 'in_progress',
+      'waiting': 'waiting',
+      'on_hold': 'on_hold',
+      'closed': 'closed'
+    };
+    
+    const dbStatus = statusMapping[status] || 'open';
+    
+    // Query AdminPanel.adminportal.cases collection
+    const query = { 
+      customerId, 
+      ...(tenant !== 'default' && { tenant }),
+      ...(status !== 'all' && { status: dbStatus })
+    };
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const cases = await Case.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await Case.countDocuments(query);
+
+    console.log('✅ Admin Portal: Found cases:', { 
+      customerId, 
+      count: cases.length, 
+      total,
+      status: dbStatus 
+    });
+
+    res.json({
+      success: true,
+      data: cases,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Admin Portal: Error fetching customer cases:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching cases',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
