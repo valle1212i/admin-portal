@@ -78,7 +78,9 @@ router.post('/', async (req, res) => {
         sessionId: caseData?.sessionId,
         customerId: caseData?.customerId,
         topic: caseData?.topic,
-        description: caseData?.description
+        description: caseData?.description,
+        messagesCount: caseData?.messages?.length || 0,
+        messages: caseData?.messages || []
       });
 
       // Validate required fields for case creation
@@ -97,17 +99,31 @@ router.post('/', async (req, res) => {
 
       // Clean and validate messages for case creation
       let cleanedMessages = [];
+      console.log('[ADMIN INGEST CASES] Processing messages:', {
+        hasMessages: !!caseData.messages,
+        isArray: Array.isArray(caseData.messages),
+        messageCount: caseData.messages?.length || 0
+      });
+      
       if (caseData.messages && Array.isArray(caseData.messages)) {
-        cleanedMessages = caseData.messages.map(msg => {
-          // Clean sender value - convert to lowercase and handle common variations
-          let cleanSender = msg.sender;
+        cleanedMessages = caseData.messages.map((msg, index) => {
+          console.log(`[ADMIN INGEST CASES] Processing message ${index}:`, {
+            originalMsg: msg,
+            sender: msg.sender || msg.type,
+            content: msg.message || msg.content
+          });
+          // Clean sender value - handle both 'sender' and 'type' fields from customer portal
+          let cleanSender = msg.sender || msg.type;
           if (cleanSender) {
             cleanSender = cleanSender.toLowerCase();
             if (cleanSender === 'support') cleanSender = 'admin'; // Map support to admin
+            if (cleanSender === 'customer') cleanSender = 'customer'; // Ensure customer is lowercase
+            if (cleanSender === 'ai assistant') cleanSender = 'admin'; // Map AI Assistant to admin
           }
           
-          // Ensure message is not empty/undefined
-          const cleanMessage = msg.message && msg.message.trim() ? msg.message.trim() : null;
+          // Handle both 'message' and 'content' fields from customer portal
+          const messageContent = msg.message || msg.content;
+          const cleanMessage = messageContent && messageContent.trim() ? messageContent.trim() : null;
           
           // Only include messages that have valid content
           if (cleanMessage && cleanSender) {
@@ -121,6 +137,12 @@ router.post('/', async (req, res) => {
           }
           return null; // Filter out invalid messages
         }).filter(msg => msg !== null); // Remove null entries
+        
+        console.log('[ADMIN INGEST CASES] Cleaned messages result:', {
+          originalCount: caseData.messages.length,
+          cleanedCount: cleanedMessages.length,
+          cleanedMessages: cleanedMessages
+        });
       }
 
       // Map Swedish status values to English enum values
