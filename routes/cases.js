@@ -64,6 +64,7 @@ router.get("/meta/:sessionId", async (req, res) => {
       description: caseDoc.description,
       status: caseDoc.status,
       assignedAdmin: caseDoc.assignedAdmin,
+      adminAssignmentHistory: caseDoc.adminAssignmentHistory || [],
       messages: caseDoc.messages,
       internalNotes: caseDoc.internalNotes || [],
       createdAt: caseDoc.createdAt,
@@ -79,23 +80,69 @@ router.get("/meta/:sessionId", async (req, res) => {
 // 🔁 Uppdatera ansvarig admin för ett ärende via sessionId
 router.post("/assign-admin", async (req, res) => {
   try {
-    const { sessionId, adminId } = req.body;
+    const { sessionId, adminId, assignedBy } = req.body;
 
     if (!sessionId || !adminId) {
       return res.status(400).json({ success: false, message: "sessionId och adminId krävs" });
     }
 
+    // Get admin details from AdminPanel.adminportal.adminusers
+    const Admin = require("../models/Admin");
+    const assignedAdmin = await Admin.findById(adminId).lean();
+    const assignedByAdmin = assignedBy ? await Admin.findById(assignedBy).lean() : null;
+
+    if (!assignedAdmin) {
+      return res.status(404).json({ success: false, message: "Admin kunde inte hittas" });
+    }
+
+    // Get current case to check if there's already an assigned admin
+    const currentCase = await Case.findOne({ sessionId }).lean();
+    if (!currentCase) {
+      return res.status(404).json({ success: false, message: "Ärendet kunde inte hittas" });
+    }
+
+    // Determine action type
+    let action = "assigned";
+    if (currentCase.assignedAdmin && currentCase.assignedAdmin.toString() !== adminId) {
+      action = "reassigned";
+    }
+
+    // Create assignment history entry
+    const assignmentEntry = {
+      adminId: assignedAdmin._id,
+      adminName: assignedAdmin.name,
+      adminEmail: assignedAdmin.email,
+      assignedBy: assignedByAdmin ? assignedByAdmin._id : assignedAdmin._id,
+      assignedByName: assignedByAdmin ? assignedByAdmin.name : assignedAdmin.name,
+      assignedAt: new Date(),
+      action: action
+    };
+
+    // Update case with new admin assignment and history
     const updated = await Case.findOneAndUpdate(
       { sessionId },
-      { assignedAdmin: adminId },
+      { 
+        assignedAdmin: adminId,
+        $push: { adminAssignmentHistory: assignmentEntry }
+      },
       { new: true }
     );
 
     if (!updated) {
-      return res.status(404).json({ success: false, message: "Ärendet kunde inte hittas" });
+      return res.status(404).json({ success: false, message: "Ärendet kunde inte uppdateras" });
     }
 
-    res.json({ success: true });
+    console.log(`✅ Admin tilldelad: ${assignedAdmin.name} till ärende ${sessionId}`);
+
+    res.json({ 
+      success: true, 
+      assignedAdmin: {
+        _id: assignedAdmin._id,
+        name: assignedAdmin.name,
+        email: assignedAdmin.email
+      },
+      action: action
+    });
   } catch (err) {
     console.error("❌ Kunde inte uppdatera ansvarig admin:", err);
     res.status(500).json({ success: false, message: "Serverfel vid uppdatering" });

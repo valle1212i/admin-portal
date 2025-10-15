@@ -459,6 +459,11 @@
       box-shadow: 0 0 0 2px var(--error-200);
     }
 
+    .timeline-dot.admin {
+      background: var(--purple-500);
+      box-shadow: 0 0 0 2px var(--purple-200);
+    }
+
     .timeline-content {
       flex: 1;
     }
@@ -1033,6 +1038,55 @@
       border-top: 1px solid var(--gray-200);
     }
 
+    .admin-suggestion-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background-color 0.2s ease;
+    }
+
+    .admin-suggestion-item:hover {
+      background-color: var(--blue-50);
+    }
+
+    .admin-suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .admin-suggestion-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue-500), var(--blue-600));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .admin-suggestion-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .admin-suggestion-name {
+      font-weight: 600;
+      color: var(--gray-900);
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .admin-suggestion-email {
+      color: var(--gray-500);
+      font-size: 12px;
+    }
+
     /* Enhanced Note Section Styles */
     .note-section {
       margin-top: var(--space-6);
@@ -1507,38 +1561,86 @@
   }
 
   function toggleEditAdmin() {
-    if (!editingAdmin) {
-      document.getElementById("admin-display").style.display = "none";
-      document.getElementById("admin-input").style.display = "block";
-      editingAdmin = true;
+    const searchContainer = document.getElementById("admin-search-container");
+    if (searchContainer.style.display === "none" || searchContainer.style.display === "") {
+      searchContainer.style.display = "block";
+      document.getElementById("admin-input").focus();
     } else {
-      const name = document.getElementById("admin-input").value;
-      const match = currentAdmins.find(a => a.name.toLowerCase() === name.toLowerCase());
-      if (match) {
-        fetch("/api/cases/assign-admin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, adminId: match._id })
-        }).then(() => {
-          document.getElementById("admin-display").value = match.name;
-          document.getElementById("admin-display").style.display = "block";
-          document.getElementById("admin-input").style.display = "none";
-          editingAdmin = false;
-        });
-      }
+      searchContainer.style.display = "none";
     }
   }
 
-  function filterAdmins(value) {
-    const datalist = document.getElementById("admin-suggestions");
-    datalist.innerHTML = "";
-    currentAdmins
-      .filter(a => a.name.toLowerCase().includes(value.toLowerCase()))
-      .forEach(a => {
-        const option = document.createElement("option");
-        option.value = a.name;
-        datalist.appendChild(option);
+  async function assignAdmin(adminId, adminName, adminEmail) {
+    try {
+      const response = await fetch("/api/cases/assign-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          sessionId, 
+          adminId: adminId,
+          assignedBy: getCurrentAdminId() // You'll need to implement this function
+        })
       });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update UI
+        updateAdminAssignmentUI({
+          assignedAdminName: result.assignedAdmin.name,
+          assignedAdminEmail: result.assignedAdmin.email
+        });
+        
+        // Close search container
+        document.getElementById("admin-search-container").style.display = "none";
+        
+        // Reload case data to update timeline
+        loadCaseData();
+        
+        showNotification(`Admin ${result.assignedAdmin.name} tilldelad`, 'success');
+      } else {
+        showNotification(`Fel vid tilldelning: ${result.message}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error assigning admin:', error);
+      showNotification('Fel vid tilldelning av admin', 'error');
+    }
+  }
+
+  function getCurrentAdminId() {
+    // This should return the current admin's ID from session
+    // You may need to implement this based on your session management
+    return null; // Placeholder - implement based on your session system
+  }
+
+  function filterAdmins(value) {
+    const suggestionsList = document.getElementById("admin-suggestions-list");
+    suggestionsList.innerHTML = "";
+    
+    if (value.length < 2) {
+      return;
+    }
+    
+    const filteredAdmins = currentAdmins.filter(a => 
+      a.name.toLowerCase().includes(value.toLowerCase()) ||
+      a.email.toLowerCase().includes(value.toLowerCase())
+    );
+    
+    filteredAdmins.forEach(admin => {
+      const adminItem = document.createElement("div");
+      adminItem.className = "admin-suggestion-item";
+      adminItem.innerHTML = `
+        <div class="admin-suggestion-avatar">
+          <span>${admin.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+        </div>
+        <div class="admin-suggestion-info">
+          <div class="admin-suggestion-name">${admin.name}</div>
+          <div class="admin-suggestion-email">${admin.email}</div>
+        </div>
+      `;
+      adminItem.onclick = () => assignAdmin(admin._id, admin.name, admin.email);
+      suggestionsList.appendChild(adminItem);
+    });
   }
 
   function saveNote() {
@@ -1644,6 +1746,20 @@
       time: data.createdAt,
       description: `Skapat av kund: ${data.customerName || 'Okänd'}`
     });
+
+    // Admin assignment history
+    if (data.adminAssignmentHistory && data.adminAssignmentHistory.length > 0) {
+      data.adminAssignmentHistory.forEach(assignment => {
+        const actionText = assignment.action === 'assigned' ? 'tilldelad' : 
+                          assignment.action === 'reassigned' ? 'omtilldelad' : 'otilldelad';
+        timelineEvents.push({
+          type: 'admin',
+          title: `Admin ${assignment.adminName} ${actionText}`,
+          time: assignment.assignedAt,
+          description: `Tilldelad av: ${assignment.assignedByName}`
+        });
+      });
+    }
 
     // Messages
     if (data.messages && data.messages.length > 0) {

@@ -48,6 +48,41 @@ const caseSchema = new mongoose.Schema({
     ref: "Admin",
     default: null
   },
+  adminAssignmentHistory: [
+    {
+      adminId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Admin",
+        required: true
+      },
+      adminName: {
+        type: String,
+        required: true
+      },
+      adminEmail: {
+        type: String,
+        required: true
+      },
+      assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Admin",
+        required: true
+      },
+      assignedByName: {
+        type: String,
+        required: true
+      },
+      assignedAt: {
+        type: Date,
+        default: Date.now
+      },
+      action: {
+        type: String,
+        enum: ["assigned", "reassigned", "unassigned"],
+        default: "assigned"
+      }
+    }
+  ],
   status: {
     type: String,
     enum: ["new", "in_progress", "waiting", "on_hold", "closed", "open"],
