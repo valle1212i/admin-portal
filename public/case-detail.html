@@ -141,8 +141,6 @@
           <div class="message-input">
             <textarea placeholder="Skriv ditt svar här..." id="customer-message"></textarea>
             <div class="input-actions">
-              <button class="btn-sm" id="emoji-btn">Emoji</button>
-              <button class="btn-sm" id="format-btn">A</button>
               <button id="send-message-btn" class="btn-primary">Skicka</button>
             </div>
           </div>
@@ -765,18 +763,9 @@
 
     .input-actions {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
-    }
-
-    .input-actions .btn-sm {
-      background: var(--gray-100);
-      border: 1px solid var(--gray-300);
-      color: var(--gray-600);
-    }
-
-    .input-actions .btn-sm:hover {
-      background: var(--gray-200);
+      margin-top: var(--space-3);
     }
 
     /* Case Details Section */
@@ -1396,12 +1385,8 @@
       }
 
       .input-actions {
-        flex-direction: column;
-        gap: var(--space-2);
-      }
-
-      .input-actions .btn-sm {
-        align-self: flex-start;
+        justify-content: center;
+        margin-top: var(--space-2);
       }
     }
 
