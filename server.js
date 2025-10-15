@@ -104,6 +104,7 @@ const adminIngestHmacRouter = require('./routes/adminIngestHmac');
 // Rate limit för ingest (skydd mot brus)
 const ingestLimiter = rateLimit({ windowMs: 60_000, max: 60 }); // 60 requests/min/IP
 
+// Mount HMAC ingest route FIRST (more specific path)
 app.use(
   '/admin/api/ingest/ads',
   ingestLimiter, // <- viktig: limiter före raw parsern
@@ -201,10 +202,10 @@ try {
 } catch (e) { console.error('❌ Kunde inte montera /api/admin/studio-radgivning:', e); }
 
 try {
-  const adminIngest = require('./routes/adminIngest');
-  app.use('/admin/api/ingest', adminIngest);
-  console.log('✅ Mounted: /admin/api/ingest');
-} catch (e) { console.error('❌ Kunde inte montera /admin/api/ingest:', e); }
+  const adminIngestSecret = require('./routes/adminIngestSecret');
+  app.use('/admin/api/ingest/secret', adminIngestSecret);
+  console.log('✅ Mounted: /admin/api/ingest/secret');
+} catch (e) { console.error('❌ Kunde inte montera /admin/api/ingest/secret:', e); }
 
 // ✅ HEALTH måste ligga före 404-fallback
 app.get("/_health/db", (_req, res) => {
