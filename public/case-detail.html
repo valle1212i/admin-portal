@@ -173,7 +173,7 @@
 
           <div class="admin-assignment">
               <div class="admin-header">
-                <h4 class="admin-title">👨‍💼 Ansvarig admin</h4>
+                <h4 class="admin-title">Ansvarig admin</h4>
                 <div class="admin-status" id="admin-status">
                   <span class="status-dot unassigned"></span>
                   <span class="status-text">Ej tilldelad</span>
@@ -189,7 +189,7 @@
                   <div class="admin-email" id="admin-email">Klicka för att tilldela</div>
                 </div>
                 <button type="button" class="admin-edit-btn" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">
-                  <span class="edit-icon">✏️</span>
+                  <span class="edit-icon">Redigera</span>
                   <span class="edit-text">Redigera</span>
                 </button>
               </div>
@@ -201,7 +201,7 @@
                 </div>
                 <div class="search-input-wrapper">
                   <input type="text" id="admin-input" placeholder="Sök admin efter namn eller e-post..." oninput="filterAdmins(this.value)" list="admin-suggestions" aria-label="Sök och välj admin" />
-                  <div class="search-icon">🔍</div>
+                  <div class="search-icon">Sök</div>
                 </div>
                 <div class="admin-suggestions" id="admin-suggestions-list"></div>
             <datalist id="admin-suggestions"></datalist>
@@ -210,7 +210,7 @@
 
           <section class="note-section" aria-labelledby="notes-heading">
               <div class="note-header">
-                <h3 id="notes-heading">📝 Interna anteckningar</h3>
+                <h3 id="notes-heading">Interna anteckningar</h3>
                 <div class="note-count" id="note-count">
                   <span class="count-badge">0</span>
                   <span class="count-text">anteckningar</span>
@@ -225,9 +225,9 @@
                 <div class="note-textarea-wrapper">
                   <textarea id="internal-note" placeholder="Skriv en intern anteckning som bara admin kan se..." aria-describedby="note-help" maxlength="500"></textarea>
                   <div class="textarea-footer">
-                    <div class="note-help-text">💡 Anteckningar är endast synliga för admin</div>
+                    <div class="note-help-text">Anteckningar är endast synliga för admin</div>
                     <button type="button" class="note-save-btn" onclick="saveNote()">
-                      <span class="save-icon">💾</span>
+                      <span class="save-icon">Spara</span>
                       <span class="save-text">Spara anteckning</span>
                     </button>
                   </div>
@@ -239,13 +239,13 @@
                 <div class="note-list-header">
                   <h4>Anteckningshistorik</h4>
                   <div class="note-list-actions">
-                    <button class="note-filter-btn" id="note-filter-btn" onclick="filterNotes()">🔽 Filtrera</button>
-                    <button class="note-sort-btn" id="note-sort-btn" onclick="sortNotes()">📅 Sortera</button>
+                    <button class="note-filter-btn" id="note-filter-btn" onclick="filterNotes()">Filtrera</button>
+                    <button class="note-sort-btn" id="note-sort-btn" onclick="sortNotes()">Sortera</button>
                   </div>
                 </div>
                 <div class="note-list" id="note-list" role="list" aria-label="Interna anteckningar">
                   <div class="empty-notes" id="empty-notes">
-                    <div class="empty-icon">📝</div>
+                    <div class="empty-icon">Anteckning</div>
                     <div class="empty-text">Inga interna anteckningar än</div>
                     <div class="empty-subtext">Lägg till din första anteckning ovan</div>
                   </div>
@@ -1489,7 +1489,7 @@
       } else {
         noteList.innerHTML = `
           <div class="empty-notes">
-            <div class="empty-icon">📝</div>
+            <div class="empty-icon">Anteckning</div>
             <div class="empty-text">Inga interna anteckningar än</div>
             <div class="empty-subtext">Lägg till din första anteckning ovan</div>
           </div>
