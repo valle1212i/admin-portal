@@ -187,7 +187,18 @@ router.post('/', async (req, res) => {
 
     } else if (submissionType === 'case_response') {
       // Handle case response submissions - update existing case
-      const responseData = (req.body && typeof req.body.caseResponse === 'object') ? req.body.caseResponse : {};
+      // Extract response data from both possible locations
+      const responseData = (req.body && typeof req.body.caseResponse === 'object') ? req.body.caseResponse : 
+                          (req.body && typeof req.body.data === 'object') ? req.body.data : {};
+      
+      console.log('[ADMIN INGEST CASES] Case response data:', {
+        responseDataKeys: Object.keys(responseData || {}),
+        caseId: responseData?.caseId,
+        customerId: responseData?.customerId,
+        message: responseData?.message,
+        hasCaseResponse: !!req.body.caseResponse,
+        hasData: !!req.body.data
+      });
       
       if (!responseData.caseId) {
         return res.status(400).json({ success: false, error: 'Missing caseId for case response' });
@@ -212,8 +223,8 @@ router.post('/', async (req, res) => {
       // Add customer response to case
       const newMessage = {
         sender: 'customer',
-        senderName: responseData.senderName || 'Customer',
-        senderEmail: responseData.senderEmail || '',
+        senderName: responseData.customerName || responseData.senderName || 'Customer',
+        senderEmail: responseData.customerEmail || responseData.senderEmail || '',
         message: cleanMessage,
         timestamp: responseData.timestamp || new Date()
       };
