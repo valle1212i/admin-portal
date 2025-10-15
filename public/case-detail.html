@@ -220,7 +220,7 @@
             <div class="chat-transcript-content" id="chat-transcript-content" style="display: none;">
               <div class="chat-transcript-messages" id="chat-transcript-messages">
                 <div class="empty-chat-transcript" id="empty-chat-transcript">
-                  <div class="empty-icon">💬</div>
+                  <div class="empty-icon">📝</div>
                   <div class="empty-text">Inget chatt-transkript tillgängligt</div>
                   <div class="empty-subtext">Chatt-transkriptet visas här när det är tillgängligt</div>
                 </div>
@@ -1724,6 +1724,12 @@
     
     // Update note count
     updateNoteCount();
+    
+    // Store case data globally for chat transcript
+    window.currentCaseData = data;
+    
+    // Load chat transcript
+    loadChatTranscript();
   }
 
   async function loadAdmins() {
@@ -2011,6 +2017,8 @@
       btn.setAttribute("aria-expanded", "true");
       text.textContent = "Dölj transkript";
       btn.classList.add("expanded");
+      // Load chat transcript when showing
+      loadChatTranscript();
     } else {
       content.style.display = "none";
       btn.setAttribute("aria-expanded", "false");
@@ -2020,22 +2028,62 @@
   }
 
   function loadChatTranscript() {
-    // This function will load the chat transcript from the case data
-    // For now, it shows a placeholder message
     const messagesContainer = document.getElementById("chat-transcript-messages");
     const emptyState = document.getElementById("empty-chat-transcript");
     
-    if (emptyState) {
-      emptyState.innerHTML = `
-        <div class="empty-icon">💬</div>
-        <div class="empty-text">Chatt-transkript laddas...</div>
-        <div class="empty-subtext">Hämtar chatt-historik från kundportalen</div>
-      `;
-    }
+    if (!messagesContainer) return;
     
-    // TODO: Implement actual chat transcript loading
-    // This would fetch the chat history from the customer portal
-    // and display it in the chat-transcript-messages container
+    // Get the current case data
+    if (typeof window.currentCaseData !== 'undefined' && window.currentCaseData.messages) {
+      const messages = window.currentCaseData.messages;
+      
+      if (messages.length === 0) {
+        if (emptyState) {
+          emptyState.innerHTML = `
+            <div class="empty-icon">📝</div>
+            <div class="empty-text">Inga meddelanden i chatt-transkriptet</div>
+            <div class="empty-subtext">Inga meddelanden hittades för detta ärende</div>
+          `;
+        }
+        return;
+      }
+      
+      // Clear empty state
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+      
+      // Build chat transcript HTML
+      const chatHTML = messages.map(msg => {
+        const isCustomer = msg.sender === 'customer';
+        const senderName = msg.senderName || (isCustomer ? 'Kund' : 'Admin');
+        const senderInitials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+        const timestamp = new Date(msg.timestamp).toLocaleString('sv-SE');
+        
+        return `
+          <div class="chat-message ${isCustomer ? 'customer' : 'admin'}">
+            <div class="chat-message-avatar">${senderInitials}</div>
+            <div class="chat-message-content">
+              <div class="chat-message-header">
+                <span class="chat-message-sender">${senderName}</span>
+                <span class="chat-message-time">${timestamp}</span>
+              </div>
+              <div class="chat-message-text">${msg.message}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      messagesContainer.innerHTML = chatHTML;
+    } else {
+      if (emptyState) {
+        emptyState.innerHTML = `
+          <div class="empty-icon">📝</div>
+          <div class="empty-text">Laddar chatt-transkript...</div>
+          <div class="empty-subtext">Hämtar meddelanden från ärendet</div>
+        `;
+      }
+    }
   }
 
   function useTemplate(templateKey) {
