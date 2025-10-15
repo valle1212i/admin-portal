@@ -112,6 +112,32 @@ app.use(
   adminIngestHmacRouter
 );
 
+// Additional ingest routes for specific services
+const adminIngestRadgivningRouter = require('./routes/adminIngestRadgivning');
+const adminIngestAIStudioRouter = require('./routes/adminIngestAIStudio');
+const adminIngestCasesRouter = require('./routes/adminIngestCases');
+
+app.use(
+  '/admin/api/ingest/radgivning',
+  ingestLimiter,
+  express.raw({ type: 'application/json', limit: '200kb' }),
+  adminIngestRadgivningRouter
+);
+
+app.use(
+  '/admin/api/ingest/ai-studio',
+  ingestLimiter,
+  express.raw({ type: 'application/json', limit: '200kb' }),
+  adminIngestAIStudioRouter
+);
+
+app.use(
+  '/admin/api/ingest/cases',
+  ingestLimiter,
+  express.raw({ type: 'application/json', limit: '200kb' }),
+  adminIngestCasesRouter
+);
+
 
 
 app.use(express.json());
