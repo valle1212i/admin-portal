@@ -67,8 +67,8 @@ router.post('/', async (req, res) => {
 
     if (!tenantId) return res.status(400).json({ success: false, error: 'tenantId required' });
 
-    // Handle case submissions
-    if (submissionType === 'case' || submissionType === 'case_response') {
+    // Handle case creation
+    if (submissionType === 'case') {
       // Extract case data - check both nested and direct structures
       const caseData = (req.body && typeof req.body.case === 'object') ? req.body.case : req.body;
       const data = (req.body && typeof req.body.data === 'object') ? req.body.data : {};
@@ -82,19 +82,17 @@ router.post('/', async (req, res) => {
       });
 
       // Validate required fields for case creation
-      if (submissionType === 'case') {
-        if (!caseData.sessionId) {
-          return res.status(400).json({ success: false, error: 'Missing sessionId' });
-        }
-        if (!caseData.customerId) {
-          return res.status(400).json({ success: false, error: 'Missing customerId' });
-        }
-        if (!caseData.topic) {
-          return res.status(400).json({ success: false, error: 'Missing topic' });
-        }
-        if (!caseData.description) {
-          return res.status(400).json({ success: false, error: 'Missing description' });
-        }
+      if (!caseData.sessionId) {
+        return res.status(400).json({ success: false, error: 'Missing sessionId' });
+      }
+      if (!caseData.customerId) {
+        return res.status(400).json({ success: false, error: 'Missing customerId' });
+      }
+      if (!caseData.topic) {
+        return res.status(400).json({ success: false, error: 'Missing topic' });
+      }
+      if (!caseData.description) {
+        return res.status(400).json({ success: false, error: 'Missing description' });
       }
 
       // Clean and validate messages for case creation
@@ -184,9 +182,10 @@ router.post('/', async (req, res) => {
       });
 
       return res.json({ success: true, id: newCase._id, idempotencyKey });
+    }
 
-    } else if (submissionType === 'case_response') {
-      // Handle case response submissions - update existing case
+    // Handle case response submissions - update existing case
+    if (submissionType === 'case_response') {
       // Extract response data from both possible locations
       const responseData = (req.body && typeof req.body.caseResponse === 'object') ? req.body.caseResponse : 
                           (req.body && typeof req.body.data === 'object') ? req.body.data : {};
@@ -246,8 +245,10 @@ router.post('/', async (req, res) => {
       });
 
       return res.json({ success: true, id: existingCase._id, idempotencyKey });
+    }
 
-    } else {
+    // Handle invalid submission types
+    if (submissionType !== 'case' && submissionType !== 'case_response') {
       return res.status(400).json({ success: false, error: 'Invalid submission type for cases endpoint' });
     }
 
