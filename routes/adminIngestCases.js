@@ -69,8 +69,17 @@ router.post('/', async (req, res) => {
 
     // Handle case submissions
     if (submissionType === 'case' || submissionType === 'case_response') {
-      const caseData = (req.body && typeof req.body.case === 'object') ? req.body.case : {};
+      // Extract case data - check both nested and direct structures
+      const caseData = (req.body && typeof req.body.case === 'object') ? req.body.case : req.body;
       const data = (req.body && typeof req.body.data === 'object') ? req.body.data : {};
+
+      console.log('[ADMIN INGEST CASES] Extracted case data:', {
+        caseDataKeys: Object.keys(caseData || {}),
+        sessionId: caseData?.sessionId,
+        customerId: caseData?.customerId,
+        topic: caseData?.topic,
+        description: caseData?.description
+      });
 
       // Validate required fields for case creation
       if (submissionType === 'case') {
@@ -82,6 +91,9 @@ router.post('/', async (req, res) => {
         }
         if (!caseData.topic) {
           return res.status(400).json({ success: false, error: 'Missing topic' });
+        }
+        if (!caseData.description) {
+          return res.status(400).json({ success: false, error: 'Missing description' });
         }
       }
 
@@ -141,7 +153,7 @@ router.post('/', async (req, res) => {
         customerId: caseData.customerId,
         sessionId: caseData.sessionId,
         topic: caseData.topic,
-        description: caseData.description || '',
+        description: caseData.description || caseData.topic || 'No description provided',
         messages: cleanedMessages,
         priority: caseData.priority || 'Normal',
         tags: caseData.tags || [],
@@ -150,6 +162,15 @@ router.post('/', async (req, res) => {
         createdAt: new Date(),
         updatedAt: new Date()
       };
+
+      console.log('[ADMIN INGEST CASES] Case document created:', {
+        customerId: caseDocument.customerId,
+        sessionId: caseDocument.sessionId,
+        topic: caseDocument.topic,
+        description: caseDocument.description,
+        status: caseDocument.status,
+        messageCount: caseDocument.messages.length
+      });
 
       // Save to AdminPanel.adminportal.cases collection
       const newCase = new Case(caseDocument);
