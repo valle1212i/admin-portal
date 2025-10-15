@@ -132,7 +132,8 @@ router.post('/', async (req, res) => {
               senderName: msg.senderName || '',
               senderEmail: msg.senderEmail || '',
               message: cleanMessage,
-              timestamp: msg.timestamp || new Date()
+              timestamp: msg.timestamp || new Date(),
+              messageType: 'chat_transcript' // Mark as original chat transcript
             };
           }
           return null; // Filter out invalid messages

@@ -40,6 +40,11 @@ const caseSchema = new mongoose.Schema({
       timestamp: {
         type: Date,
         default: Date.now
+      },
+      messageType: {
+        type: String,
+        enum: ["chat_transcript", "case_response"],
+        default: "case_response"
       }
     }
   ],

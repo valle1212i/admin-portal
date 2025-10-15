@@ -229,7 +229,8 @@ router.post("/send-message", async (req, res) => {
       senderName: adminName,
       senderEmail: adminEmail,
       message,
-      timestamp: new Date()
+      timestamp: new Date(),
+      messageType: "case_response" // Mark as case response message
     };
 
     const caseDoc = await Case.findOneAndUpdate(
@@ -280,7 +281,8 @@ router.post("/:caseId/customer-response", async (req, res) => {
       senderName: senderName || "Customer",
       senderEmail: senderEmail || "",
       message,
-      timestamp: new Date()
+      timestamp: new Date(),
+      messageType: "case_response" // Mark as case response message
     };
 
     const caseDoc = await Case.findByIdAndUpdate(

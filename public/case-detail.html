@@ -1670,11 +1670,16 @@
       btn.classList.add("active");
     }
 
-    // Update chat messages
+    // Update chat messages - only show case response messages (not chat transcript)
     const transcript = document.getElementById("chat-transcript");
     if (transcript) {
-      if (data.messages && data.messages.length > 0) {
-        transcript.innerHTML = data.messages.map(msg => {
+      // Filter to only show case response messages (exclude chat transcript messages)
+      const caseResponseMessages = data.messages ? data.messages.filter(msg => 
+        !msg.messageType || msg.messageType === 'case_response'
+      ) : [];
+      
+      if (caseResponseMessages.length > 0) {
+        transcript.innerHTML = caseResponseMessages.map(msg => {
           const messageClass = msg.sender === 'customer' ? 'customer' : 
                               msg.sender === 'system' ? 'system' : 'admin';
           const senderDisplay = msg.senderName || msg.sender;
@@ -1947,18 +1952,8 @@
       });
     }
 
-    // Messages
-    if (data.messages && data.messages.length > 0) {
-      data.messages.forEach(msg => {
-        const sender = msg.senderName || msg.sender;
-        timelineEvents.push({
-          type: 'message',
-          title: `${sender} skickade meddelande`,
-          time: msg.timestamp,
-          description: msg.message.substring(0, 50) + (msg.message.length > 50 ? '...' : '')
-        });
-      });
-    }
+    // Note: Messages are not included in timeline - timeline is for case actions only
+    // Messages are shown in the "Konversation" section instead
 
     // Internal notes
     if (data.internalNotes && data.internalNotes.length > 0) {
@@ -2040,9 +2035,9 @@
         `;
       }
       
-      // Fetch original chat transcript from Chat collection
-      const response = await fetch(`/api/chat/transcript/${sessionId}`);
-      const messages = await response.json();
+      // Get original chat transcript messages from case data (messageType: 'chat_transcript')
+      const messages = window.currentCaseData && window.currentCaseData.messages ? 
+        window.currentCaseData.messages.filter(msg => msg.messageType === 'chat_transcript') : [];
       
       if (!messages || messages.length === 0) {
         if (emptyState) {
