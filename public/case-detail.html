@@ -205,6 +205,29 @@
               </div>
           </div>
 
+          <!-- Chat Transcript Section -->
+          <section class="chat-transcript-section" aria-labelledby="chat-transcript-heading">
+            <div class="chat-transcript-header">
+              <h3 id="chat-transcript-heading">Chatt-transkript</h3>
+              <div class="chat-transcript-toggle">
+                <button type="button" class="toggle-chat-btn" onclick="toggleChatTranscript()" aria-expanded="false">
+                  <span class="toggle-text">Visa transkript</span>
+                  <span class="toggle-icon">▼</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="chat-transcript-content" id="chat-transcript-content" style="display: none;">
+              <div class="chat-transcript-messages" id="chat-transcript-messages">
+                <div class="empty-chat-transcript" id="empty-chat-transcript">
+                  <div class="empty-icon">💬</div>
+                  <div class="empty-text">Inget chatt-transkript tillgängligt</div>
+                  <div class="empty-subtext">Chatt-transkriptet visas här när det är tillgängligt</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section class="note-section" aria-labelledby="notes-heading">
               <div class="note-header">
                 <h3 id="notes-heading">Interna anteckningar</h3>
@@ -775,6 +798,7 @@
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-lg);
       overflow: hidden;
+      margin-top: var(--space-4);
     }
 
     .toggle-details-btn {
@@ -1074,6 +1098,165 @@
     .admin-suggestion-email {
       color: var(--gray-500);
       font-size: 12px;
+    }
+
+    /* Chat Transcript Section Styles */
+    .chat-transcript-section {
+      margin-bottom: var(--space-6);
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      border: 1px solid var(--blue-200);
+    }
+
+    .chat-transcript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+
+    .chat-transcript-header h3 {
+      color: var(--blue-900);
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .chat-transcript-toggle {
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--blue-500);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-4);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-chat-btn:hover {
+      background: var(--blue-600);
+      transform: translateY(-1px);
+    }
+
+    .toggle-chat-btn[aria-expanded="true"] .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .toggle-icon {
+      transition: transform 0.2s ease;
+      font-size: 12px;
+    }
+
+    .chat-transcript-content {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius-lg);
+      background: white;
+    }
+
+    .chat-transcript-messages {
+      padding: var(--space-4);
+    }
+
+    .empty-chat-transcript {
+      text-align: center;
+      padding: var(--space-8) var(--space-4);
+      color: var(--gray-500);
+    }
+
+    .empty-icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-3);
+    }
+
+    .empty-text {
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+
+    .empty-subtext {
+      font-size: var(--font-size-sm);
+      color: var(--gray-400);
+    }
+
+    .chat-message {
+      display: flex;
+      margin-bottom: var(--space-4);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      background: var(--gray-50);
+    }
+
+    .chat-message.customer {
+      background: var(--blue-50);
+      border-left: 3px solid var(--blue-500);
+    }
+
+    .chat-message.admin {
+      background: var(--green-50);
+      border-left: 3px solid var(--green-500);
+    }
+
+    .chat-message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 12px;
+      margin-right: var(--space-3);
+      flex-shrink: 0;
+    }
+
+    .chat-message.customer .chat-message-avatar {
+      background: var(--blue-500);
+      color: white;
+    }
+
+    .chat-message.admin .chat-message-avatar {
+      background: var(--green-500);
+      color: white;
+    }
+
+    .chat-message-content {
+      flex: 1;
+    }
+
+    .chat-message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-1);
+    }
+
+    .chat-message-sender {
+      font-weight: 600;
+      color: var(--gray-900);
+      font-size: var(--font-size-sm);
+    }
+
+    .chat-message-time {
+      font-size: var(--font-size-xs);
+      color: var(--gray-500);
+    }
+
+    .chat-message-text {
+      color: var(--gray-700);
+      font-size: var(--font-size-sm);
+      line-height: 1.5;
     }
 
     /* Enhanced Note Section Styles */
@@ -1815,6 +1998,44 @@
       content.style.display = "none";
       btn.classList.remove("expanded");
     }
+  }
+
+  function toggleChatTranscript() {
+    const content = document.getElementById("chat-transcript-content");
+    const btn = document.querySelector(".toggle-chat-btn");
+    const icon = btn.querySelector(".toggle-icon");
+    const text = btn.querySelector(".toggle-text");
+    
+    if (content.style.display === "none") {
+      content.style.display = "block";
+      btn.setAttribute("aria-expanded", "true");
+      text.textContent = "Dölj transkript";
+      btn.classList.add("expanded");
+    } else {
+      content.style.display = "none";
+      btn.setAttribute("aria-expanded", "false");
+      text.textContent = "Visa transkript";
+      btn.classList.remove("expanded");
+    }
+  }
+
+  function loadChatTranscript() {
+    // This function will load the chat transcript from the case data
+    // For now, it shows a placeholder message
+    const messagesContainer = document.getElementById("chat-transcript-messages");
+    const emptyState = document.getElementById("empty-chat-transcript");
+    
+    if (emptyState) {
+      emptyState.innerHTML = `
+        <div class="empty-icon">💬</div>
+        <div class="empty-text">Chatt-transkript laddas...</div>
+        <div class="empty-subtext">Hämtar chatt-historik från kundportalen</div>
+      `;
+    }
+    
+    // TODO: Implement actual chat transcript loading
+    // This would fetch the chat history from the customer portal
+    // and display it in the chat-transcript-messages container
   }
 
   function useTemplate(templateKey) {
