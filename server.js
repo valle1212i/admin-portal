@@ -102,6 +102,10 @@ app.options("*", cors());
 const adminIngestHmacRouter = require('./routes/adminIngestHmac');
 const adminIngestCasesRouter = require('./routes/adminIngestCases');
 
+// Additional ingest routes for specific services
+const adminIngestRadgivningRouter = require('./routes/adminIngestRadgivning');
+const adminIngestAIStudioRouter = require('./routes/adminIngestAIStudio');
+
 // Rate limit för ingest (skydd mot brus)
 const ingestLimiter = rateLimit({ windowMs: 60_000, max: 60 }); // 60 requests/min/IP
 
@@ -119,6 +123,27 @@ app.use(
   ingestLimiter, // <- viktig: limiter före raw parsern
   adminIngestCasesRouter
 );
+
+app.use(
+  '/admin/api/ingest/radgivning',
+  ingestLimiter,
+  express.raw({ type: 'application/json', limit: '200kb' }),
+  adminIngestRadgivningRouter
+);
+
+app.use(
+  '/admin/api/ingest/ai-studio',
+  ingestLimiter,
+  express.raw({ type: 'application/json', limit: '200kb' }),
+  adminIngestAIStudioRouter
+);
+
+app.use(
+  '/admin/api/ingest/cases',
+  ingestLimiter,
+  adminIngestCasesRouter
+);
+
 
 
 
