@@ -1475,7 +1475,10 @@
     if (adminDisplayElement) adminDisplayElement.value = data.assignedAdminName || "Ingen";
 
     // Update enhanced admin assignment UI
-    updateAdminAssignmentUI(data);
+    updateAdminAssignmentUI({
+      assignedAdminName: data.assignedAdminName,
+      assignedAdminEmail: data.assignedAdminEmail
+    });
 
     // Update customer avatar with initials
     const customerName = data.customerName || "Okänd";

@@ -55,6 +55,18 @@ router.get("/meta/:sessionId", async (req, res) => {
     }
 
     const customer = await Customer.findById(caseDoc.customerId).lean();
+    
+    // Get assigned admin information if exists
+    let assignedAdminName = null;
+    let assignedAdminEmail = null;
+    if (caseDoc.assignedAdmin) {
+      const Admin = require("../models/Admin");
+      const assignedAdmin = await Admin.findById(caseDoc.assignedAdmin).lean();
+      if (assignedAdmin) {
+        assignedAdminName = assignedAdmin.name;
+        assignedAdminEmail = assignedAdmin.email;
+      }
+    }
 
     res.json({
       _id: caseDoc._id,
@@ -64,6 +76,8 @@ router.get("/meta/:sessionId", async (req, res) => {
       description: caseDoc.description,
       status: caseDoc.status,
       assignedAdmin: caseDoc.assignedAdmin,
+      assignedAdminName: assignedAdminName,
+      assignedAdminEmail: assignedAdminEmail,
       adminAssignmentHistory: caseDoc.adminAssignmentHistory || [],
       messages: caseDoc.messages,
       internalNotes: caseDoc.internalNotes || [],
