@@ -100,6 +100,7 @@ app.options("*", cors());
 
 // --- HMAC-ingest: läs rå JSON body för exakt denna path (måste ligga före express.json()) ---
 const adminIngestHmacRouter = require('./routes/adminIngestHmac');
+const adminIngestCasesRouter = require('./routes/adminIngestCases');
 
 // Rate limit för ingest (skydd mot brus)
 const ingestLimiter = rateLimit({ windowMs: 60_000, max: 60 }); // 60 requests/min/IP
@@ -110,6 +111,13 @@ app.use(
   ingestLimiter, // <- viktig: limiter före raw parsern
   express.raw({ type: 'application/json', limit: '200kb' }), // ger req.body = Buffer
   adminIngestHmacRouter
+);
+
+// Mount cases ingest route
+app.use(
+  '/admin/api/ingest/cases',
+  ingestLimiter, // <- viktig: limiter före raw parsern
+  adminIngestCasesRouter
 );
 
 
