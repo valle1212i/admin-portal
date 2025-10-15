@@ -94,14 +94,14 @@
         </div>
         
         <div class="status-controls">
-          <div class="status-buttons" role="group" aria-label="Välj ärende status">
+      <div class="status-buttons" role="group" aria-label="Välj ärende status">
             <button class="status-btn btn-secondary" data-status="Nytt" aria-pressed="false">Nytt</button>
             <button class="status-btn btn-secondary" data-status="Arbetande" aria-pressed="false">Arbetande</button>
             <button class="status-btn btn-secondary" data-status="Väntar svar" aria-pressed="false">Väntar svar</button>
             <button class="status-btn btn-secondary" data-status="On Hold" aria-pressed="false">On Hold</button>
             <button class="status-btn btn-secondary" data-status="open" aria-pressed="false">Öppen</button>
             <button class="status-btn btn-secondary" data-status="Stängt" aria-pressed="false">Stängt</button>
-          </div>
+      </div>
           <div class="status-actions">
             <button id="update-status-btn" class="btn-primary">Bekräfta status</button>
             <button id="add-note-btn" class="btn-secondary">Lägg till anteckning</button>
@@ -124,7 +124,7 @@
           <!-- Chat Messages -->
           <div class="chat-messages" id="chat-transcript">
             <!-- Messages will be populated here -->
-          </div>
+            </div>
           
           <!-- Quick Response Templates -->
           <div class="response-templates">
@@ -135,7 +135,7 @@
               <button class="template-btn" data-template="resolution">"Problemet är nu löst..."</button>
               <button class="template-btn" data-template="follow-up">"Jag följer upp detta..."</button>
             </div>
-          </div>
+            </div>
           
           <!-- Message Input -->
           <div class="message-input">
@@ -161,36 +161,98 @@
               <h2 id="case-info-heading">Ärendeinfo</h2>
           
             <dl class="case-details">
-              <div class="detail-item">
-                <dt>Beskrivning:</dt>
-                <dd id="case-description">Laddar...</dd>
-              </div>
-              <div class="detail-item">
-                <dt>Skapad:</dt>
-                <dd id="created-at">Laddar...</dd>
-              </div>
-            </dl>
-
-            <div class="admin-assignment">
-                <label for="admin-display">Ansvarig admin:</label>
-              <div class="readonly-box">
-                <input type="text" id="admin-display" readonly aria-label="Tilldelad admin" />
-                <button type="button" class="edit-icon" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">Redigera</button>
-              </div>
-              <input type="text" id="admin-input" style="display: none;" placeholder="Sök admin..." oninput="filterAdmins(this.value)" list="admin-suggestions" aria-label="Sök och välj admin" />
-              <datalist id="admin-suggestions"></datalist>
+            <div class="detail-item">
+              <dt>Beskrivning:</dt>
+              <dd id="case-description">Laddar...</dd>
             </div>
+            <div class="detail-item">
+              <dt>Skapad:</dt>
+              <dd id="created-at">Laddar...</dd>
+            </div>
+          </dl>
 
-            <section class="note-section" aria-labelledby="notes-heading">
-              <h3 id="notes-heading">Intern anteckning</h3>
-              <label for="internal-note" class="sr-only">Skriv intern anteckning</label>
-              <textarea id="internal-note" placeholder="Skriv en intern anteckning..." aria-describedby="note-help"></textarea>
-              <div id="note-help" class="sr-only">Skriv interna anteckningar som bara admin kan se</div>
-              <button type="button" class="btn-primary" onclick="saveNote()">Spara anteckning</button>
+          <div class="admin-assignment">
+              <div class="admin-header">
+                <h4 class="admin-title">👨‍💼 Ansvarig admin</h4>
+                <div class="admin-status" id="admin-status">
+                  <span class="status-dot unassigned"></span>
+                  <span class="status-text">Ej tilldelad</span>
+            </div>
+              </div>
+              
+              <div class="admin-card" id="admin-card">
+                <div class="admin-avatar" id="admin-avatar">
+                  <span id="admin-initials">?</span>
+                </div>
+                <div class="admin-info">
+                  <div class="admin-name" id="admin-name">Ingen admin tilldelad</div>
+                  <div class="admin-email" id="admin-email">Klicka för att tilldela</div>
+                </div>
+                <button type="button" class="admin-edit-btn" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">
+                  <span class="edit-icon">✏️</span>
+                  <span class="edit-text">Redigera</span>
+                </button>
+              </div>
+              
+              <div class="admin-search-container" id="admin-search-container" style="display: none;">
+                <div class="search-header">
+                  <h5>Tilldela admin</h5>
+                  <button type="button" class="close-search" onclick="toggleEditAdmin()">✕</button>
+                </div>
+                <div class="search-input-wrapper">
+                  <input type="text" id="admin-input" placeholder="Sök admin efter namn eller e-post..." oninput="filterAdmins(this.value)" list="admin-suggestions" aria-label="Sök och välj admin" />
+                  <div class="search-icon">🔍</div>
+                </div>
+                <div class="admin-suggestions" id="admin-suggestions-list"></div>
+            <datalist id="admin-suggestions"></datalist>
+              </div>
+          </div>
 
-              <div class="note-list" id="note-list" role="list" aria-label="Interna anteckningar"></div>
-            </section>
-          </article>
+          <section class="note-section" aria-labelledby="notes-heading">
+              <div class="note-header">
+                <h3 id="notes-heading">📝 Interna anteckningar</h3>
+                <div class="note-count" id="note-count">
+                  <span class="count-badge">0</span>
+                  <span class="count-text">anteckningar</span>
+                </div>
+              </div>
+              
+              <div class="note-input-container">
+                <div class="note-input-header">
+                  <label for="internal-note" class="note-label">Lägg till ny anteckning</label>
+                  <div class="note-char-count" id="note-char-count">0 / 500</div>
+                </div>
+                <div class="note-textarea-wrapper">
+                  <textarea id="internal-note" placeholder="Skriv en intern anteckning som bara admin kan se..." aria-describedby="note-help" maxlength="500"></textarea>
+                  <div class="textarea-footer">
+                    <div class="note-help-text">💡 Anteckningar är endast synliga för admin</div>
+                    <button type="button" class="note-save-btn" onclick="saveNote()">
+                      <span class="save-icon">💾</span>
+                      <span class="save-text">Spara anteckning</span>
+                    </button>
+                  </div>
+                </div>
+            <div id="note-help" class="sr-only">Skriv interna anteckningar som bara admin kan se</div>
+              </div>
+
+              <div class="note-list-container">
+                <div class="note-list-header">
+                  <h4>Anteckningshistorik</h4>
+                  <div class="note-list-actions">
+                    <button class="note-filter-btn" id="note-filter-btn" onclick="filterNotes()">🔽 Filtrera</button>
+                    <button class="note-sort-btn" id="note-sort-btn" onclick="sortNotes()">📅 Sortera</button>
+                  </div>
+                </div>
+                <div class="note-list" id="note-list" role="list" aria-label="Interna anteckningar">
+                  <div class="empty-notes" id="empty-notes">
+                    <div class="empty-icon">📝</div>
+                    <div class="empty-text">Inga interna anteckningar än</div>
+                    <div class="empty-subtext">Lägg till din första anteckning ovan</div>
+                  </div>
+                </div>
+              </div>
+          </section>
+        </article>
         </div>
       </div>
     </main>
@@ -788,60 +850,436 @@
       color: var(--gray-600);
     }
 
+    /* Enhanced Admin Assignment Styles */
     .admin-assignment {
       margin-bottom: var(--space-6);
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .readonly-box {
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+
+    .admin-title {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-800);
+      margin: 0;
+    }
+
+    .admin-status {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
-      background: var(--gray-100);
-      padding: var(--space-3);
-      border-radius: var(--radius-lg);
-      margin-top: var(--space-2);
+      gap: var(--space-2);
     }
 
-    .readonly-box input {
-      margin: 0;
-      background: transparent;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-dot.unassigned {
+      background: var(--gray-400);
+    }
+
+    .status-dot.assigned {
+      background: var(--green-500);
+    }
+
+    .status-text {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .admin-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      background: white;
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      transition: all 0.2s ease;
+    }
+
+    .admin-card:hover {
+      border-color: var(--primary-300);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+
+    .admin-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-lg);
+    }
+
+    .admin-info {
+      flex: 1;
+    }
+
+    .admin-name {
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-800);
+      margin-bottom: var(--space-1);
+    }
+
+    .admin-email {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+    }
+
+    .admin-edit-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--primary-500);
+      color: white;
       border: none;
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      transition: all 0.2s ease;
+    }
+
+    .admin-edit-btn:hover {
+      background: var(--primary-600);
+      transform: translateY(-1px);
     }
 
     .edit-icon {
-      cursor: pointer;
+      font-size: var(--font-size-sm);
+    }
+
+    .admin-search-container {
+      margin-top: var(--space-4);
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4);
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .search-header h5 {
+      margin: 0;
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-800);
+    }
+
+    .close-search {
+      background: none;
+      border: none;
       font-size: var(--font-size-lg);
-      color: var(--gray-600);
-      transition: color var(--transition-fast);
+      color: var(--gray-500);
+      cursor: pointer;
+      padding: var(--space-1);
+      border-radius: var(--radius-sm);
     }
 
-    .edit-icon:hover {
-      color: var(--primary-600);
+    .close-search:hover {
+      background: var(--gray-200);
     }
 
+    .search-input-wrapper {
+      position: relative;
+      padding: var(--space-4);
+    }
+
+    .search-input-wrapper input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4) var(--space-3) var(--space-10);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: var(--space-4);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+    }
+
+    .admin-suggestions {
+      max-height: 200px;
+      overflow-y: auto;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    /* Enhanced Note Section Styles */
     .note-section {
       margin-top: var(--space-6);
       padding-top: var(--space-6);
       border-top: 1px solid var(--gray-200);
+      background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-6);
+    }
+
+    .note-header h3 {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-800);
+      margin: 0;
+    }
+
+    .note-count {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--primary-50);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--primary-200);
+    }
+
+    .count-badge {
+      background: var(--primary-500);
+      color: white;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-full);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .count-text {
+      font-size: var(--font-size-sm);
+      color: var(--primary-700);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .note-input-container {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      margin-bottom: var(--space-6);
+      overflow: hidden;
+    }
+
+    .note-input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4);
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .note-label {
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-800);
+      margin: 0;
+    }
+
+    .note-char-count {
+      font-size: var(--font-size-sm);
+      color: var(--gray-500);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .note-textarea-wrapper {
+      padding: var(--space-4);
+    }
+
+    .note-textarea-wrapper textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: var(--space-4);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.2s ease;
+    }
+
+    .note-textarea-wrapper textarea:focus {
+      outline: none;
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .textarea-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-3);
+    }
+
+    .note-help-text {
+      font-size: var(--font-size-sm);
+      color: var(--gray-500);
+      font-style: italic;
+    }
+
+    .note-save-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--primary-500);
+      color: white;
+      border: none;
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      transition: all 0.2s ease;
+    }
+
+    .note-save-btn:hover {
+      background: var(--primary-600);
+      transform: translateY(-1px);
+    }
+
+    .save-icon {
+      font-size: var(--font-size-sm);
+    }
+
+    .note-list-container {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+
+    .note-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4);
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .note-list-header h4 {
+      margin: 0;
+      font-weight: var(--font-weight-semibold);
+      color: var(--gray-800);
+    }
+
+    .note-list-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .note-filter-btn,
+    .note-sort-btn {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: var(--font-size-sm);
+      transition: all 0.2s ease;
+    }
+
+    .note-filter-btn:hover,
+    .note-sort-btn:hover {
+      background: var(--gray-200);
+      border-color: var(--gray-400);
     }
 
     .note-list {
-      margin-top: var(--space-4);
+      max-height: 400px;
+      overflow-y: auto;
     }
 
     .note-item {
-      background: var(--gray-50);
       padding: var(--space-4);
-      border-radius: var(--radius-lg);
-      margin-top: var(--space-3);
-      border-left: 4px solid var(--primary-500);
+      border-bottom: 1px solid var(--gray-100);
+      transition: background-color 0.2s ease;
     }
 
-    .note-item small {
-      display: block;
-      color: var(--gray-500);
-      margin-top: var(--space-2);
+    .note-item:hover {
+      background: var(--gray-50);
+    }
+
+    .note-item:last-child {
+      border-bottom: none;
+    }
+
+    .note-content {
+      color: var(--gray-800);
+      line-height: 1.6;
+      margin-bottom: var(--space-2);
+    }
+
+    .note-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: var(--font-size-sm);
+      color: var(--gray-500);
+    }
+
+    .note-timestamp {
+      font-weight: var(--font-weight-medium);
+    }
+
+    .note-author {
+      font-style: italic;
+    }
+
+    .empty-notes {
+      text-align: center;
+      padding: var(--space-8);
+      color: var(--gray-500);
+    }
+
+    .empty-icon {
+      font-size: var(--font-size-4xl);
+      margin-bottom: var(--space-4);
+    }
+
+    .empty-text {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+      margin-bottom: var(--space-2);
+    }
+
+    .empty-subtext {
+      font-size: var(--font-size-sm);
+      color: var(--gray-400);
     }
 
     /* Mobile Responsiveness */
@@ -983,6 +1421,9 @@
     const adminDisplayElement = document.getElementById("admin-display");
     if (adminDisplayElement) adminDisplayElement.value = data.assignedAdminName || "Ingen";
 
+    // Update enhanced admin assignment UI
+    updateAdminAssignmentUI(data);
+
     // Update customer avatar with initials
     const customerName = data.customerName || "Okänd";
     const initials = customerName.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -1032,20 +1473,32 @@
       }
     }
 
-    // Update internal notes
+    // Update internal notes with enhanced UI
     const noteList = document.getElementById("note-list");
     if (noteList) {
       if (data.internalNotes && data.internalNotes.length > 0) {
         noteList.innerHTML = data.internalNotes.map(n => `
           <div class="note-item">
-            ${n.note}
-            <small>${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</small>
+            <div class="note-content">${n.note}</div>
+            <div class="note-meta">
+              <span class="note-timestamp">${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</span>
+              <span class="note-author">Admin</span>
+            </div>
           </div>
         `).join("");
       } else {
-        noteList.innerHTML = '<p class="text-gray-500">Inga interna anteckningar än.</p>';
+        noteList.innerHTML = `
+          <div class="empty-notes">
+            <div class="empty-icon">📝</div>
+            <div class="empty-text">Inga interna anteckningar än</div>
+            <div class="empty-subtext">Lägg till din första anteckning ovan</div>
+          </div>
+        `;
       }
     }
+    
+    // Update note count
+    updateNoteCount();
   }
 
   async function loadAdmins() {
@@ -1467,6 +1920,100 @@
       }, 300);
     }, 3000);
   }
+
+  // Enhanced Admin Assignment Functions
+  function updateAdminAssignmentUI(data) {
+    const adminName = data.assignedAdminName || "Ingen admin tilldelad";
+    const adminEmail = data.assignedAdminEmail || "Klicka för att tilldela";
+    const isAssigned = adminName !== "Ingen admin tilldelad";
+    
+    // Update admin card
+    const adminNameElement = document.getElementById("admin-name");
+    const adminEmailElement = document.getElementById("admin-email");
+    const adminInitialsElement = document.getElementById("admin-initials");
+    const adminStatusElement = document.getElementById("admin-status");
+    
+    if (adminNameElement) adminNameElement.textContent = adminName;
+    if (adminEmailElement) adminEmailElement.textContent = adminEmail;
+    
+    if (isAssigned) {
+      // Generate initials from admin name
+      const initials = adminName.split(' ').map(n => n[0]).join('').toUpperCase();
+      if (adminInitialsElement) adminInitialsElement.textContent = initials;
+      
+      // Update status
+      if (adminStatusElement) {
+        adminStatusElement.innerHTML = `
+          <span class="status-dot assigned"></span>
+          <span class="status-text">Tilldelad</span>
+        `;
+      }
+    } else {
+      if (adminInitialsElement) adminInitialsElement.textContent = "?";
+      if (adminStatusElement) {
+        adminStatusElement.innerHTML = `
+          <span class="status-dot unassigned"></span>
+          <span class="status-text">Ej tilldelad</span>
+        `;
+      }
+    }
+  }
+
+  // Enhanced Note Functions
+  function updateNoteCount() {
+    const noteList = document.getElementById("note-list");
+    const noteCount = document.getElementById("note-count");
+    const emptyNotes = document.getElementById("empty-notes");
+    
+    if (noteList && noteCount) {
+      const noteItems = noteList.querySelectorAll('.note-item');
+      const count = noteItems.length;
+      
+      const countBadge = noteCount.querySelector('.count-badge');
+      if (countBadge) countBadge.textContent = count;
+      
+      if (emptyNotes) {
+        emptyNotes.style.display = count === 0 ? 'block' : 'none';
+      }
+    }
+  }
+
+  function updateCharCount() {
+    const textarea = document.getElementById("internal-note");
+    const charCount = document.getElementById("note-char-count");
+    
+    if (textarea && charCount) {
+      const length = textarea.value.length;
+      charCount.textContent = `${length} / 500`;
+      
+      // Change color based on length
+      if (length > 450) {
+        charCount.style.color = 'var(--red-500)';
+      } else if (length > 400) {
+        charCount.style.color = 'var(--yellow-500)';
+      } else {
+        charCount.style.color = 'var(--gray-500)';
+      }
+    }
+  }
+
+  function filterNotes() {
+    // Placeholder for note filtering functionality
+    console.log('Filter notes functionality');
+  }
+
+  function sortNotes() {
+    // Placeholder for note sorting functionality
+    console.log('Sort notes functionality');
+  }
+
+  // Add event listeners for enhanced functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const noteTextarea = document.getElementById("internal-note");
+    if (noteTextarea) {
+      noteTextarea.addEventListener('input', updateCharCount);
+    }
+  });
 
   // Initialize
   loadCaseData();
