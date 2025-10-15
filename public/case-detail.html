@@ -190,7 +190,6 @@
                 </div>
                 <button type="button" class="admin-edit-btn" onclick="toggleEditAdmin()" aria-label="Redigera admin tilldelning">
                   <span class="edit-icon">Redigera</span>
-                  <span class="edit-text">Redigera</span>
                 </button>
               </div>
               
@@ -1528,18 +1527,18 @@
     }
 
     // Update internal notes with enhanced UI
-    const noteList = document.getElementById("note-list");
+      const noteList = document.getElementById("note-list");
     if (noteList) {
       if (data.internalNotes && data.internalNotes.length > 0) {
         noteList.innerHTML = data.internalNotes.map(n => `
-          <div class="note-item">
+  <div class="note-item">
             <div class="note-content">${n.note}</div>
             <div class="note-meta">
               <span class="note-timestamp">${new Date(n.timestamp || Date.now()).toLocaleString("sv-SE")}</span>
               <span class="note-author">Admin</span>
             </div>
-          </div>
-        `).join("");
+  </div>
+`).join("");
       } else {
         noteList.innerHTML = `
           <div class="empty-notes">
@@ -1562,9 +1561,18 @@
 
   function toggleEditAdmin() {
     const searchContainer = document.getElementById("admin-search-container");
+    const adminInput = document.getElementById("admin-input");
+    
+    if (!searchContainer) {
+      console.error("Admin search container not found");
+      return;
+    }
+    
     if (searchContainer.style.display === "none" || searchContainer.style.display === "") {
       searchContainer.style.display = "block";
-      document.getElementById("admin-input").focus();
+      if (adminInput) {
+        adminInput.focus();
+      }
     } else {
       searchContainer.style.display = "none";
     }
@@ -1573,8 +1581,8 @@
   async function assignAdmin(adminId, adminName, adminEmail) {
     try {
       const response = await fetch("/api/cases/assign-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           sessionId, 
           adminId: adminId,
@@ -1592,7 +1600,10 @@
         });
         
         // Close search container
-        document.getElementById("admin-search-container").style.display = "none";
+        const searchContainer = document.getElementById("admin-search-container");
+        if (searchContainer) {
+          searchContainer.style.display = "none";
+        }
         
         // Reload case data to update timeline
         loadCaseData();
@@ -1640,7 +1651,7 @@
       `;
       adminItem.onclick = () => assignAdmin(admin._id, admin.name, admin.email);
       suggestionsList.appendChild(adminItem);
-    });
+      });
   }
 
   function saveNote() {
