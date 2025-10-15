@@ -1727,9 +1727,6 @@
     
     // Store case data globally for chat transcript
     window.currentCaseData = data;
-    
-    // Load chat transcript
-    loadChatTranscript();
   }
 
   async function loadAdmins() {
@@ -2027,22 +2024,32 @@
     }
   }
 
-  function loadChatTranscript() {
+  async function loadChatTranscript() {
     const messagesContainer = document.getElementById("chat-transcript-messages");
     const emptyState = document.getElementById("empty-chat-transcript");
     
     if (!messagesContainer) return;
     
-    // Get the current case data
-    if (typeof window.currentCaseData !== 'undefined' && window.currentCaseData.messages) {
-      const messages = window.currentCaseData.messages;
+    try {
+      // Show loading state
+      if (emptyState) {
+        emptyState.innerHTML = `
+          <div class="empty-icon">📝</div>
+          <div class="empty-text">Laddar chatt-transkript...</div>
+          <div class="empty-subtext">Hämtar original chatt-historik</div>
+        `;
+      }
       
-      if (messages.length === 0) {
+      // Fetch original chat transcript from Chat collection
+      const response = await fetch(`/api/chat/transcript/${sessionId}`);
+      const messages = await response.json();
+      
+      if (!messages || messages.length === 0) {
         if (emptyState) {
           emptyState.innerHTML = `
             <div class="empty-icon">📝</div>
-            <div class="empty-text">Inga meddelanden i chatt-transkriptet</div>
-            <div class="empty-subtext">Inga meddelanden hittades för detta ärende</div>
+            <div class="empty-text">Inget chatt-transkript tillgängligt</div>
+            <div class="empty-subtext">Inga chatt-meddelanden hittades för denna session</div>
           `;
         }
         return;
@@ -2075,12 +2082,13 @@
       }).join('');
       
       messagesContainer.innerHTML = chatHTML;
-    } else {
+    } catch (error) {
+      console.error('Error loading chat transcript:', error);
       if (emptyState) {
         emptyState.innerHTML = `
           <div class="empty-icon">📝</div>
-          <div class="empty-text">Laddar chatt-transkript...</div>
-          <div class="empty-subtext">Hämtar meddelanden från ärendet</div>
+          <div class="empty-text">Fel vid laddning av chatt-transkript</div>
+          <div class="empty-subtext">Kunde inte hämta chatt-historik</div>
         `;
       }
     }

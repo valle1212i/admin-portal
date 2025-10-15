@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Case = require("../models/Case");
 const Customer = require("../models/Customer");
+const Chat = require("../models/chat");
 
 // 🟢 Hämta aktiva sessioner
 router.get("/active-sessions", async (req, res) => {
@@ -45,6 +46,38 @@ router.get("/session/:sessionId", async (req, res) => {
     res.json(caseDoc.messages || []);
   } catch (err) {
     console.error("❌ Fel vid hämtning av session:", err);
+    res.status(500).json({ success: false, message: "Internt serverfel" });
+  }
+});
+
+// 💬 Hämta original chatt-transkript (innan case skapades)
+router.get("/transcript/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: "SessionId krävs" });
+    }
+
+    // Hämta original chatt-meddelanden från Chat collection
+    const chatMessages = await Chat.find({ sessionId })
+      .sort({ timestamp: 1 })
+      .lean();
+
+    if (!chatMessages || chatMessages.length === 0) {
+      return res.json([]);
+    }
+
+    // Formatera meddelanden för frontend
+    const formattedMessages = chatMessages.map(msg => ({
+      sender: msg.sender,
+      senderName: msg.senderName || (msg.sender === 'customer' ? 'Kund' : 'Admin'),
+      message: msg.message,
+      timestamp: msg.timestamp
+    }));
+
+    res.json(formattedMessages);
+  } catch (err) {
+    console.error("❌ Fel vid hämtning av chatt-transkript:", err);
     res.status(500).json({ success: false, message: "Internt serverfel" });
   }
 });
