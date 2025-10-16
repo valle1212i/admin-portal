@@ -150,6 +150,69 @@ router.get('/', async (req, res) => {
   }
 });
 
+// 🧪 Test customer portal connection (must be before /:customerId route)
+router.get('/test-customer-portal', async (req, res) => {
+  try {
+    const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL;
+    const adminSecret = process.env.ADMIN_SHARED_SECRET;
+    
+    if (!customerPortalUrl || !adminSecret) {
+      return res.status(500).json({
+        success: false,
+        message: 'Customer portal URL or admin secret not configured',
+        config: {
+          customerPortalUrl: !!customerPortalUrl,
+          adminSecret: !!adminSecret
+        }
+      });
+    }
+    
+    console.log('🧪 Testing customer portal connection...');
+    
+    const response = await fetch(`${customerPortalUrl}/api/admin/test-connection`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-signature': 'sha256=' + crypto
+          .createHmac('sha256', adminSecret)
+          .update('{}')
+          .digest('hex')
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Customer portal connection successful:', result);
+      res.json({
+        success: true,
+        message: 'Customer portal connection successful',
+        customerPortal: result,
+        config: {
+          customerPortalUrl: customerPortalUrl,
+          adminSecret: 'configured'
+        }
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Customer portal connection failed:', response.status, errorText);
+      res.status(500).json({
+        success: false,
+        message: 'Customer portal connection failed',
+        status: response.status,
+        error: errorText
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Customer portal connection error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Customer portal connection error',
+      error: error.message
+    });
+  }
+});
+
 // 📤 Hämta alla avtal för en specifik kund
 router.get('/:customerId', async (req, res) => {
     try {
@@ -651,67 +714,5 @@ router.post('/confirm-deletion/:customerId', async (req, res) => {
   }
 });
 
-// 🧪 Test customer portal connection
-router.get('/test-customer-portal', async (req, res) => {
-  try {
-    const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL;
-    const adminSecret = process.env.ADMIN_SHARED_SECRET;
-    
-    if (!customerPortalUrl || !adminSecret) {
-      return res.status(500).json({
-        success: false,
-        message: 'Customer portal URL or admin secret not configured',
-        config: {
-          customerPortalUrl: !!customerPortalUrl,
-          adminSecret: !!adminSecret
-        }
-      });
-    }
-    
-    console.log('🧪 Testing customer portal connection...');
-    
-    const response = await fetch(`${customerPortalUrl}/api/admin/test-connection`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-signature': 'sha256=' + crypto
-          .createHmac('sha256', adminSecret)
-          .update('{}')
-          .digest('hex')
-      }
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      console.log('✅ Customer portal connection successful:', result);
-      res.json({
-        success: true,
-        message: 'Customer portal connection successful',
-        customerPortal: result,
-        config: {
-          customerPortalUrl: customerPortalUrl,
-          adminSecret: 'configured'
-        }
-      });
-    } else {
-      const errorText = await response.text();
-      console.error('❌ Customer portal connection failed:', response.status, errorText);
-      res.status(500).json({
-        success: false,
-        message: 'Customer portal connection failed',
-        status: response.status,
-        error: errorText
-      });
-    }
-    
-  } catch (error) {
-    console.error('❌ Customer portal connection error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Customer portal connection error',
-      error: error.message
-    });
-  }
-});
 
 module.exports = router;
