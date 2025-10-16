@@ -169,18 +169,41 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
     const { customerId } = req.params;
     const { newPackage, effectiveDate, requestedBy } = req.body;
 
+    console.log('📦 Package change request:', {
+      customerId,
+      newPackage,
+      effectiveDate,
+      requestedBy,
+      body: req.body
+    });
+
+    if (!newPackage) {
+      return res.status(400).json({ success: false, message: "newPackage krävs" });
+    }
+
     if (!['Bas', 'Grower', 'Enterprise'].includes(newPackage)) {
       return res.status(400).json({ success: false, message: "Ogiltigt paket" });
+    }
+
+    if (!effectiveDate) {
+      return res.status(400).json({ success: false, message: "effectiveDate krävs" });
     }
 
     if (!['immediate', 'next_billing'].includes(effectiveDate)) {
       return res.status(400).json({ success: false, message: "Ogiltigt datum" });
     }
 
+    if (!requestedBy) {
+      return res.status(400).json({ success: false, message: "requestedBy krävs" });
+    }
+
+    console.log('🔍 Looking for customer:', customerId);
     const customer = await Customer.findById(customerId);
     if (!customer) {
+      console.log('❌ Customer not found:', customerId);
       return res.status(404).json({ success: false, message: "Kund hittades inte" });
     }
+    console.log('✅ Customer found:', customer.name, customer.email);
 
     // Create package change request
     if (!customer.packageChangeRequests) {
@@ -195,7 +218,9 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
       effectiveDate
     });
 
+    console.log('💾 Saving customer with package change request...');
     await customer.save();
+    console.log('✅ Customer saved successfully');
 
     res.json({ 
       success: true, 
