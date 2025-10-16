@@ -589,9 +589,9 @@ async function calculatePricing() {
  */
 function updateUserLimit(packageName) {
   const limits = {
-    'Bas': 2,
-    'Grower': 5,
-    'Enterprise': 20
+    'bas': 2,
+    'grower': 5,
+    'enterprise': 20
   };
   
   const limit = limits[packageName] || 0;
@@ -603,7 +603,7 @@ function updateUserLimit(packageName) {
  */
 function addUser() {
   const packageName = document.getElementById('selectedPackage').value;
-  const limits = { 'Bas': 2, 'Grower': 5, 'Enterprise': 20 };
+  const limits = { 'bas': 2, 'grower': 5, 'enterprise': 20 };
   const maxUsers = limits[packageName] || 2;
   
   const currentUsers = document.querySelectorAll('.user-card').length;

@@ -235,7 +235,7 @@ router.get('/overview', async (req, res) => {
     });
 
     // Calculate MRR
-    const packagePrices = { Bas: 499, Grower: 999, Enterprise: 1999 };
+    const packagePrices = { bas: 499, grower: 999, enterprise: 1999 };
     const customers = await CustomerPortal.find({ agreementStatus: 'active' });
     const mrr = customers.reduce((sum, c) => sum + (packagePrices[c.package] || 0), 0);
 
@@ -743,7 +743,7 @@ router.get('/customer-engagement', async (req, res) => {
 // GET /api/statistics/revenue-metrics - MRR, ARR, ARPU, etc.
 router.get('/revenue-metrics', async (req, res) => {
   try {
-    const packagePrices = { Bas: 499, Grower: 999, Enterprise: 1999 };
+    const packagePrices = { bas: 499, grower: 999, enterprise: 1999 };
 
     // Get all active customers with their packages
     const activeCustomers = await CustomerPortal.find({ 
@@ -765,9 +765,9 @@ router.get('/revenue-metrics', async (req, res) => {
 
     // Package distribution
     const packageDistribution = {
-      Bas: activeCustomers.filter(c => c.package === 'Bas').length,
-      Grower: activeCustomers.filter(c => c.package === 'Grower').length,
-      Enterprise: activeCustomers.filter(c => c.package === 'Enterprise').length
+      bas: activeCustomers.filter(c => c.package === 'bas').length,
+      grower: activeCustomers.filter(c => c.package === 'grower').length,
+      enterprise: activeCustomers.filter(c => c.package === 'enterprise').length
     };
 
     // Churn MRR (terminated this month)
@@ -791,9 +791,9 @@ router.get('/revenue-metrics', async (req, res) => {
 
     // Revenue by package
     const revenueByPackage = {
-      Bas: packageDistribution.Bas * packagePrices.Bas,
-      Grower: packageDistribution.Grower * packagePrices.Grower,
-      Enterprise: packageDistribution.Enterprise * packagePrices.Enterprise
+      bas: packageDistribution.bas * packagePrices.bas,
+      grower: packageDistribution.grower * packagePrices.grower,
+      enterprise: packageDistribution.enterprise * packagePrices.enterprise
     };
 
     // MRR trend (last 12 months)

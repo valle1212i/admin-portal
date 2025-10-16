@@ -89,9 +89,9 @@ const OnboardingSchema = new mongoose.Schema({
   // Step 5: Package Selection
   package: {
     type: String,
-    enum: ['Bas', 'Grower', 'Enterprise'],
+    enum: ['bas', 'grower', 'enterprise'],
     required: true,
-    default: 'Bas'
+    default: 'bas'
   },
   billingFrequency: {
     type: String,

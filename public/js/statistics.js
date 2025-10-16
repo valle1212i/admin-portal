@@ -432,11 +432,11 @@ async function loadRevenueMetrics() {
     const data = result.data;
     
     // Package distribution pie chart
-    const packageLabels = ['Bas', 'Grower', 'Enterprise'];
+    const packageLabels = ['bas', 'grower', 'enterprise'];
     const packageCounts = [
-      data.packageDistribution.Bas || 0,
-      data.packageDistribution.Grower || 0,
-      data.packageDistribution.Enterprise || 0
+      data.packageDistribution.bas || 0,
+      data.packageDistribution.grower || 0,
+      data.packageDistribution.enterprise || 0
     ];
     const packageColors = ['#3498db', '#2ecc71', '#9b59b6'];
     

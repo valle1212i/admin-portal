@@ -277,7 +277,7 @@ router.get('/customer/:customerId/details', async (req, res) => {
         _id: customer._id,
         name: customer.name,
         email: customer.email,
-        package: customer.package || 'Bas',
+        package: customer.package || 'bas',
         maxUsers: customer.maxUsers || 2,
         currentUserCount: customer.currentUserCount || 1,
         agreementStatus: customer.agreementStatus || 'active',
@@ -309,15 +309,11 @@ router.get('/customer/:customerId/details', async (req, res) => {
 router.post('/customer/:customerId/change-package', async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { newPackage: rawPackage, effectiveDate, requestedBy } = req.body;
-
-    // Convert package to proper case (handle both lowercase and mixed case)
-    const newPackage = rawPackage ? rawPackage.charAt(0).toUpperCase() + rawPackage.slice(1).toLowerCase() : null;
+    const { newPackage, effectiveDate, requestedBy } = req.body;
 
     console.log('📦 Package change request:', {
       customerId,
-      originalPackage: rawPackage,
-      convertedPackage: newPackage,
+      newPackage,
       effectiveDate,
       requestedBy,
       body: req.body
@@ -327,7 +323,7 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
       return res.status(400).json({ success: false, message: "newPackage krävs" });
     }
 
-    if (!['Bas', 'Grower', 'Enterprise'].includes(newPackage)) {
+    if (!['bas', 'grower', 'enterprise'].includes(newPackage)) {
       return res.status(400).json({ success: false, message: "Ogiltigt paket" });
     }
 
@@ -370,9 +366,9 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
       customer.package = newPackage;
       
       // Update max users based on package
-      if (newPackage === 'Bas') customer.maxUsers = 2;
-      else if (newPackage === 'Grower') customer.maxUsers = 5;
-      else if (newPackage === 'Enterprise') customer.maxUsers = 10;
+      if (newPackage === 'bas') customer.maxUsers = 2;
+      else if (newPackage === 'grower') customer.maxUsers = 5;
+      else if (newPackage === 'enterprise') customer.maxUsers = 10;
       
       console.log('📦 Package updated:', {
         oldPackage: customer.package,
@@ -448,9 +444,9 @@ router.post('/package-change/:customerId/:requestId/approve', async (req, res) =
     if (request.effectiveDate === 'immediate') {
       customer.package = request.requestedPackage;
       // Update max users based on package
-      if (request.requestedPackage === 'Bas') customer.maxUsers = 2;
-      else if (request.requestedPackage === 'Grower') customer.maxUsers = 5;
-      else if (request.requestedPackage === 'Enterprise') customer.maxUsers = 10;
+      if (request.requestedPackage === 'bas') customer.maxUsers = 2;
+      else if (request.requestedPackage === 'grower') customer.maxUsers = 5;
+      else if (request.requestedPackage === 'enterprise') customer.maxUsers = 10;
     }
 
     await customer.save();

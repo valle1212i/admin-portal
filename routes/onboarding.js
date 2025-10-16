@@ -54,21 +54,21 @@ const upload = multer({
 
 // Package pricing configuration
 const PACKAGE_PRICING = {
-  'Bas': {
+  'bas': {
     monthly: 499,
     quarterly: 1347, // 10% discount
     annually: 4790, // 20% discount
     maxUsers: 2,
     setupFee: 0
   },
-  'Grower': {
+  'grower': {
     monthly: 999,
     quarterly: 2697, // 10% discount
     annually: 9590, // 20% discount
     maxUsers: 5,
     setupFee: 0
   },
-  'Enterprise': {
+  'enterprise': {
     monthly: 1999,
     quarterly: 5397, // 10% discount
     annually: 19190, // 20% discount

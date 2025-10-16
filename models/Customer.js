@@ -25,8 +25,8 @@ const CustomerSchema = new mongoose.Schema({
   // Package Management Fields
   package: { 
     type: String, 
-    enum: ['Bas', 'Grower', 'Enterprise'], 
-    default: 'Bas' 
+    enum: ['bas', 'grower', 'enterprise'], 
+    default: 'bas' 
   },
   packageChangeRequests: [{
     requestedPackage: String,

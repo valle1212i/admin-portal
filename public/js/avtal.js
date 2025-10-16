@@ -74,7 +74,7 @@ function displaySearchResults(customers) {
       <div class="search-result-name">${customer.name || 'Namnlös'}</div>
       <div class="search-result-email">${customer.email || 'Ingen e-post'}</div>
       <div class="search-result-badges">
-        <span class="badge package-${customer.package || 'Bas'}">${customer.package || 'Bas'}</span>
+        <span class="badge package-${customer.package || 'bas'}">${customer.package || 'bas'}</span>
         <span class="badge status-${customer.agreementStatus || 'active'}">${formatAgreementStatus(customer.agreementStatus)}</span>
       </div>
     </div>
@@ -134,20 +134,20 @@ function displayCustomerInfo(customer) {
   
   // Package badge
   const packageBadge = document.getElementById('current-package-badge');
-  packageBadge.textContent = customer.package || 'Bas';
-  packageBadge.className = `badge package-badge package-${customer.package || 'Bas'}`;
+  packageBadge.textContent = customer.package || 'bas';
+  packageBadge.className = `badge package-badge package-${customer.package || 'bas'}`;
   
   // User count badge
   const userCountBadge = document.getElementById('user-count-badge');
   userCountBadge.textContent = `${customer.currentUserCount || 1}/${customer.maxUsers || 2} användare`;
   
   // Package info
-  document.getElementById('current-package-text').textContent = customer.package || 'Bas';
+  document.getElementById('current-package-text').textContent = customer.package || 'bas';
   document.getElementById('max-users-text').textContent = customer.maxUsers || 2;
   document.getElementById('current-users-text').textContent = customer.currentUserCount || 1;
   
   // Set package select to current package
-  document.getElementById('package-select').value = customer.package || 'Bas';
+  document.getElementById('package-select').value = customer.package || 'bas';
 }
 
 function displayContracts(contracts) {
