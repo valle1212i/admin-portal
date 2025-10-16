@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const Contract = require('../models/Contract');
 const Customer = require('../models/Customer');
@@ -13,6 +14,84 @@ const AUTHORIZED_ADMINS = [
   'vincent.korpela@gmail.com',
   'andre.soderberg@outlook.com'
 ];
+
+// 🔄 Sync package changes with customer portal
+async function syncWithCustomerPortal(customerId, newPackage, maxUsers) {
+  try {
+    const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL || 'https://source-database.onrender.com';
+    const adminSecret = process.env.ADMIN_SHARED_SECRET;
+    
+    if (!adminSecret) {
+      console.error('❌ ADMIN_SHARED_SECRET not configured');
+      return false;
+    }
+    
+    const payload = {
+      customerId,
+      package: newPackage,
+      maxUsers,
+      updatedAt: new Date()
+    };
+    
+    // Create HMAC signature
+    const body = JSON.stringify(payload);
+    const signature = 'sha256=' + crypto
+      .createHmac('sha256', adminSecret)
+      .update(body)
+      .digest('hex');
+    
+    console.log('🔄 Syncing package to customer portal:', {
+      customerId,
+      newPackage,
+      maxUsers,
+      url: `${customerPortalUrl}/api/admin/update-package`
+    });
+    
+    const response = await fetch(`${customerPortalUrl}/api/admin/update-package`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-signature': signature
+      },
+      body: body
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Package synced to customer portal:', result);
+      return true;
+    } else {
+      const error = await response.text();
+      console.error('❌ Failed to sync package:', response.status, error);
+      return false;
+    }
+    
+  } catch (error) {
+    console.error('❌ Error syncing package to customer portal:', error);
+    return false;
+  }
+}
+
+// 🔄 Retry mechanism for failed syncs
+async function retryPackageSync(customerId, package, maxUsers, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`🔄 Retry attempt ${attempt}/${maxRetries} for package sync`);
+    
+    const success = await syncWithCustomerPortal(customerId, package, maxUsers);
+    if (success) {
+      console.log('✅ Package sync succeeded on retry');
+      return true;
+    }
+    
+    if (attempt < maxRetries) {
+      console.log(`⏳ Waiting 5 seconds before retry ${attempt + 1}...`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+  
+  console.error('❌ All retry attempts failed for package sync');
+  return false;
+}
 
 // 📂 Lagring av avtal
 const storage = multer.diskStorage({
@@ -222,10 +301,26 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
     await customer.save();
     console.log('✅ Customer saved successfully');
 
+    // Add sync attempt for immediate changes
+    let syncStatus = 'pending_approval';
+    if (effectiveDate === 'immediate') {
+      console.log('🔄 Attempting immediate sync to customer portal...');
+      const syncSuccess = await syncWithCustomerPortal(customerId, newPackage, maxUsers);
+      
+      if (syncSuccess) {
+        console.log('✅ Immediate package change synced to customer portal');
+        syncStatus = 'synced';
+      } else {
+        console.warn('⚠️ Package change saved but failed to sync to customer portal');
+        syncStatus = 'sync_failed';
+      }
+    }
+
     res.json({ 
       success: true, 
       message: "Paketändring begärd och väntar på godkännande",
-      request: customer.packageChangeRequests[customer.packageChangeRequests.length - 1]
+      request: customer.packageChangeRequests[customer.packageChangeRequests.length - 1],
+      syncStatus: syncStatus
     });
   } catch (err) {
     console.error("Fel vid begäran om paketändring:", err);
@@ -276,13 +371,33 @@ router.post('/package-change/:customerId/:requestId/approve', async (req, res) =
 
     await customer.save();
 
-    // TODO: Sync with customer portal
-    // await syncWithCustomerPortal(customerId, customer.package, customer.maxUsers);
+    // Sync with customer portal for immediate changes
+    let syncStatus = 'not_applicable';
+    if (request.effectiveDate === 'immediate') {
+      console.log('🔄 Syncing approved package change to customer portal...');
+      const syncSuccess = await syncWithCustomerPortal(customerId, customer.package, customer.maxUsers);
+      
+      if (syncSuccess) {
+        console.log('✅ Package change synced to customer portal');
+        syncStatus = 'synced';
+      } else {
+        console.warn('⚠️ Package change approved but failed to sync to customer portal');
+        syncStatus = 'sync_failed';
+        
+        // Try retry mechanism
+        console.log('🔄 Attempting retry mechanism...');
+        const retrySuccess = await retryPackageSync(customerId, customer.package, customer.maxUsers);
+        if (retrySuccess) {
+          syncStatus = 'synced_after_retry';
+        }
+      }
+    }
 
     res.json({ 
       success: true, 
       message: "Paketändring godkänd",
-      newPackage: request.effectiveDate === 'immediate' ? customer.package : request.requestedPackage
+      newPackage: request.effectiveDate === 'immediate' ? customer.package : request.requestedPackage,
+      syncStatus: syncStatus
     });
   } catch (err) {
     console.error("Fel vid godkännande av paketändring:", err);
@@ -512,6 +627,69 @@ router.post('/confirm-deletion/:customerId', async (req, res) => {
   } catch (err) {
     console.error("Fel vid bekräftelse av borttagning:", err);
     res.status(500).json({ success: false, message: "Kunde inte bekräfta borttagning" });
+  }
+});
+
+// 🧪 Test customer portal connection
+router.get('/test-customer-portal', async (req, res) => {
+  try {
+    const customerPortalUrl = process.env.CUSTOMER_PORTAL_URL;
+    const adminSecret = process.env.ADMIN_SHARED_SECRET;
+    
+    if (!customerPortalUrl || !adminSecret) {
+      return res.status(500).json({
+        success: false,
+        message: 'Customer portal URL or admin secret not configured',
+        config: {
+          customerPortalUrl: !!customerPortalUrl,
+          adminSecret: !!adminSecret
+        }
+      });
+    }
+    
+    console.log('🧪 Testing customer portal connection...');
+    
+    const response = await fetch(`${customerPortalUrl}/api/admin/test-connection`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-signature': 'sha256=' + crypto
+          .createHmac('sha256', adminSecret)
+          .update('{}')
+          .digest('hex')
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Customer portal connection successful:', result);
+      res.json({
+        success: true,
+        message: 'Customer portal connection successful',
+        customerPortal: result,
+        config: {
+          customerPortalUrl: customerPortalUrl,
+          adminSecret: 'configured'
+        }
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Customer portal connection failed:', response.status, errorText);
+      res.status(500).json({
+        success: false,
+        message: 'Customer portal connection failed',
+        status: response.status,
+        error: errorText
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Customer portal connection error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Customer portal connection error',
+      error: error.message
+    });
   }
 });
 
