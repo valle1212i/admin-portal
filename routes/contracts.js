@@ -246,11 +246,15 @@ router.get('/customer/:customerId/details', async (req, res) => {
 router.post('/customer/:customerId/change-package', async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { newPackage, effectiveDate, requestedBy } = req.body;
+    const { newPackage: rawPackage, effectiveDate, requestedBy } = req.body;
+
+    // Convert package to proper case (handle both lowercase and mixed case)
+    const newPackage = rawPackage ? rawPackage.charAt(0).toUpperCase() + rawPackage.slice(1).toLowerCase() : null;
 
     console.log('📦 Package change request:', {
       customerId,
-      newPackage,
+      originalPackage: rawPackage,
+      convertedPackage: newPackage,
       effectiveDate,
       requestedBy,
       body: req.body
