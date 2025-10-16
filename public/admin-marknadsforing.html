@@ -7,11 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin-marknadsforing.css">
+  <link rel="stylesheet" href="/css/admin-marknadsforing.css">
 </head>
 <body>
 <div class="container">
-  <aside class="sidebar" role="navigation" aria-label="Huvudnavigation">
+  <aside class="sidebar" role="navigation" aria-label="Huvudnavigation" style="background: linear-gradient(135deg, #f9fafb 0%, white 100%) !important;">
     <div class="logo">
       <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
     </div>
@@ -98,16 +98,16 @@
     </section>
 
     <!-- Summary Section -->
-    <section class="card">
+      <section class="card">
       <h2>Sammanfattning</h2>
-      <div id="summaryBox" class="kv">
-        <div>Antal briefs</div><div id="sumBriefs">–</div>
+        <div id="summaryBox" class="kv">
+          <div>Antal briefs</div><div id="sumBriefs">–</div>
         <div>Ads</div><div id="sumAds">–</div>
         <div>AI Studio</div><div id="sumAIStudio">–</div>
         <div>Rådgivning</div><div id="sumRadgivning">–</div>
-        <div>Källa</div><div id="sumSource">–</div>
-      </div>
-    </section>
+          <div>Källa</div><div id="sumSource">–</div>
+        </div>
+      </section>
   </main>
 </div>
 
@@ -405,7 +405,7 @@
   document.getElementById('prevAds').addEventListener('click', ()=>{ if (page>1){ page--; loadAds(); }});
   document.getElementById('nextAds').addEventListener('click', ()=>{ if (page*limit < lastTotal){ page++; loadAds(); }});
   document.getElementById('adsSort').addEventListener('change', (e)=>{adsSortBy=e.target.value; page=1; loadAds();});
-
+  
   // Set initial sort values
   document.getElementById('adsSort').value = adsSortBy;
   
@@ -415,7 +415,7 @@
     .then(data => {
       if (data.success) {
         // Admin is logged in, initialize the page
-        loadAds();
+  loadAds();
       } else {
         // Not logged in, redirect to login
         window.location.href = "/login.html";
