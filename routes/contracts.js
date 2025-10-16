@@ -301,6 +301,23 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
       effectiveDate
     });
 
+    // Update package immediately if effectiveDate is 'immediate'
+    if (effectiveDate === 'immediate') {
+      console.log('🔄 Updating customer package immediately...');
+      customer.package = newPackage;
+      
+      // Update max users based on package
+      if (newPackage === 'Bas') customer.maxUsers = 2;
+      else if (newPackage === 'Grower') customer.maxUsers = 5;
+      else if (newPackage === 'Enterprise') customer.maxUsers = 10;
+      
+      console.log('📦 Package updated:', {
+        oldPackage: customer.package,
+        newPackage: newPackage,
+        maxUsers: customer.maxUsers
+      });
+    }
+
     console.log('💾 Saving customer with package change request...');
     await customer.save();
     console.log('✅ Customer saved successfully');
@@ -309,7 +326,7 @@ router.post('/customer/:customerId/change-package', async (req, res) => {
     let syncStatus = 'pending_approval';
     if (effectiveDate === 'immediate') {
       console.log('🔄 Attempting immediate sync to customer portal...');
-      const syncSuccess = await syncWithCustomerPortal(customerId, newPackage, maxUsers);
+      const syncSuccess = await syncWithCustomerPortal(customerId, newPackage, customer.maxUsers);
       
       if (syncSuccess) {
         console.log('✅ Immediate package change synced to customer portal');
