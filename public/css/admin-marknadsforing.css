@@ -114,13 +114,18 @@ body {
 /* Sidebar styles */
 .sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #f9fafb 0%, white 100%);
+  background: linear-gradient(135deg, #f9fafb 0%, white 100%) !important;
   border-right: 1px solid var(--gray-200);
   padding: 2rem 0;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
   z-index: 100;
+}
+
+/* Force sidebar background with higher specificity */
+.container .sidebar {
+  background: linear-gradient(135deg, #f9fafb 0%, white 100%) !important;
 }
 
 .logo {
