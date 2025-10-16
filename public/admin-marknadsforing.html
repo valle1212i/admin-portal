@@ -7,11 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/admin-marknadsforing.css">
+  <link rel="stylesheet" href="/css/admin-marknadsforing.css?v=2">
 </head>
 <body>
 <div class="container">
-  <aside class="sidebar" role="navigation" aria-label="Huvudnavigation" style="background: red !important; background: linear-gradient(135deg, #f9fafb 0%, white 100%) !important; border: 5px solid blue !important;">
+        <aside class="sidebar" role="navigation" aria-label="Huvudnavigation" style="background: linear-gradient(135deg, #f9fafb 0%, white 100%) !important; background-color: #f9fafb !important; border: 5px solid blue !important;">
     <div class="logo">
       <img src="/images/Source.png" alt="Source Logo" width="160" height="auto" />
     </div>
@@ -409,22 +409,39 @@
   // Set initial sort values
   document.getElementById('adsSort').value = adsSortBy;
   
-  // Check admin session before initializing
-  fetch("/api/admin/me", { credentials: "include" })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        // Admin is logged in, initialize the page
-  loadAds();
-      } else {
-        // Not logged in, redirect to login
-        window.location.href = "/login.html";
+    // Force sidebar background
+    function forceSidebarBackground() {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.style.setProperty('background', 'linear-gradient(135deg, #f9fafb 0%, white 100%)', 'important');
+        sidebar.style.setProperty('background-color', '#f9fafb', 'important');
+        console.log('Forced sidebar background applied');
       }
-    })
-    .catch(err => {
-      console.error('Session check failed:', err);
-      window.location.href = "/login.html";
-    });
+    }
+
+    // Apply immediately and after a delay
+    forceSidebarBackground();
+    setTimeout(forceSidebarBackground, 100);
+    setTimeout(forceSidebarBackground, 500);
+
+    // Check admin session before initializing
+    fetch("/api/admin/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Admin is logged in, initialize the page
+          loadAds();
+          // Force background again after content loads
+          setTimeout(forceSidebarBackground, 1000);
+        } else {
+          // Not logged in, redirect to login
+          window.location.href = "/login.html";
+        }
+      })
+      .catch(err => {
+        console.error('Session check failed:', err);
+        window.location.href = "/login.html";
+      });
 </script>
 
 </body>
