@@ -115,8 +115,31 @@ router.get('/', async (req, res) => {
       ]
     };
 
+    // Dynamic sorting implementation
+    const sortParam = req.query.sort || 'createdAt-desc';
+    let sortObj = { createdAt: -1, _id: -1 }; // default
+
+    // Parse sort parameter
+    if (sortParam.includes('createdAt')) {
+      sortObj = sortParam.includes('asc') 
+        ? { createdAt: 1, _id: 1 } 
+        : { createdAt: -1, _id: -1 };
+    } else if (sortParam.includes('category')) {
+      sortObj = sortParam.includes('asc') 
+        ? { category: 1, createdAt: -1 } 
+        : { category: -1, createdAt: -1 };
+    } else if (sortParam.includes('tenantId')) {
+      sortObj = sortParam.includes('asc') 
+        ? { tenantId: 1, createdAt: -1 } 
+        : { tenantId: -1, createdAt: -1 };
+    } else if (sortParam.includes('userEmail')) {
+      sortObj = sortParam.includes('asc') 
+        ? { userEmail: 1, createdAt: -1 } 
+        : { userEmail: -1, createdAt: -1 };
+    }
+
     const [items, total] = await Promise.all([
-      Ad.find(adFilter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit).lean(),
+      Ad.find(adFilter).sort(sortObj).skip(skip).limit(limit).lean(),
       Ad.countDocuments(adFilter)
     ]);
 

@@ -222,6 +222,8 @@
           <option value="category-desc">Kategori (Ö-A)</option>
           <option value="tenantId-asc">Företag (A-Ö)</option>
           <option value="tenantId-desc">Företag (Ö-A)</option>
+          <option value="userEmail-asc">E-post (A-Ö)</option>
+          <option value="userEmail-desc">E-post (Ö-A)</option>
         </select>
       </div>
       
@@ -329,7 +331,11 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentCategory = btn.dataset.category;
+      
+      // CRITICAL FIX: Update the category filter dropdown to match the selected tab
       document.getElementById('category').value = currentCategory;
+      
+      // Reset to first page and reload with the new category filter
       page = 1;
       loadAds();
     });
@@ -344,7 +350,7 @@
     const q = document.getElementById('q').value.trim();
     const from = document.getElementById('from').value;
     const to   = document.getElementById('to').value;
-    const category = document.getElementById('category').value;
+    const category = document.getElementById('category').value || currentCategory;
 
     const params = new URLSearchParams({ page, limit });
     if (q) params.set('q', q);
